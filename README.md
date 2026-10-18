@@ -139,6 +139,13 @@ Under **Admin overview → Recent assignments** or **Assignments → All assignm
 - **Keep administrator and student sign-in pages separate**. Administrator accounts and student accounts are checked against the same private MTI database; do not attempt to use student-only screens to escalate a user's role.
 - Deployed and tested HTTPS root, admin and student pages, backend health, and an admin sign-out POST with valid same-origin forwarding. Signed-in sessions from the previous `workers.dev` domain are not transferred; users log in again under `mti.greatchurch.ca`.
 
+### MTI sender preference (October 2026)
+
+- MTI's selected outgoing sender is **mti@greatchurch.ca** with display name **Ministry Training Institute**. The existing `MTI_EMAIL_FROM` Cloudflare Worker secret has been changed to this email address.
+- The church's primary Microsoft 365 / Graph integration is in `globalconnectionschurch-eng/greatchurch`, with its Microsoft credentials stored exclusively as Cloudflare secrets in the GlobalConnectionsChurch account.
+- Do **not** reuse the existing church website's welcome-team sender identity for MTI.
+- **Sending remains disabled** pending confirmation that `mti@greatchurch.ca` exists as a Microsoft 365 mailbox or shared mailbox (or supported send-as identity), and a secure, scoped cross-account relay. No Microsoft credentials are copied into GitHub or the MTI Worker. MTI queued notifications remain pending until delivery is tested.
+
 ## Upcoming work
 
 Complete private roster review and account onboarding; connect a verified sender and test automatic delivery, finish reports, printable template refinements, backup and recovery, and full GitHub-to-Cloudflare continuous deployment.
