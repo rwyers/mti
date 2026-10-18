@@ -1,7 +1,7 @@
 /* MTI course progression and durable event-driven email notifications.
    No credentials or student records are stored in this public module.
    Email delivery uses a verified sender and secret in Cloudflare Workers. */
-const MTI_PORTAL_URL="https://mti-portal.rwyers.workers.dev";
+const MTI_PORTAL_URL="https://mti.greatchurch.ca";
 function nextLessonTitle(course,lesson) {
  return course+" · Year "+lesson.year+" · Lesson "+lesson.lesson_number;
 }
