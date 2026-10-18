@@ -109,8 +109,11 @@ function render(){
     "<strong>"+esc(a.title)+"</strong><br><small>"+esc(lessonName(a.lesson_id))+"</small>",
     esc(nameOf(a.student_id,"students")),esc(a.due_date||"Not set"),
     badge(a.status),a.grade_points==null?"—":"<strong>"+a.grade_points+"/100</strong>",
-    gradingMode?'<button class="soft" onclick="openForm(\'grade\',\''+a.id+'\')">'+(a.status==="graded"?"Edit marks":"Mark")+'</button>':
-     '<button class="outline" onclick="openForm(\'grade\',\''+a.id+'\')">Review →</button>'
+    '<div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">'+
+    (gradingMode?'<button class="soft" onclick="openForm(\'grade\',\''+a.id+'\')">'+(a.status==="graded"?"Edit marks":"Mark")+'</button>':
+     '<button class="outline" onclick="openForm(\'grade\',\''+a.id+'\')">Review →</button>')+
+    (a.status==="assigned"&&ACCOUNT&&["owner","admin"].includes(ACCOUNT.role)?
+      '<button type="button" class="outline" data-unassign-id="'+esc(a.id)+'" style="color:#9b4742;border-color:#e9ccc8" aria-label="Unassign '+esc(a.title)+'">Unassign</button>':"")+'</div>'
   ])}).join("");
  }
  el("recent").innerHTML=assignments.length?table(["Assignment","Student","Due","Status","Grade",""],[assignmentRows(assignments.slice(0,5),false)]):empty("No assignments yet","assignment","Create assignment");
