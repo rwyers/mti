@@ -50,7 +50,8 @@ function snapshot(v){return v?JSON.stringify(v):null}
 const COOKIE="mti_session";
 function cookieDelete(){return COOKIE+"=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax"}
 function randomSecret(){return base64url(crypto.getRandomValues(new Uint8Array(32)))}
-async function passwordKey(password,salt,iterations=120000){
+const PASSWORD_KDF_ITERATIONS=100000; // Cloudflare Workers limits one PBKDF2 invocation to 100,000 iterations
+async function passwordKey(password,salt,iterations=PASSWORD_KDF_ITERATIONS){
  const key=await crypto.subtle.importKey("raw",enc.encode(password),"PBKDF2",false,["deriveBits"]);
  const bytes=await crypto.subtle.deriveBits({name:"PBKDF2",salt:enc.encode(salt),iterations,hash:"SHA-256"},key,256);
  return hex(bytes);
@@ -60,7 +61,7 @@ async function passwordMatches(input,account){
  // A single-use transition from the old MTI administrator credential.
  // New and changed passwords always use a per-account salted PBKDF2 hash.
  if(account.password_salt==="legacy-sha256")return secureEqual(await digest(input),account.password_hash);
- return secureEqual(await passwordKey(input,account.password_salt,account.password_iter||120000),account.password_hash);
+ return secureEqual(await passwordKey(input,account.password_salt,account.password_iter||PASSWORD_KDF_ITERATIONS),account.password_hash);
 }
 function validPassword(v){return typeof v==="string" && v.length>=12&&v.length<=128}
 async function sessionCookie(env,user) {
@@ -137,8 +138,8 @@ async function acceptInvite(req,env){
  const salt=randomSecret(),password_hash=await passwordKey(password,salt);
  const done=await env.DB.prepare("UPDATE account_invitations SET redeemed_at=CURRENT_TIMESTAMP WHERE id=? AND redeemed_at IS NULL").bind(invite.id).run();
  if(!done.meta?.changes)return json({error:"Invitation has already been used."},400);
- await env.DB.prepare("UPDATE user_accounts SET password_hash=?,password_salt=?,session_version=session_version+1,must_change_password=0,updated_at=CURRENT_TIMESTAMP WHERE id=?")
- .bind(password_hash,salt,account.id).run();
+ await env.DB.prepare("UPDATE user_accounts SET password_hash=?,password_salt=?,password_iter=?,session_version=session_version+1,must_change_password=0,updated_at=CURRENT_TIMESTAMP WHERE id=?")
+ .bind(password_hash,salt,PASSWORD_KDF_ITERATIONS,account.id).run();
  const updated=await env.DB.prepare("SELECT * FROM user_accounts WHERE id=?").bind(account.id).first();
  await auditAction(env,updated,"activate_account","account",account.id,null,{email:updated.email,role:updated.role});
  return json({ok:true,user:safeAccount(updated)},200,{"Set-Cookie":await sessionCookie(env,updated)});
@@ -150,8 +151,8 @@ async function changePassword(req,env,account){
  if(!(await passwordMatches(old,account)))return json({error:"Current password is incorrect."},403);
  if(secureEqual(old,next))return json({error:"Choose a different password."},400);
  const salt=randomSecret(),pass=await passwordKey(next,salt);
- await env.DB.prepare("UPDATE user_accounts SET password_hash=?,password_salt=?,session_version=session_version+1,must_change_password=0,updated_at=CURRENT_TIMESTAMP WHERE id=?")
-  .bind(pass,salt,account.id).run();
+ await env.DB.prepare("UPDATE user_accounts SET password_hash=?,password_salt=?,password_iter=?,session_version=session_version+1,must_change_password=0,updated_at=CURRENT_TIMESTAMP WHERE id=?")
+  .bind(pass,salt,PASSWORD_KDF_ITERATIONS,account.id).run();
  const updated=await env.DB.prepare("SELECT * FROM user_accounts WHERE id=?").bind(account.id).first();
  await auditAction(env,account,"change_password","account",account.id);
  return json({ok:true},200,{"Set-Cookie":await sessionCookie(env,updated)});
