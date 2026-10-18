@@ -68,9 +68,11 @@ async function materialAccessAllowed(env,studentId,assignmentId) {
  if(!year){
   const past=await yearProgressRows(env,studentId);
   if(!past.length)return true; // Original manual assignments for non-enrolled students
-  const completed=await env.DB.prepare("SELECT 1 FROM student_session_completions WHERE student_id=? AND assignment_id=?").bind(studentId,assignmentId).first();
-  return !!completed;
+  const preserved=await env.DB.prepare("SELECT id FROM assignments WHERE id=? AND student_id=? AND status IN ('submitted','graded')").bind(assignmentId,studentId).first();
+  return !!preserved;
  }
+ const preserved=await env.DB.prepare("SELECT id FROM assignments WHERE id=? AND student_id=? AND status IN ('submitted','graded')").bind(assignmentId,studentId).first();
+ if(preserved)return true;
  const data=await yearCardData(env,studentId);
  return data.allowed.some(x=>x.id===assignmentId);
 }
@@ -153,6 +155,10 @@ async function yearProgressEnrollment(req,env,actor) {
   if(!existing&&body.payment_confirmed!==true)return json({error:"Confirm the next-year payment before approving this enrollment."},409);
  }
  if(current&&current.year!==year)return json({error:"Finish the currently active year before moving to a new year."},409);
+ if(existing&&existing.course_id!==courseId){
+  const pending=await env.DB.prepare("SELECT COUNT(*) n FROM assignments a JOIN lessons l ON l.id=a.lesson_id WHERE a.student_id=? AND l.year=? AND a.status='submitted'").bind(studentId,year).first();
+  if(pending?.n)return json({error:"Please grade the student's "+pending.n+" submitted assignment(s) in Year "+year+" before switching curricula, so every session receives credit."},409);
+ }
  if(existing&&existing.course_id!==courseId&&body.confirm_replace!==true)return json({error:"Confirm this curriculum transfer. Completed sessions and grades will be preserved."},409);
  if(existing&&existing.course_id!==courseId){
   await env.DB.prepare("INSERT INTO student_curriculum_transfers(id,student_id,year,from_course_id,to_course_id,changed_by) VALUES(?,?,?,?,?,?)")
@@ -180,15 +186,22 @@ async function yearStudentData(env,user){
  // Graded assignment content remains permanently available, including after
  // a curriculum transfer or after the whole year has been archived.
  const completedAssignments=await env.DB.prepare("SELECT a.*,l.course_id,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.submission_notes,l.materials_list,c.name AS course_name,s.response_text,s.submitted_at AS response_submitted_at FROM student_session_completions t JOIN assignments a ON a.id=t.assignment_id JOIN lessons l ON l.id=a.lesson_id JOIN courses c ON c.id=l.course_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE t.student_id=? AND a.status='graded' ORDER BY t.year DESC,t.session_number DESC").bind(user.student_id).all();
- const visible=new Map([...completedAssignments.results,...data.allowed].map(a=>[a.id,a]));
+ // Retain all handed-in and graded work from earlier curricula, even when not
+ // credited in the nine-session ledger yet. Keep former submissions read-only.
+ const retained=await env.DB.prepare("SELECT a.*,l.course_id,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.submission_notes,l.materials_list,c.name AS course_name,s.response_text,s.submitted_at AS response_submitted_at FROM assignments a LEFT JOIN lessons l ON l.id=a.lesson_id LEFT JOIN courses c ON c.id=l.course_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? AND a.status IN ('submitted','graded') ORDER BY COALESCE(a.submitted_at,a.updated_at) DESC,a.created_at DESC").bind(user.student_id).all();
+ const historic=retained.results.map(a=>({...a,read_only:a.status==="graded"||!data.current||a.course_id!==data.current.course_id||a.year!==data.current.year}));
+ const visible=new Map([...completedAssignments.results.map(a=>({...a,read_only:true})),...historic,...data.allowed].map(a=>[a.id,a]));
  const allowed=new Set([...visible.keys()]);
  const files=await env.DB.prepare("SELECT id,assignment_id,filename,content_type,size_bytes,created_at FROM submission_files WHERE student_id=? ORDER BY created_at DESC").bind(user.student_id).all();
  return {student,assignments:[...visible.values()],files:files.results.filter(f=>allowed.has(f.assignment_id)),
   learning_path:{course_id:data.current?.course_id||null,course_name:data.current?.course_name||"",
    year:data.current?.year||null,year_completed:!data.current,cards:data.cards,history:data.history,
-   next_year_requires_payment:true}};
+   next_year_requires_payment:true,
+   previous_submissions:historic.filter(a=>a.read_only&&a.status==="submitted").map(a=>({
+    assignment_id:a.id,title:a.title,course_name:a.course_name||"Previous curriculum",year:a.year,lesson_number:a.lesson_number,status:a.status,submitted_at:a.submitted_at
+   }))}};
 }
-async function yearFileGuard(env,studentId,p){
+async function yearFileGuard(env,studentId,p,method){
  const upload=p.match(/^\/api\/student\/assignments\/([^/]+)\/(files|submit)$/);
  const file=p.match(/^\/api\/student\/files\/([^/]+)$/);
  let assignmentId=upload?.[1];
@@ -198,6 +211,11 @@ async function yearFileGuard(env,studentId,p){
   assignmentId=info.assignment_id;
  }
  if(!assignmentId)return null;
+ const old=await env.DB.prepare("SELECT a.status,l.course_id,l.year FROM assignments a LEFT JOIN lessons l ON l.id=a.lesson_id WHERE a.id=? AND a.student_id=?").bind(assignmentId,studentId).first();
+ const current=await currentYearProgress(env,studentId);
+ const historic=!current||old?.course_id!==current.course_id||old?.year!==current.year;
+ if(historic && (upload || (file&&method==="DELETE")))
+  return json({error:"Previously submitted work is preserved for viewing and downloading, but cannot be changed after switching curricula."},409);
  const allowed=await materialAccessAllowed(env,studentId,assignmentId);
  if(!allowed)return json({error:"This lesson is locked or belongs to a different curriculum. Completed graded work remains available in your history."},403);
  if(upload){
@@ -239,7 +257,7 @@ export default {
     const user=await currentUser(req,env);
     if(!user||user.role!=="student"||!user.student_id)return json({error:"Please sign in."},401);
     if((await yearProgressRows(env,user.student_id)).length){
-     const fail=await yearFileGuard(env,user.student_id,p);
+     const fail=await yearFileGuard(env,user.student_id,p,req.method);
      if(fail)return fail;
      // Bypass legacy current-curriculum filtering; verified above against
      // permanent completion and current unlocked session entitlements.
