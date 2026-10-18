@@ -48,6 +48,21 @@ All application code lives in the **rwyers/mti** GitHub repository. Hosting, dat
 - `scripts/build.mjs`: bundles source files in Cloudflare's remote build process
 - `wrangler.jsonc`: Worker bindings for D1 and R2
 
+## October 2026 curriculum and student import
+
+- **334 populated lessons imported** from MTI's source package into Cloudflare D1; the previously created Counseling Year 1 Lesson 3 example remains, for **335 lessons total**.
+- Published MTI course sheets supplied most lessons. Busy Man Working Women (27) and New Believers (1) came from the uploaded Excel workbooks after their published sources proved unavailable.
+- Import is additive and idempotent, preserving already-edited lessons; admin-only course import controls are under **Curriculum import**.
+- All **17 named rows from MTI Student Database.xlsx** were staged **privately** in Cloudflare for administrator review, but **zero students were automatically enrolled or invited**.
+- The **Roster review** tab is private to owner/administrator accounts. Review, edit, approve or skip each staged record, with duplicate-email safeguards and an attributed audit history.
+- Students do not receive signup invitations until an administrator intentionally invites them from the student directory.
+- The temporary import-only URL has been removed from the deployed Worker.
+- Current cloud infrastructure: Cloudflare Worker `mti-portal`, D1 `mti_portal`, private R2 `mti-student-submissions`.
+
+### Student data safeguards
+
+The original student workbook includes blank/incomplete enrollment rows, unverified addresses and duplicate/shared email addresses. Those rows must be resolved before approval. No private roster bytes were committed to this public GitHub repository. Do not put passwords, student rosters or private invitations in GitHub.
+
 ## Upcoming work
 
 Import and verify the complete course workbooks and real student roster privately. Add automated emails, export/reporting, printable template refinements, backup and recovery, and full GitHub-to-Cloudflare continuous deployment.
