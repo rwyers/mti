@@ -1,0 +1,11 @@
+// Builds a single Cloudflare Worker from files stored in this GitHub repository.
+// Run by Cloudflare's remote build service when Git integration is enabled.
+import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
+const worker=readFileSync("src/worker.js","utf8");
+const files={"/": "public/index.html", "/admin": "public/admin.html", "/student": "public/student.html"};
+const pages=Object.fromEntries(Object.entries(files).map(([key, file]) => [key,readFileSync(file,"utf8")]));
+const marker="const STATIC = {};";
+if(!worker.includes(marker))throw new Error("MTI asset build marker not found");
+mkdirSync("dist",{recursive:true});
+writeFileSync("dist/worker.js",worker.replace(marker,"const STATIC = "+JSON.stringify(pages)+";"),"utf8");
+console.log("Built MTI Cloudflare Worker from GitHub sources");
