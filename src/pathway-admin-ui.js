@@ -105,7 +105,7 @@ async function loadMTINotifications(){
   const pending=(count.pending||0)+(count.failed||0);
   target.innerHTML=r.configured?
    '<div class="callout"><strong>Email delivery is configured.</strong> Pending: '+pending+' · Sent: '+(count.sent||0)+'.</div>':
-   '<div class="warning"><strong>Email delivery is not connected yet.</strong> MTI is recording notification events but cannot send them until a verified sending domain and email API key are connected. No email is falsely marked as sent. Pending: '+pending+'.</div>';
+   '<div class="warning"><strong>Email delivery is not connected yet.</strong> MTI is recording notification events, but the Microsoft 365 sender connection is not enabled yet. No email is falsely marked as sent. Pending: '+pending+'.</div>';
   el("sendPendingButton").disabled=!r.configured;
   el("notificationHistory").innerHTML=r.recent.length?table(["When","Event","Recipient","Status","Attempts"],r.recent.map(x=>row([
    esc(x.created_at)+" UTC",esc(x.event_type.replaceAll("_"," ")),
