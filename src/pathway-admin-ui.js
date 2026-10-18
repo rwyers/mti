@@ -29,6 +29,7 @@ const existingPathRender=render;
 render=function(){existingPathRender();addPathButtons()};
 async function openPathEnrollment(studentId){
  const student=DATA.students.find(x=>x.id===studentId);if(!student)return;
+ await loadPathEnrollments();
  const eligible=completeCurriculumYears();
  const selected=ACTIVE_LEARNING_PATHS.get(studentId);
  el("modalTitle").textContent="Enroll student in curriculum + year";
@@ -120,3 +121,5 @@ async function sendPendingMTINotifications(){
 }
 const pathStart=start;
 start=async function(){await pathStart();if(ACCOUNT&&!ACCOUNT.must_change_password)await loadPathEnrollments()};
+
+Promise.resolve().then(async ()=>{const me=await api("/api/admin/me");if(me.authenticated)await loadPathEnrollments()}).catch(()=>{});
