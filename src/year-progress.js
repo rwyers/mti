@@ -226,7 +226,7 @@ export default {
    }
    if(p==="/api/admin/learning-paths/enroll"&&req.method==="POST"){
     const user=await currentUser(req,env);
-    if(!user||user.role==="student"||user.must_change_password)return json({error:"Unauthorized"},401);
+    if(!user||!["owner","admin"].includes(user.role)||user.must_change_password)return json({error:"Only an administrator may approve or change a paid-year enrollment."},403);
     return yearProgressEnrollment(req,env,user);
    }
    if(p==="/api/student/data"&&req.method==="GET"){
