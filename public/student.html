@@ -56,7 +56,7 @@ async function boot(){
 async function refresh(){
  DATA=await api("/api/student/data");showPortal();
  el("welcome").textContent="Hello, "+(DATA.student.full_name||"student").split(" ")[0]+".";
- el("statProgram").textContent=DATA.assignments.find(function(a){return a.course_id})?.course_id?"Your enrolled course":"My learning";
+ el("statProgram").textContent=DATA.student.course_name||"Not enrolled";
  el("statYear").textContent="Year "+DATA.student.current_year;
  el("statCompleted").textContent=DATA.assignments.filter(function(a){return a.status==="graded"}).length+" / "+DATA.assignments.length;
  el("assignmentList").innerHTML=DATA.assignments.length?DATA.assignments.map(function(a){
