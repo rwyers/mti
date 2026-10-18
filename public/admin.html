@@ -165,8 +165,13 @@ async function submitForm(mode){
  if(mode==="lesson")path="/api/admin/lessons";
  if(mode==="assignment")path="/api/admin/assignments";
  button.disabled=true;el("formError").textContent="";
- try{await api(path,{method:method,headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});closeForm();await refresh()}
- catch(e){el("formError").textContent=e.message}finally{button.disabled=false}
+ try{
+  const result=await api(path,{method:method,headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+  closeForm();await refresh();
+  if(mode.startsWith("grade:")&&result.next_unlocked?.length){
+   alert(result.next_unlocked.map(x=>"Lesson "+x.lesson_number+" has unlocked for the student.").join("\n"));
+  }
+ }catch(e){el("formError").textContent=e.message}finally{button.disabled=false}
 }
 el("loginForm").addEventListener("submit",async function(e){
  e.preventDefault();var button=this.querySelector("button");button.disabled=true;el("loginError").textContent="";
