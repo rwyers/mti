@@ -19,7 +19,7 @@ textarea{min-height:230px;resize:vertical;line-height:1.7}.error{color:#ab4b45;f
 .small{color:#819397;font-size:12px}#portal{padding:37px 0 90px}.intro{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:27px}.intro p{margin:4px 0}.intro h1{margin:3px 0;font-size:37px}
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:28px}.card{background:white;border:1px solid var(--line);border-radius:12px;padding:21px}.card small{font-size:11px;color:#829796}.card b{display:block;font:normal 25px Georgia,serif;margin:7px 0 0}
 .layout{display:grid;grid-template-columns:350px 1fr;gap:21px;align-items:start}.panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}.panel-top{padding:22px;border-bottom:1px solid var(--line)}.panel-top h2{font-size:16px;margin:0}.panel-top p{font-size:12px;margin:5px 0 0}
-.assignment{display:block;width:100%;text-align:left;background:#fff;color:inherit;border:0;border-bottom:1px solid #e7ede9;padding:18px 20px}.assignment:hover,.assignment.active{background:#f1f7f3}.assignment strong{display:block;font-size:13px}.assignment small{display:block;color:#859797;margin:6px 0}.status{display:inline-block;background:#f8eddd;color:#98703b;font-size:10px;border-radius:18px;padding:5px 9px;font-weight:800;text-transform:capitalize}.status.submitted{background:#e5f2e8;color:#4b8063}.status.graded{background:#e7edf7;color:#496e97}
+.assignment{display:block;width:100%;text-align:left;background:#fff;color:inherit;border:0;border-bottom:1px solid #e7ede9;padding:18px 20px}.assignment:hover,.assignment.active{background:#f1f7f3}.assignment.locked:hover{background:#f5f8f6}.assignment strong{display:block;font-size:13px}.assignment small{display:block;color:#859797;margin:6px 0}.status{display:inline-block;background:#f8eddd;color:#98703b;font-size:10px;border-radius:18px;padding:5px 9px;font-weight:800;text-transform:capitalize}.status.submitted{background:#e5f2e8;color:#4b8063}.status.graded{background:#e7edf7;color:#496e97}
 .details{padding:28px}.details h2{font:normal 32px/1.2 Georgia,serif;margin:0 0 10px}.details p{font-size:13px;line-height:1.75}.detail-box{padding:17px 19px;background:#f4f7f2;border-radius:10px;margin:18px 0;white-space:pre-wrap;line-height:1.75;font-size:13px}
 .detail-title{font-weight:800;font-size:12px;margin-top:26px;text-transform:uppercase;letter-spacing:.9px;color:#577466}
 .actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:17px}
@@ -58,12 +58,43 @@ async function refresh(){
  el("welcome").textContent="Hello, "+(DATA.student.full_name||"student").split(" ")[0]+".";
  el("statProgram").textContent=DATA.student.course_name||"Not enrolled";
  el("statYear").textContent="Year "+DATA.student.current_year;
+ if(DATA.learning_path){renderNineLessonPath();return}
  el("statCompleted").textContent=DATA.assignments.filter(function(a){return a.status==="graded"}).length+" / "+DATA.assignments.length;
  el("assignmentList").innerHTML=DATA.assignments.length?DATA.assignments.map(function(a){
   return '<button class="assignment '+(selected===a.id?"active":"")+'" onclick="selectAssignment('+JSON.stringify(a.id)+')"><strong>'+esc(a.title)+'</strong><small>'+(a.year?"Year "+esc(a.year)+" · Lesson "+esc(a.lesson_number):"Custom assignment")+' · Due: '+esc(a.due_date||"Not set")+'</small>'+status(a.status)+'</button>';
  }).join(""):'<div class="details"><h2>No assignments yet</h2><p>Your instructors will add assignments as you progress.</p></div>';
  if(!selected&&DATA.assignments.length)selected=DATA.assignments[0].id;
  if(selected)selectAssignment(selected);
+}
+function renderNineLessonPath(){
+ const path=DATA.learning_path;
+ el("statProgram").textContent=path.course_name;
+ el("statYear").textContent="Year "+path.year;
+ const completed=path.cards.filter(c=>c.status==="graded").length;
+ el("statCompleted").textContent=completed+" / 9";
+ const cards=path.cards;
+ el("assignmentList").innerHTML=cards.map(c=>{
+  const name="Lesson "+c.lesson_number;
+  if(c.locked)return '<div class="assignment locked" aria-disabled="true" style="background:#f5f8f6;cursor:not-allowed">'+
+   '<strong>🔒 '+name+'</strong><small>'+(c.available?"Complete and have your previous lesson graded to unlock this one.":"Lesson materials are not available yet.")+'</small>'+
+   '<span class="status" style="background:#ecf0ed;color:#73877d">Locked</span></div>';
+  return '<button type="button" class="assignment '+(selected===c.assignment_id?"active":"")+'" data-path-lesson="'+esc(c.assignment_id||"")+'">'+
+   '<strong>'+esc(name)+' '+(c.status==="graded"?"✓":"")+'</strong>'+
+   '<small>'+esc(c.title)+' · '+(c.due_date?"Due "+esc(c.due_date):"No due date set")+'</small>'+status(c.status)+'</button>';
+ }).join("");
+ const allowed=DATA.assignments;
+ if(!allowed.some(a=>a.id===selected)){
+  const pending=allowed.find(a=>a.status!=="graded");
+  selected=(pending||allowed[allowed.length-1])?.id||null;
+ }
+ el("assignmentList").querySelectorAll("[data-path-lesson]").forEach(button=>{
+  button.addEventListener("click",()=>{
+   const id=button.dataset.pathLesson;
+   if(id&&allowed.some(a=>a.id===id))selectAssignment(id);
+  });
+ });
+ if(selected)selectAssignment(selected);
+ else el("assignmentDetail").innerHTML='<h2>Awaiting your first lesson</h2><p>Your teacher will make the first lesson available soon.</p>';
 }
 function selectAssignment(id){
  selected=id;var a=DATA.assignments.find(function(x){return x.id===id});if(!a)return;
