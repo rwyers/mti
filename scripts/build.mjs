@@ -10,5 +10,6 @@ pages["/admin"]=pages["/admin"].replace("/*__MTI_ADMIN_V2__*/",adminEnhancements
 const marker="const STATIC = {};";
 if(!worker.includes(marker))throw new Error("MTI asset build marker not found");
 mkdirSync("dist",{recursive:true});
-writeFileSync("dist/worker.js",worker.replace(marker,"const STATIC = "+JSON.stringify(pages)+";"),"utf8");
+const curriculumImporter=readFileSync("src/curriculum-import.js","utf8");
+writeFileSync("dist/worker.js",worker.replace(marker,"const STATIC = "+JSON.stringify(pages)+";")+"\n"+curriculumImporter,"utf8");
 console.log("Built MTI Cloudflare Worker from GitHub sources");
