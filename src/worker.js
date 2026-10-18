@@ -403,12 +403,17 @@ async function studentFileAPI(req,env,path,user){
   if(size>6*1024*1024)return json({error:"Maximum file size is 6 MB."},413);
   const bytes=await req.arrayBuffer();
   if(!bytes.byteLength||bytes.byteLength>6*1024*1024)return json({error:"Invalid file size (6 MB maximum)."},413);
-  const fileId=crypto.randomUUID(),key="students/"+user.student_id+"/"+id+"/"+fileId;
+  const newFileId=crypto.randomUUID(),key="students/"+user.student_id+"/"+id+"/"+newFileId;
   await env.FILES.put(key,bytes,{httpMetadata:{contentType:mime}});
-  await env.DB.prepare("INSERT INTO submission_files(id,assignment_id,student_id,object_key,filename,content_type,size_bytes) VALUES(?,?,?,?,?,?,?)")
-   .bind(fileId,id,user.student_id,key,filename,mime,bytes.byteLength).run();
-  await auditAction(env,user,"upload_file","assignment",id,null,{file_id:fileId,filename,size_bytes:bytes.byteLength});
-  return json({ok:true,id:fileId,filename});
+  try {
+   await env.DB.prepare("INSERT INTO submission_files(id,assignment_id,student_id,object_key,filename,content_type,size_bytes) VALUES(?,?,?,?,?,?,?)")
+    .bind(newFileId,id,user.student_id,key,filename,mime,bytes.byteLength).run();
+  }catch(error){
+   await env.FILES.delete(key).catch(()=>{});
+   throw error;
+  }
+  await auditAction(env,user,"upload_file","assignment",id,null,{file_id:newFileId,filename,size_bytes:bytes.byteLength});
+  return json({ok:true,id:newFileId,filename});
  }
  return json({error:"Not found"},404);
 }
