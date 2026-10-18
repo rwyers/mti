@@ -23,7 +23,7 @@ async function nextLessonPreview(env,assignmentId) {
   submission_notes:next.submission_notes,materials_list:next.materials_list,title:nextLessonTitle(a.course_name,next)},
   already_assigned:duplicate||null};
 }
-function emailSendingEnabled(env){return Boolean(env.MTI_EMAIL_FROM && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(env.MTI_EMAIL_FROM) && (typeof env.EMAIL?.send==="function" || env.RESEND_API_KEY));}
+function emailSendingEnabled(env){return Boolean(env.MTI_EMAIL_FROM && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(env.MTI_EMAIL_FROM) && (env.MTI_MAIL_RELAY_TOKEN || typeof env.EMAIL?.send==="function" || env.RESEND_API_KEY));}
 async function queueEmail(env,eventType,recipientRole,recipientEmail,assignmentId,studentId,subject,bodyText) {
  if(!recipientEmail||!isEmail(recipientEmail))return null;
  const id=crypto.randomUUID();
@@ -33,7 +33,7 @@ async function queueEmail(env,eventType,recipientRole,recipientEmail,assignmentI
  return id;
 }
 async function sendPendingEmails(env,onlyIds=null) {
- if(!emailSendingEnabled(env))return {configured:false,sent:0};
+ if(!emailSendingEnabled(env)||env.MTI_EMAIL_DELIVERY_ENABLED!=="true")return {configured:false,sent:0};
  const rows=await env.DB.prepare("SELECT * FROM notification_outbox WHERE status IN ('pending','failed') ORDER BY created_at ASC LIMIT 12").all();
  const ready=onlyIds?rows.results.filter(row=>onlyIds.includes(row.id)):rows.results;
  let sent=0,failed=0;
@@ -41,7 +41,14 @@ async function sendPendingEmails(env,onlyIds=null) {
   const locked=await env.DB.prepare("UPDATE notification_outbox SET status='sending',attempts=attempts+1,last_error=NULL WHERE id=? AND status IN ('pending','failed')").bind(mail.id).run();
   if(!locked.meta?.changes)continue;
   try {
-   if(typeof env.EMAIL?.send==="function"){
+   if(env.MTI_MAIL_RELAY_TOKEN){
+    const response=await fetch("https://greatchurch.ca/api/mti/email/send",{
+     method:"POST",
+     headers:{"Authorization":"Bearer "+env.MTI_MAIL_RELAY_TOKEN,"Content-Type":"application/json"},
+     body:JSON.stringify({to:mail.recipient_email,subject:mail.subject,text:mail.body_text})
+    });
+    if(!response.ok)throw new Error("Church email relay rejected message (HTTP "+response.status+")");
+   }else if(typeof env.EMAIL?.send==="function"){
     await env.EMAIL.send({from:env.MTI_EMAIL_FROM,to:mail.recipient_email,subject:mail.subject,text:mail.body_text});
    }else{
     const response=await fetch("https://api.resend.com/emails",{
