@@ -79,17 +79,16 @@ async function importPublishedYear(env,name,year,actor){
   courseId=crypto.randomUUID();
   await env.DB.prepare("INSERT INTO courses (id,name,description) VALUES (?,?,'')").bind(courseId,name).run();
  }
- let imported=0,existing=0;
- for(const row of rows){
-  const id=crypto.randomUUID();
-  const result=await env.DB.prepare("INSERT OR IGNORE INTO lessons (id,course_id,year,lesson_number,credits,memory_verse_reference,memory_verse_text,bible_instruction,assignment_instructions,submission_notes,materials_list) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
-   .bind(id,courseId,row.year,row.number,row.credits,row.memory_verse_reference,row.memory_verse_text,row.bible_instruction,row.assignment_instructions,row.submission_notes,row.materials_list).run();
-  if(result.meta?.changes)imported++;else existing++;
- }
- if(actor&&imported)await auditAction(env,actor,"import_curriculum","course",courseId,null,{course:name,year,imported,existing,source:"published MTI curriculum"});
+ const statements=rows.map(row=>env.DB.prepare("INSERT OR IGNORE INTO lessons (id,course_id,year,lesson_number,credits,memory_verse_reference,memory_verse_text,bible_instruction,assignment_instructions,submission_notes,materials_list) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
+  .bind(crypto.randomUUID(),courseId,row.year,row.number,row.credits,row.memory_verse_reference,row.memory_verse_text,row.bible_instruction,row.assignment_instructions,row.submission_notes,row.materials_list));
+ const changes=await env.DB.batch(statements);
+ const imported=changes.reduce((n,result)=>n+(result.meta?.changes||0),0),existing=rows.length-imported;
+ if(imported)await auditAction(env,actor||null,"import_curriculum","course",courseId,null,{course:name,year,imported,existing,source:"published MTI curriculum"});
  return {course:name,year,found:rows.length,imported,existing};
 }
 async function curriculumProbe(){
  const source=IMPORT_SOURCES[0];const res=await fetch(publishedURL(source,1),{method:"GET"});
  return {status:res.status,ok:res.ok,length:Number(res.headers.get("content-length")||0),type:res.headers.get("content-type")};
 }
+
+async function importPublishedCourse(env,name){const source=IMPORT_SOURCES.find(s=>s.course===name);if(!source)throw Error("Unknown course source");const result=[];for(let year=1;year<=source.years;year++){try{result.push(await importPublishedYear(env,name,year,null));}catch(e){result.push({course:name,year,error:e.message})}}return result}
