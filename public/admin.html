@@ -47,14 +47,14 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 <body>
 <div id="loginPage"><section class="login-left"><div class="login-left-inner"><div class="brand"><span class="mark">MTI</span><span>MINISTRY TRAINING<small>INSTITUTE · ADMIN</small></span></div><div class="eyebrow">Your ministry, organized</div><h1>Everything in one <em>thoughtful</em> place.</h1><p>Manage students, plan courses, prepare assignments and celebrate progress in one secure workspace.</p><p style="margin-top:45px;color:#dbbf91;font:italic 23px Georgia,serif">Equipping Today. Empowering Tomorrow.</p></div></section>
 <section class="login-right"><div class="login-box"><div class="eyebrow" style="color:#b18d5f;font-size:11px;letter-spacing:2px;font-weight:800;margin-bottom:12px">MTI STAFF PORTAL</div><h2>Welcome back.</h2><p>Sign in to your MTI administration workspace.</p>
-<form id="loginForm"><div class="field"><label for="password">Administrator password</label><input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password"></div>
+<form id="loginForm"><div class="field"><label for="adminEmail">Administrator email</label><input id="adminEmail" type="email" autocomplete="username" placeholder="Your email address"><div class="hint">First sign-in after the upgrade? You may use the original password once to activate the primary admin profile.</div></div><div class="field"><label for="password">Administrator password</label><input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password"></div>
 <div id="loginError" role="alert"></div><button class="primary" type="submit">Sign in to dashboard →</button></form><div class="backlink"><a href="/">← Back to MTI website</a></div></div></section></div>
 <div class="app hidden" id="app"><aside><a class="brand" href="/"><span class="mark">MTI</span><span>MINISTRY TRAINING<small>ADMINISTRATION</small></span></a><div class="nav-title">WORKSPACE</div>
 <button class="nav-item active" data-tab="overview"><i>⌂</i><span>Overview</span></button>
 <button class="nav-item" data-tab="students"><i>♙</i><span>Students</span></button>
 <button class="nav-item" data-tab="courses"><i>▤</i><span>Courses & lessons</span></button>
 <button class="nav-item" data-tab="assignments"><i>▣</i><span>Assignments</span></button>
-<button class="nav-item" data-tab="grading"><i>✎</i><span>Grading</span></button>
+<button class="nav-item" data-tab="grading"><i>✎</i><span>Grading</span></button><button class="nav-item" data-tab="staff"><i>♧</i><span>Staff accounts</span></button><button class="nav-item" data-tab="activity"><i>◷</i><span>Activity history</span></button><button class="nav-item" data-tab="profile"><i>⚙</i><span>My profile</span></button>
 <div class="aside-bottom"><a href="/">↗ View website</a><button class="nav-item" id="logout" style="padding-left:0"><i>⇥</i><span>Sign out</span></button><div>MTI · Staff workspace</div></div></aside>
 <main><div class="top"><div class="crumb">MINISTRY TRAINING INSTITUTE <strong id="topTitle">Admin overview</strong></div><div style="display:flex;align-items:center;gap:13px"><span style="color:#87999a;font-size:12px">Administrator</span><div class="avatar">A</div></div></div>
 <div class="maininner">
@@ -71,10 +71,10 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 <section class="page" id="page-grading"><div class="heading"><div><h1>Grading</h1><p>Score student work using MTI's original marking rubric.</p></div></div>
 <div class="callout">Core scores total 100 points. The remaining tracked activities are recorded separately as additional points. All marks stay private.</div>
 <div class="panel"><div class="panel-head"><div><h2>Mark assignments</h2><p>Select an assignment to score it and add feedback.</p></div></div><div id="gradingTable"></div></div></section>
-</div></main></div>
+<section class="page" id="page-staff"><div class="heading"><div><h1>Staff accounts</h1><p>Give each administrator or teacher their own secure login.</p></div><button class="primary" onclick="openForm('staff')">+ Invite staff member</button></div><div class="callout">Invitation links expire after seven days. Share them privately with the intended staff member.</div><div class="panel"><div class="panel-head"><div><h2>Staff directory</h2><p>Individual roles, access and last sign-in.</p></div></div><div id="staffTable"></div></div></section><section class="page" id="page-activity"><div class="heading"><div><h1>Activity history</h1><p>See who changed what, and when.</p></div><button class="outline" onclick="loadActivity()">↻ Refresh</button></div><div class="panel"><div class="panel-head"><div><h2>Recent activity</h2><p>Most recent 200 events, including before-and-after values.</p></div></div><div id="activityTable"></div></div></section><section class="page" id="page-profile"><div class="heading"><div><h1>My profile</h1><p>Manage your account and password.</p></div></div><div class="panel" style="padding:30px;max-width:650px"><h2>Your administrator account</h2><div id="profileText"></div><button class="primary" onclick="openForm('password')">Change my password</button></div></section></div></main></div>
 <div id="overlay" class="hidden" role="dialog" aria-modal="true"><div class="modal"><div class="modal-top"><h2 id="modalTitle">New record</h2><button class="close" aria-label="Close form" onclick="closeForm()">×</button></div><div id="modalBody"></div><div id="formError" role="alert"></div></div></div>
 <script>
-var DATA={courses:[],lessons:[],students:[],assignments:[]};var CURRENT="overview";
+var DATA={courses:[],lessons:[],students:[],assignments:[],submissions:[]};var ACCOUNT=null;var CURRENT="overview";
 var CORE=[["scripture","Scripture memorized",5],["practical","Practical service",10],["bible","Bible reading and questions",5],["outreach","Outreach",10],["intensive","Spiritual Intensive Course",10],["assignment","Assignment",30],["attendance","Church attendance",12],["mentorship","Mentorship Assignment",12],["groups","Small Groups / Worship Encounter",6]];
 var BONUS=[["opportunity","Opportunity 101/102",5],["growth","Growth Tracks",10],["videos","Weekly YouTube Videos",12],["confessions","Confessions",3],["study","MTI Study Group",3]];
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -86,7 +86,7 @@ function table(headers,rows){return '<div class="table-scroll"><table><thead><tr
 function td(s){return "<td>"+s+"</td>"}
 function row(cells){return "<tr>"+cells.map(td).join("")+"</tr>"}
 function el(id){return document.getElementById(id)}
-function switchTab(name){CURRENT=name;document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){b.classList.toggle("active",b.dataset.tab===name)});document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("show",p.id==="page-"+name)});el("topTitle").textContent=({overview:"Admin overview",students:"Students",courses:"Courses & lessons",assignments:"Assignments",grading:"Grading"})[name];window.scrollTo({top:0,behavior:"smooth"})}
+function switchTab(name){CURRENT=name;document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){b.classList.toggle("active",b.dataset.tab===name)});document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("show",p.id==="page-"+name)});el("topTitle").textContent=({overview:"Admin overview",students:"Students",courses:"Courses & lessons",assignments:"Assignments",grading:"Grading",staff:"Staff accounts",activity:"Activity history",profile:"My profile"})[name];if(name==="staff")loadStaff();if(name==="activity")loadActivity();if(name==="profile")renderProfile();window.scrollTo({top:0,behavior:"smooth"})}
 window.switchTab=switchTab;
 function render(){
  var assignments=DATA.assignments,students=DATA.students,lessons=DATA.lessons;
@@ -162,7 +162,7 @@ async function submitForm(mode){
 }
 el("loginForm").addEventListener("submit",async function(e){
  e.preventDefault();var button=this.querySelector("button");button.disabled=true;el("loginError").textContent="";
- try{await api("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:el("password").value})});el("password").value="";await start()}
+ try{await api("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:el("adminEmail").value,password:el("password").value})});el("password").value="";await start()}
  catch(err){el("loginError").textContent=err.message}finally{button.disabled=false}
 });
 async function start(){var session=await api("/api/admin/me");if(!session.authenticated){el("loginPage").classList.remove("hidden");el("app").classList.add("hidden");return}el("loginPage").classList.add("hidden");el("app").classList.remove("hidden");try{await refresh()}catch(e){alert("Unable to load admin data: "+e.message)}}
@@ -171,5 +171,5 @@ el("logout").addEventListener("click",async function(){await api("/api/admin/log
 el("studentSearch").addEventListener("input",render);
 el("overlay").addEventListener("click",function(e){if(e.target===this)closeForm()});
 document.addEventListener("keydown",function(e){if(e.key==="Escape")closeForm()});
-start();
+/*__MTI_ADMIN_V2__*/
 </script></body></html>
