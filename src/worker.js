@@ -451,7 +451,7 @@ export default {
   const url=new URL(request.url),p=url.pathname.replace(/\/+$/,"")||"/";
   try{
    if(p==="/health")return json({ok:true,service:"MTI Portal",version:"3"});
-   if(p==="/health/source-check")return json(await curriculumProbe());
+
    if(p==="/api/auth/accept-invite"&&request.method==="POST")return await acceptInvite(request,env);
    if(p.startsWith("/api/admin/"))return await adminAPI(request,env,p);
    if(p.startsWith("/api/student/"))return await studentAPI(request,env,p);
