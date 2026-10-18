@@ -23,7 +23,7 @@ async function nextLessonPreview(env,assignmentId) {
   submission_notes:next.submission_notes,materials_list:next.materials_list,title:nextLessonTitle(a.course_name,next)},
   already_assigned:duplicate||null};
 }
-function emailSendingEnabled(env){return Boolean(env.MTI_EMAIL_FROM && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(env.MTI_EMAIL_FROM) && (env.MTI_MAIL_RELAY_TOKEN || typeof env.EMAIL?.send==="function" || env.RESEND_API_KEY));}
+function emailSendingEnabled(env){return Boolean(env.MTI_EMAIL_DELIVERY_ENABLED==="true" && env.MTI_EMAIL_FROM && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(env.MTI_EMAIL_FROM) && (env.MTI_MAIL_RELAY_TOKEN || typeof env.EMAIL?.send==="function" || env.RESEND_API_KEY));}
 async function queueEmail(env,eventType,recipientRole,recipientEmail,assignmentId,studentId,subject,bodyText) {
  if(!recipientEmail||!isEmail(recipientEmail))return null;
  const id=crypto.randomUUID();
