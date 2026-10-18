@@ -36,7 +36,7 @@ textarea{min-height:230px;resize:vertical;line-height:1.7}.error{color:#ab4b45;f
 <form id="activate" class="hidden"><div class="field"><label for="newPassword">Choose password (at least 12 characters)</label><input id="newPassword" type="password" minlength="12" autocomplete="new-password" required></div><div class="field"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" minlength="12" autocomplete="new-password" required></div><div id="activateError" class="error" role="alert"></div><button type="submit" class="primary" style="width:100%">Activate student account →</button></form>
 <p class="small" style="margin-top:24px">New to MTI? Your administrator will send you a private invitation link once your student record has been added.</p></div></section>
 <div id="portal" class="hidden"><div class="wrap"><div class="intro"><div><div class="eyebrow">Your MTI learning home</div><h1 id="welcome">My learning</h1><p>Grow at your pace, stay organized and keep moving forward.</p></div><button class="outline" id="changePassword">Change password</button></div><div class="cards"><div class="card"><small>My current program</small><b id="statProgram">—</b></div><div class="card"><small>Current year</small><b id="statYear">—</b></div><div class="card"><small>Assignments completed</small><b id="statCompleted">0</b></div></div>
-<div class="layout"><div class="panel"><div class="panel-top"><h2>My assignments</h2><p>Select an assignment to view instructions and submit your response.</p></div><div id="assignmentList"></div></div><div class="panel"><div class="panel-top"><h2>Assignment details</h2><p>Instructions, submission and instructor grading.</p></div><div id="assignmentDetail" class="details"><h2>Choose an assignment</h2><p>Your assignments will appear here when assigned by the institute.</p></div></div></div></div></div>
+<div class="layout"><div class="panel"><div class="panel-top"><h2>My assignments</h2><p>Select an assignment to view instructions and submit your response.</p></div><div id="assignmentList"></div></div><div class="panel"><div class="panel-top"><h2>Assignment details</h2><p>Instructions, submission and instructor grading.</p></div><div id="assignmentDetail" class="details"><h2>Choose an assignment</h2><p>Your assignments will appear here when assigned by the institute.</p></div></div><div id="yearArchive" style="margin-top:24px"></div></div></div></div>
 <section id="passwordPanel" class="panel hidden"><h2>Change password</h2><form id="passwordForm"><div class="field"><label>Current password<input name="old_password" type="password" required></label></div><div class="field"><label>New password (12+ characters)<input name="new_password" type="password" minlength="12" required></label></div><div class="field"><label>Confirm new password<input name="confirm_password" type="password" minlength="12" required></label></div><div class="error" id="passwordError"></div><button class="primary">Save new password</button> <button type="button" class="outline" id="cancelChange">Cancel</button></form></section>
 <div id="paper" aria-hidden="true"></div>
 <script>
@@ -68,38 +68,46 @@ async function refresh(){
 }
 function renderNineLessonPath(){
  const path=DATA.learning_path;
- el("statProgram").textContent=path.course_name;
- el("statYear").textContent="Year "+path.year;
- const completed=path.cards.filter(c=>c.status==="graded").length;
- el("statCompleted").textContent=completed+" / 9";
- const cards=path.cards;
- el("assignmentList").innerHTML=cards.map(c=>{
-  const name="Lesson "+c.lesson_number;
-  if(c.locked)return '<div class="assignment locked" aria-disabled="true" style="background:#f5f8f6;cursor:not-allowed">'+
-   '<strong>🔒 '+name+'</strong><small>'+(c.available?"Complete and have your previous lesson graded to unlock this one.":"Lesson materials are not available yet.")+'</small>'+
-   '<span class="status" style="background:#ecf0ed;color:#73877d">Locked</span></div>';
-  return '<button type="button" class="assignment '+(selected===c.assignment_id?"active":"")+'" data-path-lesson="'+esc(c.assignment_id||"")+'">'+
-   '<strong>'+esc(name)+' '+(c.status==="graded"?"✓":"")+'</strong>'+
-   '<small>'+esc(c.title)+' · '+(c.due_date?"Due "+esc(c.due_date):"No due date set")+'</small>'+status(c.status)+'</button>';
- }).join("");
- const allowed=DATA.assignments;
- if(!allowed.some(a=>a.id===selected)){
-  const pending=allowed.find(a=>a.status!=="graded");
-  selected=(pending||allowed[allowed.length-1])?.id||null;
+ const archive=el("yearArchive");
+ const history=path.history||[];
+ const completedYears=history.filter(y=>y.status==="completed");
+ const current=history.find(y=>y.status==="active");
+ el("statProgram").textContent=path.course_name||"Awaiting next-year approval";
+ el("statYear").textContent=current?"Year "+current.year:"Year completed";
+ el("statCompleted").textContent=(current?.completed_count??completedYears.at(-1)?.completed_count??0)+" / 9";
+ const cards=path.cards||[];
+ if(!current){
+  el("assignmentList").innerHTML='<div class="details"><h2>Year complete ✓</h2><p>All nine sessions have been completed and your assignments are saved below. The next year will open after its payment is confirmed and an MTI administrator approves enrollment.</p></div>';
+ }else{
+  el("assignmentList").innerHTML=cards.map(c=>{
+   const name="Session "+c.lesson_number;
+   if(c.locked)return '<div class="assignment locked" aria-disabled="true" style="background:#f5f8f6;cursor:not-allowed">'+
+    '<strong><icon>🔒</icon> '+name+'</strong><small>'+(c.available?"Complete this session and receive your teacher’s grade to unlock it.":"Session material is not ready.")+'</small>'+
+    '<span class="status" style="background:#ecf0ed;color:#73877d">Locked</span></div>';
+   return '<button type="button" class="assignment '+(selected===c.assignment_id?"active":"")+'" data-path-lesson="'+esc(c.assignment_id||"")+'">'+
+    '<strong>'+esc(name)+(c.completed?" ✓":"")+'</strong>'+
+    '<small>'+esc(c.course_name||path.course_name)+' · '+esc(c.title||name)+'</small>'+status(c.status)+'</button>';
+  }).join("");
  }
- el("assignmentList").querySelectorAll("[data-path-lesson]").forEach(button=>{
-  button.addEventListener("click",()=>{
-   const id=button.dataset.pathLesson;
-   if(id&&allowed.some(a=>a.id===id))selectAssignment(id);
-  });
- });
+ archive.innerHTML=completedYears.length?'<div class="panel"><div class="panel-top"><h2>Completed years</h2><p>Past assignments, grades and course history are saved here. Select a session to review it.</p></div>'+
+ completedYears.map(y=>'<details style="border-bottom:1px solid #e3eae5"><summary style="cursor:pointer;padding:20px;font-weight:800;display:flex;justify-content:space-between"><span>✓ Year '+esc(y.year)+' — Completed</span><span style="color:#718b78;font-size:12px">9 / 9 sessions <span style="margin-left:6px">⌄</span></span></summary>'+
+ '<div style="padding:3px 16px 18px">'+y.sessions.map(a=>
+ '<button type="button" class="assignment" data-history-assignment="'+esc(a.assignment_id)+'"><strong>Session '+esc(a.number)+' · '+esc(a.course_name)+'</strong><small>'+esc(a.title)+' · Score: '+(a.grade_points===null?"—":esc(a.grade_points)+"/100")+'</small></button>'
+ ).join("")+'</div></details>').join("")+'</div>':"";
+ const allowed=DATA.assignments||[];
+ if(!allowed.some(a=>a.id===selected)){
+  const pending=allowed.find(a=>current&&a.year===current.year&&a.status!=="graded");
+  selected=(pending||allowed[0])?.id||null;
+ }
+ el("assignmentList").querySelectorAll("[data-path-lesson]").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.pathLesson)selectAssignment(b.dataset.pathLesson)}));
+ archive.querySelectorAll("[data-history-assignment]").forEach(b=>b.addEventListener("click",()=>selectAssignment(b.dataset.historyAssignment)));
  if(selected)selectAssignment(selected);
- else el("assignmentDetail").innerHTML='<h2>Awaiting your first lesson</h2><p>Your teacher will make the first lesson available soon.</p>';
+ else el("assignmentDetail").innerHTML='<h2>All sessions complete</h2><p>Your completed work is archived. An administrator will approve your next year after payment.</p>';
 }
 function selectAssignment(id){
  selected=id;var a=DATA.assignments.find(function(x){return x.id===id});if(!a)return;
  document.querySelectorAll(".assignment").forEach(function(e){e.classList.remove("active")});
- var index=DATA.assignments.indexOf(a),btn=el("assignmentList").querySelectorAll(".assignment")[index];if(btn)btn.classList.add("active");
+ var btn=[...document.querySelectorAll("[data-path-lesson],[data-history-assignment]")].find(b=>b.dataset.pathLesson===a.id||b.dataset.historyAssignment===a.id);if(btn)btn.classList.add("active");
  var html='<h2>'+esc(a.title)+'</h2><p>'+status(a.status)+' &nbsp; '+(a.year?"Year "+esc(a.year)+" · Lesson "+esc(a.lesson_number)+" · "+esc(a.credits)+" credits":"Individual assignment")+' · Due '+esc(a.due_date||"Not set")+'</p>';
  if(a.memory_verse_reference||a.memory_verse_text)html+='<div class="detail-title">Scripture to memorize</div><div class="detail-box"><b>'+esc(a.memory_verse_reference)+'</b>\n'+esc(a.memory_verse_text)+'</div>';
  if(a.bible_instruction)html+='<div class="detail-title">Bible instructions</div><div class="detail-box">'+esc(a.bible_instruction)+'</div>';
