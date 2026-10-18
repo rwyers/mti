@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mti-portal",
+  "main": "dist/worker.js",
+  "compatibility_date": "2026-10-18",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mti_portal",
+      "database_id": "910fe1c7-82d7-4f9a-921b-6c50cf70d749"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}
