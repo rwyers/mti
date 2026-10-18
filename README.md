@@ -101,6 +101,16 @@ The original student workbook includes blank/incomplete enrollment rows, unverif
 - **Not sending yet:** `greatchurch.ca` belongs to a different Cloudflare account (GlobalConnectionsChurch), which has not been exposed to the currently connected rwyers Cloudflare tool. The domain must be verified for Email Sending, and an approved sender binding or API credential needs to be configured. No email is marked delivered before provider acceptance.
 - Real recipient notification emails are still pending until the sender account has been connected and tested.
 
+## Safe backup and OpenAI editing release — October 18, 2026
+
+Before this release, MTI's GitHub source was snapshotted on branch `backup/pre-ai-tools-2026-10-18`, and all 17 application D1 tables (schema plus rows) were exported into private Cloudflare R2 bucket `mti-private-backups` under `2026-10-18/pre-ai-tools/`. The private backup manifest identifies the snapshot; Cloudflare's internal `_cf_KV` table is managed by D1 and is excluded. A D1 Time Travel bookmark was also recorded. Never commit backup data or student records to GitHub.
+
+- **Student portal:** assignment instructions and submission panel are collapsed by default, so the student can see the dashboard without scrolling through the entire lesson. Selecting a lesson opens the panel. Existing assignment submission and print controls are unchanged.
+- **Student materials:** **Find these materials online** offers Amazon.ca product-search links and search links for official author/publisher sites. Results are suggestions only; students can buy or borrow from any provider. Listings and availability are not guaranteed.
+- **Admin AI lesson assistant:** inside **Edit lesson**, staff can proofread the full written lesson or type/paste/speak an instruction such as changing a memory-verse reference. A per-field proposed edit is shown next to the original, with individual checkboxes. AI never updates D1 automatically; changes first populate the editor, then the administrator must press **Save lesson**.
+- **OpenAI:** the MTI Worker uses the existing `MTI_OPENAI_KEY` Cloudflare secret server-side. A live test returned valid JSON; the diagnostic endpoint was removed afterward. Browser speech recognition is optional and depends on client support. No OpenAI key is exposed to students or staff.
+- **Application files:** `src/ai-edit-materials.js`, `src/ai-editor-ui.js`, and `public/student.html`. `scripts/build.mjs` includes them in the remote Cloudflare build.
+
 ## Upcoming work
 
 Complete private roster review and account onboarding; connect a verified sender and test automatic delivery, finish reports, printable template refinements, backup and recovery, and full GitHub-to-Cloudflare continuous deployment.
