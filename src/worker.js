@@ -56,8 +56,11 @@ async function passwordKey(password,salt,iterations=120000){
  return hex(bytes);
 }
 async function passwordMatches(input,account){
- return !!account.password_hash && input.length>0 &&
- secureEqual(await passwordKey(input,account.password_salt,account.password_iter||120000),account.password_hash);
+ if(!account || !account.password_hash || !input)return false;
+ // A single-use transition from the old MTI administrator credential.
+ // New and changed passwords always use a per-account salted PBKDF2 hash.
+ if(account.password_salt==="legacy-sha256")return secureEqual(await digest(input),account.password_hash);
+ return secureEqual(await passwordKey(input,account.password_salt,account.password_iter||120000),account.password_hash);
 }
 function validPassword(v){return typeof v==="string" && v.length>=12&&v.length<=128}
 async function sessionCookie(env,user) {
@@ -103,9 +106,12 @@ async function authLogin(req,env,role){
  if(role==="admin"){
   const count=await env.DB.prepare("SELECT COUNT(*) n FROM user_accounts WHERE role IN ('owner','admin','teacher')").first();
   if(!count.n && password.length>=16&&env.ADMIN_PASSWORD_HASH&&secureEqual(await digest(password),env.ADMIN_PASSWORD_HASH)){
-   const id=crypto.randomUUID(),salt=randomSecret();
+   // Keep first-time setup on the original verified SHA-256 credential.
+   // The mandatory password-change screen upgrades it to salted PBKDF2.
+   // This avoids an expensive password-derivation step in the one-time migration.
+   const id=crypto.randomUUID();
    await env.DB.prepare("INSERT INTO user_accounts (id,name,email,role,password_hash,password_salt,must_change_password) VALUES (?,?,?,?,?,?,1)")
-    .bind(id,"Primary Administrator","rwyers@gmail.com","owner",await passwordKey(password,salt),salt).run();
+    .bind(id,"Primary Administrator","rwyers@gmail.com","owner",env.ADMIN_PASSWORD_HASH,"legacy-sha256").run();
    account=await env.DB.prepare("SELECT * FROM user_accounts WHERE id=?").bind(id).first();
    await auditAction(env,account,"bootstrap","administrator",id,null,{email:account.email,role:account.role});
   }
