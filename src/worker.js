@@ -190,6 +190,17 @@ async function adminAPI(req,env,path){
  if(path==="/api/admin/change-password"&&req.method==="POST")return changePassword(req,env,u);
  if(u.must_change_password)return json({error:"Change your administrator password before continuing.",password_change_required:true},403);
  if(path==="/api/admin/data"&&req.method==="GET")return json(await dataset(env));
+ if(path==="/api/admin/curriculum/import-status"&&req.method==="GET"){
+  if(u.role!=="owner"&&u.role!=="admin")return json({error:"Only administrators may import curriculum"},403);
+  return json({sources:IMPORT_SOURCES.map(s=>({course:s.course,years:s.years})),counts:await curriculumCount(env)});
+ }
+ if(path==="/api/admin/curriculum/import-year"&&req.method==="POST"){
+  if(u.role!=="owner"&&u.role!=="admin")return json({error:"Only administrators may import curriculum"},403);
+  if(!originOK(req))return json({error:"Invalid request origin"},403);
+  const b=await payload(req);
+  try{return json(await importPublishedYear(env,string(b.course,160),Number(b.year),u));}
+  catch(err){return json({error:"Curriculum import failed: "+err.message},422);}
+ }
  if(path.startsWith("/api/admin/files/")&&req.method==="GET")return fileDownload(env,path.split("/")[4],u);
  if(path==="/api/admin/accounts"&&req.method==="GET") {
   if(u.role==="teacher")return json({error:"Not authorized"},403);
@@ -439,7 +450,8 @@ export default {
  async fetch(request,env){
   const url=new URL(request.url),p=url.pathname.replace(/\/+$/,"")||"/";
   try{
-   if(p==="/health")return json({ok:true,service:"MTI Portal",version:"2"});
+   if(p==="/health")return json({ok:true,service:"MTI Portal",version:"3"});
+   if(p==="/health/source-check")return json(await curriculumProbe());
    if(p==="/api/auth/accept-invite"&&request.method==="POST")return await acceptInvite(request,env);
    if(p.startsWith("/api/admin/"))return await adminAPI(request,env,p);
    if(p.startsWith("/api/student/"))return await studentAPI(request,env,p);
