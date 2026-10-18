@@ -13,5 +13,11 @@
   ],
   "observability": {
     "enabled": true
-  }
+  },
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "mti-student-submissions"
+    }
+  ]
 }
