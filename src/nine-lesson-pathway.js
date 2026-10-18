@@ -129,6 +129,20 @@ export default {
  async fetch(request,env){
   const p=new URL(request.url).pathname.replace(/\/+$/,"")||"/";
   try{
+   if(p.startsWith("/api/admin/notifications")){
+    const user=await currentUser(request,env);
+    if(!user||!["owner","admin"].includes(user.role))return json({error:"Administrator access required"},403);
+    if(p==="/api/admin/notifications"&&request.method==="GET"){
+     const counts=await env.DB.prepare("SELECT status,COUNT(*) n FROM notification_outbox GROUP BY status").all();
+     const recent=await env.DB.prepare("SELECT event_type,recipient_role,recipient_email,subject,status,attempts,last_error,created_at,sent_at FROM notification_outbox ORDER BY created_at DESC,id DESC LIMIT 50").all();
+     return json({configured:emailSendingEnabled(env),counts:counts.results,recent:recent.results});
+    }
+    if(p==="/api/admin/notifications/send-pending"&&request.method==="POST"){
+     if(!originOK(request))return json({error:"Invalid origin"},403);
+     return json(await sendPendingEmails(env));
+    }
+    return json({error:"Not found"},404);
+   }
    if(p.startsWith("/api/admin/learning-paths"))return learningPathAPI(request,env,p);
    if(p==="/api/student/data"&&request.method==="GET"){
     const user=await currentUser(request,env);
