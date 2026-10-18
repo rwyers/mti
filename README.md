@@ -78,8 +78,28 @@ The original student workbook includes blank/incomplete enrollment rows, unverif
 - Submission → an alert is queued for active MTI owner/administrator accounts.
 - Assignment/enrollment/unlock, graded work and corrected grades → an alert is queued to the student's email.
 - `notification_outbox` records every pending/sent/failed message and supports delivery retries. Admins can inspect these events under **Email notifications**.
-- **Actual sending is not yet active**: connect a verified sender domain and set `RESEND_API_KEY` and `MTI_EMAIL_FROM` as secure Cloudflare Worker secrets. Do not claim messages were delivered while not configured. No secrets or student messages are committed to GitHub.
+- **Actual sending is not yet active**: connect and verify the GreatChurch.ca sending domain and grant MTI an authorized Cloudflare Email Service binding (or external provider API key). Do not claim messages were delivered while not configured. No secrets or student messages are committed to GitHub.
 - Automated recurring retries and notification policy refinements remain follow-up work.
+
+## Cross-curriculum session progress and paid-year approval
+
+**Deployed October 2026.** An MTI academic year is a sequence of **nine sessions**, regardless of which of the school's complete curricula provides the assignments.
+
+- Permanently credits each graded session to the student's record using `student_session_completions`, recording original course, source assignment, marks, and completion date. Original submissions, instructor feedback, and R2 attachments are not moved or deleted when a student switches curricula.
+- Curriculum transfer example: Counseling Year 1 Sessions 1–7 completed → switch to Music and Creative Arts Year 1 → open Music Session 8, not Session 1. The nine-session student dashboard displays previous completions as graded, with the name of the original course.
+- On instructor grading of the current session, the next session is opened. When all nine are graded, Year N changes to **completed** and becomes a collapsible history card in the student portal.
+- Year N+1 **never opens automatically**. Only owner/admin accounts can enroll a paid new year, and the previous year must have completed all nine sessions. The admin confirmation records who approved payment; it does not process payment or verify banking transactions.
+- Admin **Students → Enroll year** now displays student history and progress, supports curriculum transfers without erasing completed work, and requires payment confirmation for the next year.
+- Admin **Courses & lessons** now uses searchable category cards → course dropdowns → year dropdowns → individual session editing. Original courses and 335 lessons remain in D1.
+- New D1 tables: `student_year_enrollments`, `student_session_completions`, and `student_curriculum_transfers`. See `migrations/0007_cross_curriculum_progress.sql`.
+- The transfer, automatic unlocking at Session 8/9, Year 1 completion/archival and a separate paid Year 2 enrollment were successfully tested on Cloudflare. Temporary test data and diagnostic routes were removed.
+
+### MTI sending domain
+
+- Intended sender: `notifications@greatchurch.ca` (stored as `MTI_EMAIL_FROM` in Cloudflare secrets).
+- Cloudflare-native sending is supported by the Worker via an optional `EMAIL` send binding, with Resend as an alternative service. The MTI outbox retains events and delivery statuses.
+- **Not sending yet:** `greatchurch.ca` belongs to a different Cloudflare account (GlobalConnectionsChurch), which has not been exposed to the currently connected rwyers Cloudflare tool. The domain must be verified for Email Sending, and an approved sender binding or API credential needs to be configured. No email is marked delivered before provider acceptance.
+- Real recipient notification emails are still pending until the sender account has been connected and tested.
 
 ## Upcoming work
 
