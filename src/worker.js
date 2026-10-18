@@ -159,14 +159,15 @@ async function createInvite(env,account,actor,type){
  return raw;
 }
 async function dataset(env){
- const [courses,lessons,students,assignments,submissions]=await Promise.all([
+ const [courses,lessons,students,assignments,submissions,files]=await Promise.all([
  env.DB.prepare("SELECT * FROM courses ORDER BY name").all(),
  env.DB.prepare("SELECT * FROM lessons ORDER BY course_id,year,lesson_number").all(),
  env.DB.prepare("SELECT * FROM students ORDER BY created_at DESC").all(),
  env.DB.prepare("SELECT * FROM assignments ORDER BY created_at DESC").all(),
- env.DB.prepare("SELECT id,assignment_id,student_id,response_text,submitted_at,updated_at FROM assignment_submissions ORDER BY submitted_at DESC").all()
+ env.DB.prepare("SELECT id,assignment_id,student_id,response_text,submitted_at,updated_at FROM assignment_submissions ORDER BY submitted_at DESC").all(),
+ env.DB.prepare("SELECT id,assignment_id,student_id,filename,content_type,size_bytes,created_at FROM submission_files ORDER BY created_at DESC").all()
  ]);
- return {courses:courses.results,lessons:lessons.results,students:students.results,assignments:assignments.results,submissions:submissions.results};
+ return {courses:courses.results,lessons:lessons.results,students:students.results,assignments:assignments.results,submissions:submissions.results,files:files.results};
 }
 async function adminAPI(req,env,path){
  if(path==="/api/admin/login"&&req.method==="POST")return authLogin(req,env,"admin");
@@ -183,6 +184,7 @@ async function adminAPI(req,env,path){
  if(path==="/api/admin/change-password"&&req.method==="POST")return changePassword(req,env,u);
  if(u.must_change_password)return json({error:"Change your administrator password before continuing.",password_change_required:true},403);
  if(path==="/api/admin/data"&&req.method==="GET")return json(await dataset(env));
+ if(path.startsWith("/api/admin/files/")&&req.method==="GET")return fileDownload(env,path.split("/")[4],u);
  if(path==="/api/admin/accounts"&&req.method==="GET") {
   if(u.role==="teacher")return json({error:"Not authorized"},403);
   const r=await env.DB.prepare("SELECT * FROM user_accounts WHERE role IN('owner','admin','teacher') ORDER BY created_at").all();
@@ -333,6 +335,65 @@ async function adminAPI(req,env,path){
  }
  return json({error:"Not found"},404);
 }
+
+function fileOriginOK(req){const o=req.headers.get("Origin");return !!o&&o===new URL(req.url).origin}
+function safeFileName(raw){
+ try{return decodeURIComponent(raw||"").replace(/[/\\\r\n\t\x00-\x1f]/g,"_").slice(0,165).trim()}
+ catch{return ""}
+}
+async function fileDownload(env,id,user){
+ const file=await env.DB.prepare("SELECT * FROM submission_files WHERE id=?").bind(id).first();
+ if(!file || (user.role==="student"&&file.student_id!==user.student_id))return json({error:"File not found"},404);
+ const object=await env.FILES.get(file.object_key);
+ if(!object)return json({error:"File unavailable"},404);
+ const safe=file.filename.replace(/[\u0000-\u001f"\\]/g,"_");
+ return new Response(object.body,{headers:{
+  "Content-Type":"application/octet-stream",
+  "Content-Disposition":"attachment; filename=\""+safe+"\"; filename*=UTF-8''"+encodeURIComponent(file.filename),
+  "Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff",
+  "Content-Security-Policy":"sandbox"
+ }});
+}
+async function studentFileAPI(req,env,path,user){
+ const segments=path.split("/"),fileId=segments[4];
+ if(req.method==="GET"&&segments[3]==="files")return fileDownload(env,fileId,user);
+ if(req.method==="DELETE"&&segments[3]==="files"){
+  if(!fileOriginOK(req))return json({error:"Invalid request origin"},403);
+  const f=await env.DB.prepare("SELECT * FROM submission_files WHERE id=? AND student_id=?").bind(fileId,user.student_id).first();
+  if(!f)return json({error:"File not found"},404);
+  const a=await env.DB.prepare("SELECT status FROM assignments WHERE id=? AND student_id=?").bind(f.assignment_id,user.student_id).first();
+  if(!a||a.status==="graded")return json({error:"Graded assignment files cannot be removed"},409);
+  await env.FILES.delete(f.object_key);
+  await env.DB.prepare("DELETE FROM submission_files WHERE id=?").bind(f.id).run();
+  await auditAction(env,user,"delete_file","assignment",f.assignment_id,{filename:f.filename});
+  return json({ok:true});
+ }
+ if(req.method==="POST"&&segments[3]==="assignments"&&segments[5]==="files"){
+  if(!fileOriginOK(req))return json({error:"Invalid request origin"},403);
+  const id=fileId;
+  const a=await env.DB.prepare("SELECT * FROM assignments WHERE id=? AND student_id=?").bind(id,user.student_id).first();
+  if(!a)return json({error:"Assignment not found"},404);
+  if(a.status==="graded")return json({error:"The assignment has already been graded."},409);
+  const existing=await env.DB.prepare("SELECT COUNT(*) n FROM submission_files WHERE assignment_id=?").bind(id).first();
+  if(existing.n>=5)return json({error:"Maximum five files per assignment"},400);
+  const mime=(req.headers.get("Content-Type")||"").split(";")[0].toLowerCase();
+  const valid={"application/pdf":[".pdf"],"application/vnd.openxmlformats-officedocument.wordprocessingml.document":[".docx"],
+  "text/plain":[".txt"],"image/png":[".png"],"image/jpeg":[".jpg",".jpeg"]};
+  const filename=safeFileName(req.headers.get("X-MTI-File-Name"));
+  if(!filename||!valid[mime]?.some(ext=>filename.toLowerCase().endsWith(ext)))return json({error:"Allowed files: PDF, DOCX, TXT, JPG, PNG."},400);
+  const size=Number(req.headers.get("Content-Length")||0);
+  if(size>6*1024*1024)return json({error:"Maximum file size is 6 MB."},413);
+  const bytes=await req.arrayBuffer();
+  if(!bytes.byteLength||bytes.byteLength>6*1024*1024)return json({error:"Invalid file size (6 MB maximum)."},413);
+  const fileId=crypto.randomUUID(),key="students/"+user.student_id+"/"+id+"/"+fileId;
+  await env.FILES.put(key,bytes,{httpMetadata:{contentType:mime}});
+  await env.DB.prepare("INSERT INTO submission_files(id,assignment_id,student_id,object_key,filename,content_type,size_bytes) VALUES(?,?,?,?,?,?,?)")
+   .bind(fileId,id,user.student_id,key,filename,mime,bytes.byteLength).run();
+  await auditAction(env,user,"upload_file","assignment",id,null,{file_id:fileId,filename,size_bytes:bytes.byteLength});
+  return json({ok:true,id:fileId,filename});
+ }
+ return json({error:"Not found"},404);
+}
 async function studentAPI(req,env,path) {
  if(path==="/api/student/login"&&req.method==="POST")return authLogin(req,env,"student");
  if(path==="/api/student/me"){
@@ -345,11 +406,13 @@ async function studentAPI(req,env,path) {
  }
  const user=await currentUser(req,env);
  if(!user||user.role!=="student"||!user.student_id)return json({error:"Please sign in."},401);
+ if(path.startsWith("/api/student/files/")||path.includes("/files"))return studentFileAPI(req,env,path,user);
  if(path==="/api/student/change-password"&&req.method==="POST")return changePassword(req,env,user);
  if(path==="/api/student/data"&&req.method==="GET"){
   const s=await env.DB.prepare("SELECT id,full_name,email,course_id,current_year,current_lesson,status FROM students WHERE id=?").bind(user.student_id).first();
   const assignments=await env.DB.prepare("SELECT a.*, l.course_id,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.submission_notes,l.materials_list,s.response_text,s.submitted_at AS response_submitted_at FROM assignments a LEFT JOIN lessons l ON l.id=a.lesson_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? ORDER BY a.created_at DESC").bind(user.student_id).all();
-  return json({student:s,assignments:assignments.results});
+  const files=await env.DB.prepare("SELECT id,assignment_id,filename,content_type,size_bytes,created_at FROM submission_files WHERE student_id=? ORDER BY created_at DESC").bind(user.student_id).all();
+  return json({student:s,assignments:assignments.results,files:files.results});
  }
  if(path.startsWith("/api/student/assignments/")&&path.endsWith("/submit")&&req.method==="POST"){
   if(!originOK(req))return json({error:"Invalid request origin"},403);
@@ -357,7 +420,7 @@ async function studentAPI(req,env,path) {
   if(!a)return json({error:"Assignment not found"},404);
   if(a.status==="graded")return json({error:"This work has already been graded. Contact your instructor."},409);
   const b=await payload(req),response=string(b.response_text,20000);
-  if(response.length<5)return json({error:"Please write your response before submitting."},400);
+  if(response.length<5){const f=await env.DB.prepare("SELECT COUNT(*) n FROM submission_files WHERE assignment_id=? AND student_id=?").bind(id,user.student_id).first();if(!f.n)return json({error:"Please write your response or upload a file before submitting."},400)}
   await env.DB.prepare("INSERT INTO assignment_submissions(id,assignment_id,student_id,response_text) VALUES(?,?,?,?) ON CONFLICT(assignment_id) DO UPDATE SET response_text=excluded.response_text,updated_at=CURRENT_TIMESTAMP,submitted_at=CURRENT_TIMESTAMP")
   .bind(crypto.randomUUID(),id,user.student_id,response).run();
   await env.DB.prepare("UPDATE assignments SET status='submitted',submitted_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(id).run();
