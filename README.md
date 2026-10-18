@@ -33,7 +33,7 @@ All application code lives in the **rwyers/mti** GitHub repository. Hosting, dat
 - Server-validated signed sessions; only registered staff can access admin data, students only their own submissions.
 - Passwords are PBKDF2-derived with per-user salts; credentials and session keys never stored in GitHub.
 - Administrator and student accounts are in `user_accounts`; changes recorded in `audit_events`.
-- No actual student roster has been imported. Only starter course names and a Counseling Year 1 Lesson 3 sample are in D1.
+- Full imported MTI lesson library is in D1. Historical student rows are staged for administrator review; enrollment is manual and private.
 
 ## Source files
 
@@ -63,9 +63,27 @@ All application code lives in the **rwyers/mti** GitHub repository. Hosting, dat
 
 The original student workbook includes blank/incomplete enrollment rows, unverified addresses and duplicate/shared email addresses. Those rows must be resolved before approval. No private roster bytes were committed to this public GitHub repository. Do not put passwords, student rosters or private invitations in GitHub.
 
+## Sequential nine-lesson curriculum enrollment (October 2026)
+
+- Admin opens **Students → Enroll year**, selects the curriculum and year, and confirms nine available lessons. Incomplete years cannot be activated.
+- Students see all **nine lesson cards** for their enrolled curriculum and year. Locked cards display only a lesson number and lock status — no Bible, assignment, reading or materials content is delivered by the private API for locked lessons.
+- Lesson 1 is assigned upon enrollment (or an existing lesson assignment and grade are preserved).
+- A student submits the current lesson. An instructor then grades it, automatically unlocking and assigning **the next lesson only**. Submitting without grading does not unlock anything.
+- Direct requests to submission/file endpoints for locked lessons are rejected. Existing manually assigned classes remain unchanged until an administrator explicitly enrolls the student in a nine-lesson pathway.
+- The admin receives a confirmation when grading unlocks a new lesson. A distinct actor is logged for each generated assignment.
+- Database: `migrations/0006_student_learning_paths.sql`, protected API in `src/nine-lesson-pathway.js`, UI in `src/pathway-admin-ui.js` and `public/student.html`.
+
+## Assignment email notifications
+
+- Submission → an alert is queued for active MTI owner/administrator accounts.
+- Assignment/enrollment/unlock, graded work and corrected grades → an alert is queued to the student's email.
+- `notification_outbox` records every pending/sent/failed message and supports delivery retries. Admins can inspect these events under **Email notifications**.
+- **Actual sending is not yet active**: connect a verified sender domain and set `RESEND_API_KEY` and `MTI_EMAIL_FROM` as secure Cloudflare Worker secrets. Do not claim messages were delivered while not configured. No secrets or student messages are committed to GitHub.
+- Automated recurring retries and notification policy refinements remain follow-up work.
+
 ## Upcoming work
 
-Import and verify the complete course workbooks and real student roster privately. Add automated emails, export/reporting, printable template refinements, backup and recovery, and full GitHub-to-Cloudflare continuous deployment.
+Complete private roster review and account onboarding; connect a verified sender and test automatic delivery, finish reports, printable template refinements, backup and recovery, and full GitHub-to-Cloudflare continuous deployment.
 
 Cloudflare's connection to the GitHub repo exists, but an independent build/deploy credential has **not** yet been set up. Current deployments were published directly through the Cloudflare API using GitHub source, without requiring local tooling.
 
