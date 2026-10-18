@@ -23,7 +23,7 @@ async function nextLessonPreview(env,assignmentId) {
   submission_notes:next.submission_notes,materials_list:next.materials_list,title:nextLessonTitle(a.course_name,next)},
   already_assigned:duplicate||null};
 }
-function emailSendingEnabled(env) { return Boolean(env.RESEND_API_KEY && env.MTI_EMAIL_FROM && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(env.MTI_EMAIL_FROM)); }
+function emailSendingEnabled(env){return Boolean(env.MTI_EMAIL_FROM && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(env.MTI_EMAIL_FROM) && (typeof env.EMAIL?.send==="function" || env.RESEND_API_KEY));}
 async function queueEmail(env,eventType,recipientRole,recipientEmail,assignmentId,studentId,subject,bodyText) {
  if(!recipientEmail||!isEmail(recipientEmail))return null;
  const id=crypto.randomUUID();
@@ -41,13 +41,17 @@ async function sendPendingEmails(env,onlyIds=null) {
   const locked=await env.DB.prepare("UPDATE notification_outbox SET status='sending',attempts=attempts+1,last_error=NULL WHERE id=? AND status IN ('pending','failed')").bind(mail.id).run();
   if(!locked.meta?.changes)continue;
   try {
-   const response=await fetch("https://api.resend.com/emails",{
-    method:"POST",headers:{"Authorization":"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":mail.event_key},
-    body:JSON.stringify({from:env.MTI_EMAIL_FROM,to:[mail.recipient_email],subject:mail.subject,text:mail.body_text})
-   });
-   if(!response.ok){
-    const info=await response.text();
-    throw new Error("Email provider HTTP "+response.status+": "+info.slice(0,280));
+   if(typeof env.EMAIL?.send==="function"){
+    await env.EMAIL.send({from:env.MTI_EMAIL_FROM,to:mail.recipient_email,subject:mail.subject,text:mail.body_text});
+   }else{
+    const response=await fetch("https://api.resend.com/emails",{
+     method:"POST",headers:{"Authorization":"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":mail.event_key},
+     body:JSON.stringify({from:env.MTI_EMAIL_FROM,to:[mail.recipient_email],subject:mail.subject,text:mail.body_text})
+    });
+    if(!response.ok){
+     const info=await response.text();
+     throw new Error("Email provider HTTP "+response.status+": "+info.slice(0,280));
+    }
    }
    await env.DB.prepare("UPDATE notification_outbox SET status='sent',sent_at=CURRENT_TIMESTAMP,last_error=NULL WHERE id=?").bind(mail.id).run();
    sent++;
