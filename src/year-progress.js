@@ -177,9 +177,13 @@ async function yearStudentData(env,user){
  if(!years.length)return null;
  const data=await yearCardData(env,user.student_id);
  const student=await env.DB.prepare("SELECT s.id,s.full_name,s.email,s.course_id,s.current_year,s.current_lesson,s.status,c.name AS course_name FROM students s LEFT JOIN courses c ON c.id=s.course_id WHERE s.id=?").bind(user.student_id).first();
- const allowed=new Set(data.allowed.map(x=>x.id));
+ // Graded assignment content remains permanently available, including after
+ // a curriculum transfer or after the whole year has been archived.
+ const completedAssignments=await env.DB.prepare("SELECT a.*,l.course_id,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.submission_notes,l.materials_list,c.name AS course_name,s.response_text,s.submitted_at AS response_submitted_at FROM student_session_completions t JOIN assignments a ON a.id=t.assignment_id JOIN lessons l ON l.id=a.lesson_id JOIN courses c ON c.id=l.course_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE t.student_id=? AND a.status='graded' ORDER BY t.year DESC,t.session_number DESC").bind(user.student_id).all();
+ const visible=new Map([...completedAssignments.results,...data.allowed].map(a=>[a.id,a]));
+ const allowed=new Set([...visible.keys()]);
  const files=await env.DB.prepare("SELECT id,assignment_id,filename,content_type,size_bytes,created_at FROM submission_files WHERE student_id=? ORDER BY created_at DESC").bind(user.student_id).all();
- return {student,assignments:data.allowed,files:files.results.filter(f=>allowed.has(f.assignment_id)),
+ return {student,assignments:[...visible.values()],files:files.results.filter(f=>allowed.has(f.assignment_id)),
   learning_path:{course_id:data.current?.course_id||null,course_name:data.current?.course_name||"",
    year:data.current?.year||null,year_completed:!data.current,cards:data.cards,history:data.history,
    next_year_requires_payment:true}};
@@ -257,6 +261,22 @@ export default {
      }
      const bodyResult=await response.json();
      return json({...bodyResult,next_unlocked:unlocked.map(x=>({lesson_number:x.lesson_number,title:x.title})),year_complete:yearComplete},response.status);
+    }
+   }
+   // Corrections to previously completed sessions always remain reflected in
+   // the permanent grade history, even after a transfer or year completion.
+   const priorGrade=p.match(/^\/api\/admin\/assignments\/([^/]+)$/);
+   if(priorGrade&&req.method==="PATCH"){
+    const old=await env.DB.prepare("SELECT t.student_id,t.year,t.session_number FROM student_session_completions t WHERE t.assignment_id=?").bind(priorGrade[1]).first();
+    if(old){
+     const reply=await ROSTER_APP.fetch(req,env);
+     if(!reply.ok)return reply;
+     const row=await env.DB.prepare("SELECT status,grade_points,bonus_points FROM assignments WHERE id=?").bind(priorGrade[1]).first();
+     if(row?.status==="graded"){
+      await env.DB.prepare("UPDATE student_session_completions SET grade_points=?,bonus_points=? WHERE assignment_id=?").bind(row.grade_points,row.bonus_points,priorGrade[1]).run();
+      if(typeof safeQueueNotice==="function")await safeQueueNotice(()=>queuedStudentUpdate(env,priorGrade[1],"grade_corrected"));
+     }
+     return reply;
     }
    }
    if(p==="/api/admin/assignments"&&req.method==="POST"){
