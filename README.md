@@ -129,6 +129,16 @@ Under **Admin overview → Recent assignments** or **Assignments → All assignm
 - The live student and admin screens have been tested with representative samples. Temporary test students and temporary test API endpoints were removed.
 - Implementation: `src/student-assignment-cards-ui.js`, `src/year-progress.js`, `public/student.html`, `scripts/build.mjs`.
 
+## GreatChurch.ca production address
+
+- MTI is available at **https://mti.greatchurch.ca/**. Admin sign-in: **https://mti.greatchurch.ca/admin**; student sign-in: **https://mti.greatchurch.ca/student**.
+- The original **https://mti-portal.rwyers.workers.dev** URL remains an operational fallback. The original MTI Worker, private D1 records, and R2 submissions remain in the **rwyers** Cloudflare account.
+- The GreatChurch.ca zone is in the **GlobalConnectionsChurch** Cloudflare account. It uses a separate `mti-greatchurch-gateway` Worker attached through a Cloudflare Custom Domain (Cloudflare-managed DNS and HTTPS); its versioned source is `src/greatchurch-domain-gateway.js`.
+- Browser POST origins are checked against `https://mti.greatchurch.ca`, then rewritten server-side to the backend origin. HTTP response cookies are passed through as host-only, secure cookies on the GreatChurch.ca MTI subdomain. Unsafe cross-site requests are denied before proxying.
+- Custom-domain URLs for student submission/assignment/grading alerts are generated from `src/progression-notifications.js`. Email delivery still depends on completing the separate verified sender setup.
+- **Keep administrator and student sign-in pages separate**. Administrator accounts and student accounts are checked against the same private MTI database; do not attempt to use student-only screens to escalate a user's role.
+- Deployed and tested HTTPS root, admin and student pages, backend health, and an admin sign-out POST with valid same-origin forwarding. Signed-in sessions from the previous `workers.dev` domain are not transferred; users log in again under `mti.greatchurch.ca`.
+
 ## Upcoming work
 
 Complete private roster review and account onboarding; connect a verified sender and test automatic delivery, finish reports, printable template refinements, backup and recovery, and full GitHub-to-Cloudflare continuous deployment.
