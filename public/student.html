@@ -78,7 +78,14 @@ function selectAssignment(id){
  if(a.status==="graded"){
   html+='<div class="grade"><strong>'+esc(a.grade_points==null?"—":a.grade_points+"/100")+'</strong><p>Core assignment score · Additional activities: '+esc(a.bonus_points||0)+' points</p><p>'+esc(a.feedback||"No written feedback")+'</p></div>';
  }
- html+='<div class="detail-title">Your response</div><p>You can type your assignment below. Please include chapter and question numbers where applicable.</p>';
+ html+='<div class="detail-title">Your attached files</div>';
+ var myFiles=(DATA.files||[]).filter(function(f){return f.assignment_id===id});
+ html+=myFiles.length?'<div class="detail-box">'+myFiles.map(function(f){
+  return '<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:9px"><a href="/api/student/files/'+esc(f.id)+'" style="text-decoration:underline">'+esc(f.filename)+'</a>'+
+  (a.status!=="graded"?'<button type="button" class="outline" onclick="removeFile(\''+esc(f.id)+'\')">Remove</button>':"")+'</div>';
+ }).join("")+'</div>':'<p>No files attached yet.</p>';
+ if(a.status!=="graded")html+='<div class="field"><label for="fileUpload">Add up to 5 files (PDF, Word DOCX, text or image; 6 MB each)</label><input id="fileUpload" type="file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" multiple><small id="uploadStatus" class="small"></small></div>';
+ html+='<div class="detail-title">Your response</div><p>You can type your assignment below or submit your work as an attachment. Please include chapter and question numbers where applicable.</p>';
  if(a.status!=="graded"){
   html+='<form id="responseForm"><textarea id="responseText" maxlength="20000" required placeholder="Type your answers here...">'+esc(a.response_text||"")+'</textarea><div class="error" id="submitError"></div><div class="actions"><button class="primary" type="submit">'+(a.status==="submitted"?"Update my submission":"Submit assignment")+'</button><button type="button" class="outline" id="printLesson">Print assignment / Save PDF</button></div></form>';
  }else{
@@ -90,6 +97,29 @@ function selectAssignment(id){
   catch(e){el("submitError").textContent=e.message}finally{btn.disabled=false}
  });
  el("printLesson")?.addEventListener("click",function(){printAssignment(a)});
+ el("fileUpload")?.addEventListener("change",function(){uploadFiles(id,this.files)});
+}
+
+async function uploadFiles(assignmentId,list){
+ var files=Array.from(list||[]),status=el("uploadStatus");
+ if(files.length>5){if(status)status.textContent="Please select no more than five files.";return;}
+ var mime={pdf:"application/pdf",docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",txt:"text/plain",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg"};
+ for(var f of files){
+  var ext=f.name.split(".").pop().toLowerCase();
+  if(!mime[ext]||f.size>6*1024*1024){if(status)status.textContent="Use PDF, DOCX, TXT, PNG or JPG files smaller than 6 MB.";return}
+  if(status)status.textContent="Uploading "+f.name+"…";
+  try{
+   var r=await fetch("/api/student/assignments/"+assignmentId+"/files",{method:"POST",
+    headers:{"Content-Type":mime[ext],"X-MTI-File-Name":encodeURIComponent(f.name)},body:f,credentials:"same-origin"});
+   var out=await r.json();if(!r.ok)throw Error(out.error||"Upload failed");
+  }catch(e){if(status)status.textContent=e.message;return}
+ }
+ await refresh();
+}
+async function removeFile(id){
+ if(!confirm("Remove this attachment?"))return;
+ try{await api("/api/student/files/"+id,{method:"DELETE",headers:{"Content-Type":"application/json"},body:"{}"});await refresh();}
+ catch(e){alert(e.message)}
 }
 function printAssignment(a){
  var rows=[["Student",DATA.student.full_name],["Assignment",a.title],["Year / Lesson",a.year?"Year "+a.year+" — Lesson "+a.lesson_number:"Individual assignment"],["Due date",a.due_date||"Not set"]];
