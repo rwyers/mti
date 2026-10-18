@@ -409,8 +409,8 @@ async function studentAPI(req,env,path) {
  if(path.startsWith("/api/student/files/")||path.includes("/files"))return studentFileAPI(req,env,path,user);
  if(path==="/api/student/change-password"&&req.method==="POST")return changePassword(req,env,user);
  if(path==="/api/student/data"&&req.method==="GET"){
-  const s=await env.DB.prepare("SELECT id,full_name,email,course_id,current_year,current_lesson,status FROM students WHERE id=?").bind(user.student_id).first();
-  const assignments=await env.DB.prepare("SELECT a.*, l.course_id,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.submission_notes,l.materials_list,s.response_text,s.submitted_at AS response_submitted_at FROM assignments a LEFT JOIN lessons l ON l.id=a.lesson_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? ORDER BY a.created_at DESC").bind(user.student_id).all();
+  const s=await env.DB.prepare("SELECT s.id,s.full_name,s.email,s.course_id,s.current_year,s.current_lesson,s.status,c.name AS course_name FROM students s LEFT JOIN courses c ON c.id=s.course_id WHERE s.id=?").bind(user.student_id).first();
+  const assignments=await env.DB.prepare("SELECT a.*, l.course_id,c.name AS course_name,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.submission_notes,l.materials_list,s.response_text,s.submitted_at AS response_submitted_at FROM assignments a LEFT JOIN lessons l ON l.id=a.lesson_id LEFT JOIN courses c ON c.id=l.course_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? ORDER BY a.created_at DESC").bind(user.student_id).all();
   const files=await env.DB.prepare("SELECT id,assignment_id,filename,content_type,size_bytes,created_at FROM submission_files WHERE student_id=? ORDER BY created_at DESC").bind(user.student_id).all();
   return json({student:s,assignments:assignments.results,files:files.results});
  }
