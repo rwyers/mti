@@ -29,7 +29,7 @@ async function loadRosterReview(){
   el("rosterStats").innerHTML=[["Staged entries",STAGED.length],["Pending review",pending.length],["Need attention",flagged.length],["Approved",done]].map(x=>'<div class="stat"><span>'+x[0]+'</span><strong>'+x[1]+'</strong></div>').join("");
   el("rosterTable").innerHTML=table(["Source row","Student","Enrollment","Status","Review notes","Actions"],STAGED.map(function(v){
    const flags=issueList(v),pending=v.review_status==="pending";
-   const actions=pending?'<button class="soft" onclick="editRoster('+JSON.stringify(v.id)+')">Edit</button> <button class="outline" onclick="approveRoster('+JSON.stringify(v.id)+')">Approve</button> <button class="outline" onclick="skipRoster('+JSON.stringify(v.id)+')">Skip</button>':"Reviewed";
+   const actions=pending?'<button class="soft" onclick="editRoster('+JSON.stringify(v.id)+')">'+(flags.length?"Resolve details":"Edit")+'</button> <button class="outline" onclick="approveRoster('+JSON.stringify(v.id)+')">'+(flags.length?"Review →":"Approve")+'</button> <button class="outline" onclick="skipRoster('+JSON.stringify(v.id)+')">Skip</button>':"Reviewed";
    return row(["<strong>#"+esc(v.source_row)+"</strong>","<strong>"+esc(v.full_name)+"</strong><br><small>"+esc(v.email||"No email")+"</small>",
     esc(v.course_name||"Not assigned")+"<br><small>Year "+esc(v.current_year||"—")+" · Lesson "+esc(v.current_lesson||"—")+"</small>",
     badge(v.review_status),flags.length?'<span style="color:#9f623e">'+flags.map(esc).join(" · ")+"</span>":'<span style="color:#4d8866">Ready to review</span>',actions]);
@@ -38,10 +38,19 @@ async function loadRosterReview(){
 }
 async function approveRoster(id){
  const r=STAGED.find(x=>x.id===id);if(!r)return;
- if(issueList(r).length){alert("Resolve the highlighted issues before approving this row.");return}
+ if(issueList(r).length){
+  editRoster(id);
+  const note=el("formError");
+  if(note)note.textContent="Before approving: "+issueList(r).join(" · ")+". Save corrected information and then click Approve again.";
+  return;
+ }
  if(!confirm("Approve "+r.full_name+" as an MTI student? This adds a student record but does not send an invitation."))return;
  try{await api("/api/admin/roster-review/approve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})});await refresh();await loadRosterReview()}
- catch(e){alert(e.message)}
+ catch(e){
+  // Keep the review entry available for corrections instead of a dead-end alert.
+  editRoster(id);
+  if(el("formError"))el("formError").textContent=e.message;
+ }
 }
 async function skipRoster(id){
  if(!confirm("Mark this source row as skipped? No student record will be created."))return;
