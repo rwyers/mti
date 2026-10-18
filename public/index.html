@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ministry Training Institute | Equipping Today. Empowering Tomorrow.</title>
+<meta name="description" content="Ministry Training Institute — practical, faith-centered ministry training, learning pathways and student resources.">
+<style>
+:root{--navy:#102b43;--deep:#071c30;--sage:#798f7f;--gold:#c4a579;--cream:#f6f5ef;--line:#dfdfd6;--white:#fff;--muted:#63737c}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--cream);color:var(--navy);font-family:Inter,Arial,Helvetica,sans-serif}a{color:inherit;text-decoration:none}button,a{outline-offset:3px}
+.container{width:min(1200px,calc(100% - 60px));margin:auto}
+nav{background:#fff;position:sticky;top:0;z-index:40;border-bottom:1px solid #e8e8e1}
+.nav-inner{height:86px;display:flex;align-items:center;gap:32px}
+.logo{display:flex;gap:12px;align-items:center;font-weight:800;letter-spacing:-1px}.logo-mark{font-size:30px;line-height:1;padding:9px 12px;border-radius:10px;background:var(--navy);color:#fff;letter-spacing:-3px}.logo small{display:block;font-size:10px;letter-spacing:2px;font-weight:700;margin-top:3px}
+.navlinks{display:flex;gap:30px;margin-left:auto;font-size:13px;font-weight:650;color:#435867}.navlinks a:hover{color:#b28d58}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:8px;border:1px solid var(--navy);background:var(--navy);color:#fff;padding:14px 21px;font-size:13px;font-weight:750;transition:.2s;white-space:nowrap}
+.btn:hover{transform:translateY(-2px);background:#17405e}.btn.light{background:white;border-color:#d4d9d5;color:var(--navy)}.btn.light:hover{background:#f0f2ef}
+.eyebrow{text-transform:uppercase;letter-spacing:3px;font-weight:800;font-size:11px;color:#ac8657}
+.hero{background:radial-gradient(circle at 84% 26%,#294a59 0%,transparent 32%),linear-gradient(118deg,#0a253b 20%,#153d50 100%);color:#fff;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-100px;top:-220px;border:1px solid rgba(255,255,255,.13);width:700px;height:700px;border-radius:50%;box-shadow:0 0 0 100px rgba(255,255,255,.025),0 0 0 220px rgba(255,255,255,.02)}
+.hero-content{display:grid;grid-template-columns:1fr 1fr;gap:55px;align-items:center;min-height:570px;padding:90px 0 92px;position:relative;z-index:1}
+.hero h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(43px,5vw,70px);font-weight:500;line-height:1.08;letter-spacing:-1.8px;margin:22px 0 20px}
+.hero h1 em{font-style:italic;color:#d6bd91}.hero p{font-size:16px;color:#d2dee0;line-height:1.85;max-width:490px;margin:0 0 32px}
+.hero .eyebrow{color:#d9ba89}.hero .btn{background:#d0b487;border-color:#d0b487;color:#102b43}.hero .btn:hover{background:#f0d7a5}.hero .btn.light{background:transparent;color:white;border-color:#6d8995}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap}.hero-foot{display:flex;gap:26px;margin-top:48px;font-size:12px;color:#b9cdd2}
+.hero-foot span{display:flex;align-items:center;gap:8px}.hero-foot i{width:6px;height:6px;border-radius:50%;background:#c3a16a;display:block}
+.mock{padding:19px;transform:rotate(3deg);position:relative;max-width:475px;margin:0 auto}
+.mock:before{content:"";position:absolute;inset:10px;transform:rotate(-8deg);background:#d8be8d;border-radius:17px;opacity:.8}
+.sheet{position:relative;background:#fff;color:var(--navy);padding:28px 31px;border-radius:14px;box-shadow:0 28px 70px #0617266b;min-height:393px;transform:rotate(-3deg)}
+.sheet-top{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e7ece9;padding-bottom:21px}
+.sheet .little{font-size:10px;letter-spacing:2px;font-weight:800;color:#7e9291}.sheet .success{font-size:11px;background:#e5efe8;color:#397453;border-radius:30px;padding:7px 10px}
+.sheet h3{font-family:Georgia,serif;font-size:30px;line-height:1.15;font-weight:500;margin:26px 0 8px}
+.sheet .course{color:#8a9a95;font-size:13px}.progress{height:7px;background:#ebefed;border-radius:100px;margin:25px 0 14px;overflow:hidden}.progress i{display:block;width:68%;height:100%;background:#88a69a}
+.steps{display:grid;gap:12px}.step{display:flex;align-items:center;gap:11px;font-size:12px;border-bottom:1px solid #edf0ee;padding-bottom:11px}.check{width:21px;height:21px;display:grid;place-items:center;border-radius:50%;background:#e4f0e9;color:#4d896c;font-size:12px}.check.pending{background:#f6efdc;color:#ad8c4b}
+.floating{position:absolute;right:-31px;bottom:30px;transform:rotate(4deg);background:#fff;color:#183e45;padding:16px 19px;border-radius:12px;box-shadow:0 14px 40px #071b2d35;font-size:12px;font-weight:800;display:flex;gap:9px;align-items:center}
+.floating b{color:#4e9471;font-size:20px}
+.strip{background:#ebece5;border-bottom:1px solid #e0e1d8}.strip .container{display:flex;align-items:center;justify-content:space-between;padding:26px 0;gap:30px}
+.strip strong{font:italic 21px Georgia,serif;font-weight:400;color:#35505e}.strip small{color:#78877f;font-size:11px;letter-spacing:1.2px}
+.section{padding:100px 0}.section-head{max-width:665px}.section h2{font:normal clamp(34px,4vw,51px)/1.15 Georgia,serif;letter-spacing:-1px;margin:16px 0 16px}.section-head p{color:#667781;line-height:1.7;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:40px}
+.course-card{background:#fff;border:1px solid #e4e7df;padding:25px;border-radius:13px;min-height:196px;transition:.25s}
+.course-card:hover{transform:translateY(-5px);box-shadow:0 15px 38px #28415613}
+.course-card .ico{font-size:25px;margin-bottom:27px;display:grid;place-items:center;width:48px;height:48px;border-radius:12px;background:#e6ece8}
+.course-card:nth-child(4n+2) .ico{background:#e5edf2}.course-card:nth-child(4n+3) .ico{background:#f3eadb}.course-card:nth-child(4n+4) .ico{background:#e5e9e2}
+.course-card h3{font-size:16px;margin:0 0 9px}.course-card p{font-size:12px;color:#76848a;margin:0;line-height:1.6}
+.how{background:#fff}.howgrid{display:grid;grid-template-columns:1fr 1fr;gap:65px;align-items:center}.how h2{max-width:520px}
+.feature-list{display:grid;gap:23px;margin-top:35px}.feature{display:flex;gap:16px}.number{display:grid;place-items:center;flex:0 0 38px;height:38px;border:1px solid #becbc6;border-radius:10px;color:#6c8b7f;font-size:13px;font-weight:800}.feature strong{display:block;margin-bottom:6px;font-size:15px}.feature span{display:block;font-size:13px;line-height:1.6;color:#7a888b}
+.illustration{background:#eff3ef;border:1px solid #e2ebe4;border-radius:21px;padding:34px;min-height:420px;display:grid;place-items:center}
+.ui{background:white;width:100%;border-radius:13px;box-shadow:0 18px 55px #20433a16;padding:28px}.ui small{color:#96a49f;font-size:11px}.ui h3{font:normal 29px Georgia,serif;margin:7px 0 22px}.ui-row{border:1px solid #e5eae7;border-radius:9px;padding:15px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:11px}
+.ui-row span{font-size:12px;font-weight:750}.ui-row small{display:block;margin-top:6px}.pill{border-radius:20px;padding:6px 9px;font-size:10px;font-weight:800;background:#e9f0e8;color:#52745d}.pill.warn{background:#f6edda;color:#97703c}
+.cta{padding:80px 0;background:#12364b;color:#fff;text-align:center}.cta h2{font:normal 43px Georgia,serif;margin:12px 0}.cta p{color:#c0d0d4;margin:0 auto 24px;max-width:530px;line-height:1.75}
+footer{background:#091d2d;color:#d4deda;padding:40px 0}.footerin{display:flex;align-items:center;justify-content:space-between;gap:25px;flex-wrap:wrap}.footerin small{color:#8fa8ad;font-size:12px}.footerin a{color:#c7d5d5;font-size:12px;margin-left:18px}
+@media(max-width:900px){.hero-content,.howgrid{grid-template-columns:1fr}.hero-content{padding:70px 0;gap:50px}.mock{max-width:480px;width:100%}.grid{grid-template-columns:repeat(2,1fr)}.navlinks{display:none}.nav-inner{justify-content:space-between}.strip .container{flex-wrap:wrap}}
+@media(max-width:540px){.container{width:calc(100% - 36px)}.hero h1{font-size:42px}.hero-content{padding:65px 0}.mock{padding:0 5px}.floating{right:0;bottom:-15px}.sheet{padding:23px;min-height:370px}.grid{grid-template-columns:1fr 1fr;gap:10px}.course-card{padding:17px;min-height:190px}.course-card h3{font-size:14px}.section{padding:70px 0}.nav-inner{height:72px}.logo-mark{font-size:22px}.logo small{font-size:8px}.logo>span:nth-child(2){font-size:13px}.footerin{display:block}.footerin a{display:inline-block;margin:12px 14px 0 0}.cta h2{font-size:35px}}
+</style></head>
+<body>
+<nav><div class="container nav-inner"><a class="logo" href="/" aria-label="MTI Home"><span class="logo-mark">MTI</span><span>MINISTRY TRAINING<small>INSTITUTE · GLOBAL CONNECTIONS CHURCH</small></span></a>
+<div class="navlinks"><a href="#about">About MTI</a><a href="#programs">Fields of study</a><a href="#how">How it works</a></div>
+<a class="btn" href="/student">Student portal <span aria-hidden="true">↗</span></a></div></nav>
+<main><section class="hero"><div class="container hero-content"><div><div class="eyebrow">Faith · Purpose · Leadership</div><h1>Equipping today.<br><em>Empowering</em><br>tomorrow.</h1><p>Discover your calling, grow in faith, and prepare for a life of impact. Ministry Training Institute brings your courses, assignments, and progress together in one welcoming place.</p>
+<div class="hero-ctas"><a href="#programs" class="btn">Explore our programs <span>→</span></a><a href="/student" class="btn light">Student sign in <span>↗</span></a></div>
+<div class="hero-foot"><span><i></i>Faith-centered learning</span><span><i></i>Practical ministry training</span></div></div>
+<div class="mock" aria-label="Illustration of student course dashboard"><div class="sheet"><div class="sheet-top"><span class="little">MY LEARNING JOURNEY</span><span class="success">In progress</span></div><h3>Grow in faith.<br>Lead with purpose.</h3><div class="course">Counseling · Year 1 · A purposeful learning journey</div><div class="progress"><i></i></div><div class="steps"><div class="step"><span class="check">✓</span>Explore your course material</div><div class="step"><span class="check">✓</span>Work through scripture and study</div><div class="step"><span class="check pending">○</span>Complete and submit your assignment</div></div></div><div class="floating"><b>✦</b> Every step has purpose</div></div></div></section>
+<div class="strip" id="about"><div class="container"><strong>“Equipping Today. Empowering Tomorrow. Advancing His Kingdom.”</strong><small>MINISTRY TRAINING INSTITUTE</small></div></div>
+<section class="section" id="programs"><div class="container"><div class="section-head"><span class="eyebrow">Your calling, your pathway</span><h2>Find your place to grow.</h2><p>Explore the MTI learning paths. Course availability and lesson materials are managed by the institute.</p></div>
+<div class="grid">
+<div class="course-card"><div class="ico">✧</div><h3>Leadership / 5 Fold Ministry</h3><p>Develop a servant leader's heart.</p></div>
+<div class="course-card"><div class="ico">♫</div><h3>Music & Creative Arts</h3><p>Use creative gifts to serve.</p></div>
+<div class="course-card"><div class="ico">♡</div><h3>Counseling</h3><p>Support and encourage others.</p></div>
+<div class="course-card"><div class="ico">◎</div><h3>Missions</h3><p>Prepare to make a global impact.</p></div>
+<div class="course-card"><div class="ico">▣</div><h3>Ministry in Business</h3><p>Lead with purpose in business.</p></div>
+<div class="course-card"><div class="ico">❀</div><h3>Discipleship & Helps Ministry</h3><p>Grow and serve with care.</p></div>
+<div class="course-card"><div class="ico">↗</div><h3>Evangelism & Outreach</h3><p>Share hope with your community.</p></div>
+<div class="course-card"><div class="ico">☀</div><h3>Children & Youth Ministry</h3><p>Invest in the next generation.</p></div>
+</div></div></section>
+<section class="section how" id="how"><div class="container howgrid"><div><span class="eyebrow">Made for real life</span><h2>Your learning, all in one place.</h2><div class="feature-list">
+<div class="feature"><span class="number">01</span><div><strong>See your learning path</strong><span>Keep your course, year, lessons and study materials organized together.</span></div></div>
+<div class="feature"><span class="number">02</span><div><strong>Know what's next</strong><span>Clear assignment details, scripture references and due dates.</span></div></div>
+<div class="feature"><span class="number">03</span><div><strong>Track your growth</strong><span>Students will be able to submit work and view instructor feedback when account access launches.</span></div></div></div></div>
+<div class="illustration"><div class="ui"><small>A CLEARER WAY TO LEARN</small><h3>My assignments</h3>
+<div class="ui-row"><div><span>Bible study & reflection</span><small>Scripture • Reading • Writing</small></div><span class="pill">Study</span></div>
+<div class="ui-row"><div><span>Practical ministry</span><small>Serve • Reflect • Apply</small></div><span class="pill warn">Practical</span></div>
+<div class="ui-row"><div><span>Mentorship & growth</span><small>Listen • Learn • Grow</small></div><span class="pill">Mentorship</span></div></div></div></div></section>
+<section class="cta"><div class="container"><span class="eyebrow">A journey with purpose</span><h2>Begin your next chapter.</h2><p>We're building a simpler student experience for MTI. Explore your pathway and return here for portal access.</p><a class="btn" href="/student" style="background:#d0b487;border-color:#d0b487;color:#102b43">Visit student portal →</a></div></section>
+</main><footer><div class="container footerin"><div><b>MTI</b> <small>Ministry Training Institute · Global Connections Church</small></div><div><a href="mailto:MTInstitute1@gmail.com">Contact MTI</a><a href="/admin">Staff login</a></div></div></footer></body></html>
