@@ -96,6 +96,10 @@ function renderNineLessonPath(){
  '<div style="padding:3px 16px 18px">'+y.sessions.map(a=>
  '<button type="button" class="assignment" data-history-assignment="'+esc(a.assignment_id)+'"><strong>Session '+esc(a.number)+' · '+esc(a.course_name)+'</strong><small>'+esc(a.title)+' · Score: '+(a.grade_points===null?"—":esc(a.grade_points)+"/100")+'</small></button>'
  ).join("")+'</div></details>').join("")+'</div>':"";
+ const waiting=path.previous_submissions||[];
+ if(waiting.length)archive.innerHTML+='<div class="panel" style="margin-top:16px"><details><summary style="cursor:pointer;padding:20px 24px"><strong>Submitted work from previous curricula</strong> · '+waiting.length+' awaiting grading ▾</summary>'+
+ '<div style="padding:0 16px 16px"><p class="small">Your original answers and attachments are saved here. Your instructor can still grade them; they cannot be edited after a transfer.</p>'+
+ waiting.map(x=>'<button type="button" class="assignment" data-history-assignment="'+esc(x.assignment_id)+'"><strong>'+esc(x.course_name)+' · Year '+esc(x.year)+' · Session '+esc(x.lesson_number||"—")+'</strong><small>'+esc(x.title)+' · Awaiting grading</small>'+status(x.status)+'</button>').join("")+'</div></details></div>';
  const allowed=DATA.assignments||[];
  if(!allowed.some(a=>a.id===selected)){
   const pending=allowed.find(a=>current&&a.year===current.year&&a.status!=="graded");
@@ -125,11 +129,13 @@ function selectAssignment(id){
  var myFiles=(DATA.files||[]).filter(function(f){return f.assignment_id===id});
  html+=myFiles.length?'<div class="detail-box">'+myFiles.map(function(f){
   return '<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:9px"><a href="/api/student/files/'+esc(f.id)+'" style="text-decoration:underline">'+esc(f.filename)+'</a>'+
-  (a.status!=="graded"?'<button type="button" class="outline" onclick="removeFile(\''+esc(f.id)+'\')">Remove</button>':"")+'</div>';
+  (a.status!=="graded"&&!a.read_only?'<button type="button" class="outline" onclick="removeFile(\''+esc(f.id)+'\')">Remove</button>':"")+'</div>';
  }).join("")+'</div>':'<p>No files attached yet.</p>';
- if(a.status!=="graded")html+='<div class="field"><label for="fileUpload">Add up to 5 files (PDF, Word DOCX, text or image; 6 MB each)</label><input id="fileUpload" type="file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" multiple><small id="uploadStatus" class="small"></small></div>';
- html+='<div class="detail-title">Your response</div><p>You can type your assignment below or submit your work as an attachment. Please include chapter and question numbers where applicable.</p>';
- if(a.status!=="graded"){
+ if(a.status!=="graded"&&!a.read_only)html+='<div class="field"><label for="fileUpload">Add up to 5 files (PDF, Word DOCX, text or image; 6 MB each)</label><input id="fileUpload" type="file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" multiple><small id="uploadStatus" class="small"></small></div>';
+ html+='<div class="detail-title">Your response</div>'+
+ (a.read_only?'<p><strong>Previous curriculum submission.</strong> Your work remains saved for grading and review, but cannot be edited after a transfer.</p>':
+ '<p>You can type your assignment below or submit your work as an attachment. Please include chapter and question numbers where applicable.</p>');
+ if(a.status!=="graded"&&!a.read_only){
   html+='<form id="responseForm"><textarea id="responseText" maxlength="20000" required placeholder="Type your answers here...">'+esc(a.response_text||"")+'</textarea><div class="error" id="submitError"></div><div class="actions"><button class="primary" type="submit">'+(a.status==="submitted"?"Update my submission":"Submit assignment")+'</button><button type="button" class="outline" id="printLesson">Print assignment / Save PDF</button></div></form>';
  }else{
   html+='<div class="detail-box">'+esc(a.response_text||"No written response saved.")+'</div><button type="button" class="outline" id="printLesson">Print assignment / Save PDF</button>';
