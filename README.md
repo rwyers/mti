@@ -111,6 +111,16 @@ Before this release, MTI's GitHub source was snapshotted on branch `backup/pre-a
 - **OpenAI:** the MTI Worker uses the existing `MTI_OPENAI_KEY` Cloudflare secret server-side. A live test returned valid JSON; the diagnostic endpoint was removed afterward. Browser speech recognition is optional and depends on client support. No OpenAI key is exposed to students or staff.
 - **Application files:** `src/ai-edit-materials.js`, `src/ai-editor-ui.js`, and `public/student.html`. `scripts/build.mjs` includes them in the remote Cloudflare build.
 
+## Correcting an accidental assignment
+
+Under **Admin overview → Recent assignments** or **Assignments → All assignments**, an owner/administrator can choose **Unassign** for a lesson that is still assigned and has no student submission, uploaded files, grade or completion credit. The admin previews the effects and explicitly confirms.
+
+- Removing a standalone mistaken assignment (e.g. Music) deletes only that assigned lesson; the student's existing Counseling pathway is unaffected.
+- If it is also the only untouched lesson of their current curriculum/year, the workflow explains that the mistaken active year enrollment will be removed so the assignment does not immediately reappear. If there are completed sessions or other assignments in that curriculum/year, removal is blocked with an explanation; use **Enroll year** to transfer curricula safely.
+- Submitted or graded work remains protected, including uploads and year completion. An attributed `unassign_assignment` event is written to the audit history.
+- A cancelled/unsent assignment notice in the outbox is removed with the assignment. All real enrollments and grades remain unchanged until an administrator explicitly confirms unassignment.
+- Protected Worker API: `GET /api/admin/assignments/:id/unassign-review` and `POST /api/admin/assignments/:id/unassign`; source `src/unassign-assignments.js`. Admin delegated click handler: `src/unassign-ui.js`.
+
 ## Upcoming work
 
 Complete private roster review and account onboarding; connect a verified sender and test automatic delivery, finish reports, printable template refinements, backup and recovery, and full GitHub-to-Cloudflare continuous deployment.
