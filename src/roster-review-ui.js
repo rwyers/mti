@@ -10,6 +10,25 @@
  '<div class="stats" id="rosterStats"></div><div class="panel"><div class="panel-head"><div><h2>Student import candidates</h2><p>Incomplete and shared-email records remain pending until reviewed.</p></div></div><div id="rosterTable"></div></div></section>');
 })();
 var STAGED=[];
+/* The roster rows are generated dynamically. Handle button clicks through
+   the existing table rather than embedding executable IDs into HTML attributes. */
+(function registerRosterActions(){
+ const target=document.getElementById("rosterTable");
+ if(!target||target.dataset.actionsReady)return;
+ target.dataset.actionsReady="true";
+ target.addEventListener("click",function(event){
+  const button=event.target.closest("button[data-roster-action]");
+  if(!button||!target.contains(button))return;
+  event.preventDefault();
+  const id=button.dataset.rosterId;
+  if(!id)return;
+  switch(button.dataset.rosterAction){
+   case "edit":editRoster(id);break;
+   case "approve":approveRoster(id);break;
+   case "skip":skipRoster(id);break;
+  }
+ });
+})();
 function issueList(v) {
  const issues=[];
  if(v.original_status!=="Active")issues.push("Not marked active");
@@ -29,7 +48,7 @@ async function loadRosterReview(){
   el("rosterStats").innerHTML=[["Staged entries",STAGED.length],["Pending review",pending.length],["Need attention",flagged.length],["Approved",done]].map(x=>'<div class="stat"><span>'+x[0]+'</span><strong>'+x[1]+'</strong></div>').join("");
   el("rosterTable").innerHTML=table(["Source row","Student","Enrollment","Status","Review notes","Actions"],STAGED.map(function(v){
    const flags=issueList(v),pending=v.review_status==="pending";
-   const actions=pending?'<button class="soft" onclick="editRoster('+JSON.stringify(v.id)+')">'+(flags.length?"Resolve details":"Edit")+'</button> <button class="outline" onclick="approveRoster('+JSON.stringify(v.id)+')">'+(flags.length?"Review →":"Approve")+'</button> <button class="outline" onclick="skipRoster('+JSON.stringify(v.id)+')">Skip</button>':"Reviewed";
+   const actions=pending?'<button type="button" class="soft" data-roster-action="edit" data-roster-id="'+esc(v.id)+'">'+(flags.length?"Resolve details":"Edit")+'</button> <button type="button" class="outline" data-roster-action="approve" data-roster-id="'+esc(v.id)+'">'+(flags.length?"Review →":"Approve")+'</button> <button type="button" class="outline" data-roster-action="skip" data-roster-id="'+esc(v.id)+'">Skip</button>':"Reviewed";
    return row(["<strong>#"+esc(v.source_row)+"</strong>","<strong>"+esc(v.full_name)+"</strong><br><small>"+esc(v.email||"No email")+"</small>",
     esc(v.course_name||"Not assigned")+"<br><small>Year "+esc(v.current_year||"—")+" · Lesson "+esc(v.current_lesson||"—")+"</small>",
     badge(v.review_status),flags.length?'<span style="color:#9f623e">'+flags.map(esc).join(" · ")+"</span>":'<span style="color:#4d8866">Ready to review</span>',actions]);
