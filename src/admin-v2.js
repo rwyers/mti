@@ -207,3 +207,68 @@ function activateInvitation(token){
 var invitation=new URLSearchParams(location.search).get("invite");
 if(invitation)activateInvitation(invitation);
 else start();
+
+/* Curriculum library: additive source review and import. */
+var CURRICULUM_RUNNING=false;
+async function loadCurriculumStatus(){
+ const target=el("curriculumTable");if(!target)return;
+ try{
+  const d=await api("/api/admin/curriculum/import-status");
+  const counts=new Map(d.counts.map(c=>[c.name,c]));
+  let count=0;
+  const rows=d.sources.map(function(source){
+   const saved=counts.get(source.course)?.lessons||0;count+=saved;
+   return row(["<strong>"+esc(source.course)+"</strong>",source.years+" year(s)",
+    "<strong>"+saved+"</strong> saved",'<button class="soft" '+(CURRICULUM_RUNNING?"disabled":"")+
+    ' onclick="importOneCourse('+JSON.stringify(source.course)+','+source.years+')">Import this course</button>']);
+  });
+  target.innerHTML=table(["Course","Published years","Lessons stored",""],rows);
+  target.insertAdjacentHTML("afterbegin",'<div class="callout" style="margin:15px">Saved lessons for published-source courses: <strong>'+count+'</strong>. Other courses and existing lessons are not included in this subtotal.</div>');
+ }catch(e){target.innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
+}
+function logCurriculum(message){
+ const log=el("curriculumLog");if(!log)return;
+ const now=new Date().toLocaleTimeString();
+ log.textContent+="\n["+now+"] "+message;
+ log.scrollTop=log.scrollHeight;
+}
+async function importOneCourse(course,years){
+ if(CURRICULUM_RUNNING)return;
+ if(ACCOUNT?.role!=="admin"&&ACCOUNT?.role!=="owner"){alert("Administrator permission required.");return}
+ if(!confirm("Import missing lessons for "+course+"? Existing lessons will be left unchanged."))return;
+ CURRICULUM_RUNNING=true;el("runCurriculumBtn").disabled=true;
+ try{
+  for(let year=1;year<=years;year++){
+   logCurriculum("Reading "+course+" — Year "+year+"…");
+   try{
+    const d=await api("/api/admin/curriculum/import-year",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({course,year})});
+    logCurriculum("Year "+year+": found "+d.found+" lesson(s), added "+d.imported+", already in database "+d.existing+".");
+   }catch(e){logCurriculum("Year "+year+": "+e.message)}
+  }
+  await refresh();await loadCurriculumStatus();
+ }finally{CURRICULUM_RUNNING=false;el("runCurriculumBtn").disabled=false;await loadCurriculumStatus()}
+}
+async function runCurriculumImport(){
+ if(CURRICULUM_RUNNING)return;
+ if(ACCOUNT?.role!=="admin"&&ACCOUNT?.role!=="owner"){alert("Administrator permission required.");return}
+ if(!confirm("Import all available MTI published curriculum years? This may take several minutes. Existing lessons will NOT be overwritten."))return;
+ CURRICULUM_RUNNING=true;el("runCurriculumBtn").disabled=true;
+ let added=0,failed=0;
+ try{
+  const d=await api("/api/admin/curriculum/import-status");
+  for(const source of d.sources){
+   for(let year=1;year<=source.years;year++){
+    logCurriculum("Importing "+source.course+", Year "+year+"...");
+    try{
+     const result=await api("/api/admin/curriculum/import-year",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({course:source.course,year:year})});
+     added+=result.imported;
+     logCurriculum(result.course+" Year "+year+": "+result.imported+" added, "+result.existing+" already saved.");
+    }catch(e){failed++;logCurriculum(source.course+" Year "+year+": "+e.message)}
+   }
+  }
+  logCurriculum("Finished. "+added+" new lessons added. "+failed+" source years could not be imported.");
+  await refresh();
+ }finally{
+  CURRICULUM_RUNNING=false;el("runCurriculumBtn").disabled=false;await loadCurriculumStatus();
+ }
+}
