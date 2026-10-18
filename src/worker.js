@@ -345,6 +345,7 @@ async function studentAPI(req,env,path) {
  }
  const user=await currentUser(req,env);
  if(!user||user.role!=="student"||!user.student_id)return json({error:"Please sign in."},401);
+ if(path==="/api/student/change-password"&&req.method==="POST")return changePassword(req,env,user);
  if(path==="/api/student/data"&&req.method==="GET"){
   const s=await env.DB.prepare("SELECT id,full_name,email,course_id,current_year,current_lesson,status FROM students WHERE id=?").bind(user.student_id).first();
   const assignments=await env.DB.prepare("SELECT a.*, l.course_id,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.submission_notes,l.materials_list,s.response_text,s.submitted_at AS response_submitted_at FROM assignments a LEFT JOIN lessons l ON l.id=a.lesson_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? ORDER BY a.created_at DESC").bind(user.student_id).all();
