@@ -96,6 +96,10 @@ openForm=function(type,id){
    var submission=DATA.submissions?.find(function(s){return s.assignment_id===id});
    var form=el("recordForm");
    if(submission&&form)form.insertAdjacentHTML("afterbegin",'<div class="callout" style="background:#f3f8f5"><strong>Student submitted:</strong><p style="white-space:pre-wrap;margin:12px 0 0">'+esc(submission.response_text)+'</p><small>Submitted '+esc(submission.submitted_at)+'</small></div>');
+   var files=(DATA.files||[]).filter(function(f){return f.assignment_id===id});
+   if(files.length&&form)form.insertAdjacentHTML("afterbegin",'<div class="callout"><strong>Student attachments</strong><div style="margin-top:8px">'+files.map(function(f){
+    return '<p><a target="_blank" rel="noopener" style="text-decoration:underline" href="/api/admin/files/'+esc(f.id)+'">'+esc(f.filename)+'</a> ('+Math.ceil(f.size_bytes/1024)+' KB)</p>';
+   }).join("")+'</div></div>');
   }
   return;
  }
