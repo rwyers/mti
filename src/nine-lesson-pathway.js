@@ -162,7 +162,15 @@ export default {
    if(gradeMatch&&request.method==="PATCH"){
     const actor=await currentUser(request,env);
     const requestBody=await request.clone().json().catch(()=>null);
-    const before=actor?await env.DB.prepare("SELECT status FROM assignments WHERE id=?").bind(gradeMatch[1]).first():null;
+    const before=actor?await env.DB.prepare("SELECT status,student_id,lesson_id FROM assignments WHERE id=?").bind(gradeMatch[1]).first():null;
+    if(before&&requestBody?.status==="graded"&&before.status==="assigned"){
+     const path=await getLearningPath(env,before.student_id);
+     if(path){
+      const lesson=await env.DB.prepare("SELECT course_id,year FROM lessons WHERE id=?").bind(before.lesson_id).first();
+      if(lesson&&lesson.course_id===path.course_id&&lesson.year===path.year)
+       return json({error:"The student must submit this lesson before grading unlocks the next lesson."},409);
+     }
+    }
     const response=await ROSTER_APP.fetch(request,env);
     if(!response.ok||!actor||!before)return response;
     let unlocked=[];
