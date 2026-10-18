@@ -121,6 +121,14 @@ Under **Admin overview → Recent assignments** or **Assignments → All assignm
 - A cancelled/unsent assignment notice in the outbox is removed with the assignment. All real enrollments and grades remain unchanged until an administrator explicitly confirms unassignment.
 - Protected Worker API: `GET /api/admin/assignments/:id/unassign-review` and `POST /api/admin/assignments/:id/unassign`; source `src/unassign-assignments.js`. Admin delegated click handler: `src/unassign-ui.js`.
 
+## Student assignment cards and permanent submitted-work history
+
+- On **Admin overview → Recent assignments** and **Assignments → View all**, work is grouped under collapsible student cards instead of a long per-assignment table. Students with the most assignments awaiting marking appear first, highlighted; cards with pending marking are open by default. Each card contains all assigned, submitted and graded work, with Review / Mark now and eligible Unassign buttons. The View all screen includes a student/assignment search. The Grading page also lists submitted work first.
+- On a curriculum transfer (e.g. six completed Counseling sessions, then Pastoral Session 7), completed scores and original course names remain attached to the student's year. Submissions still awaiting marking also remain visible in **Submitted work from previous curricula**, with their original response and file links. Historical submissions are read-only after a transfer.
+- For correctness, an administrator must grade any pending submitted work in the same academic year **before** transferring curricula, ensuring sessions receive credit before the new course's next session opens.
+- The live student and admin screens have been tested with representative samples. Temporary test students and temporary test API endpoints were removed.
+- Implementation: `src/student-assignment-cards-ui.js`, `src/year-progress.js`, `public/student.html`, `scripts/build.mjs`.
+
 ## Upcoming work
 
 Complete private roster review and account onboarding; connect a verified sender and test automatic delivery, finish reports, printable template refinements, backup and recovery, and full GitHub-to-Cloudflare continuous deployment.
