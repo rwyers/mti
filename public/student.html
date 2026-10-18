@@ -1,21 +1,117 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MTI Student Portal | Ministry Training Institute</title><style>
-:root{--navy:#102e42;--sage:#7c988d;--gold:#c8aa79}*{box-sizing:border-box}body{margin:0;background:#f4f6f1;color:var(--navy);font:14px/1.6 Arial,Helvetica,sans-serif}
-a{color:inherit;text-decoration:none}.wrap{max-width:1040px;padding:0 23px;margin:auto}
-header{height:90px;background:white;border-bottom:1px solid #e2e8e3;display:flex;align-items:center}
-header .wrap{width:100%;display:flex;align-items:center;justify-content:space-between}
-.logo{font-weight:900;letter-spacing:1.5px}.logo b{background:var(--navy);border-radius:9px;color:white;padding:11px 13px;margin-right:9px;letter-spacing:-2px;font-size:21px}
-header a:last-child{font-size:12px;font-weight:750;color:#6d828b}
-section{display:grid;place-items:center;min-height:calc(100vh - 90px);padding:55px 0}
-.card{background:white;border:1px solid #dfe8e1;border-radius:20px;max-width:745px;padding:65px 75px;text-align:center;box-shadow:0 15px 70px #173f4712}
-.emblem{width:76px;height:76px;margin:0 auto 25px;border-radius:20px;background:#e9f0e9;display:grid;place-items:center;font-size:34px;color:#689882}
-.eyebrow{text-transform:uppercase;letter-spacing:2.7px;color:#bc9b66;font-size:11px;font-weight:900}
-h1{font:normal clamp(38px,5vw,55px)/1.1 Georgia,serif;letter-spacing:-1px;margin:13px 0 19px}p{color:#6c8085;max-width:500px;margin:0 auto 27px;line-height:1.9;font-size:15px}
-.note{background:#f4f6f1;border-radius:10px;padding:17px 23px;font-size:12px;color:#577267;margin-bottom:28px}
-.btn{display:inline-block;background:var(--navy);color:white;border-radius:9px;padding:13px 24px;font-weight:800;font-size:12px}
-.contact{margin-top:20px;color:#82928d;font-size:12px}.contact a{text-decoration:underline}
-@media(max-width:650px){header{height:74px}.card{padding:42px 24px}section{padding:26px 0}.logo{font-size:12px}.logo b{font-size:16px;padding:9px}.wrap{padding:0 15px}}
-</style></head><body><header><div class="wrap"><a class="logo" href="/"><b>MTI</b> STUDENT PORTAL</a><a href="/">← Back to website</a></div></header>
-<section><div class="wrap"><div class="card"><div class="emblem">✦</div><div class="eyebrow">Building your new learning home</div><h1>A better student experience is on its way.</h1>
-<p>We are preparing secure student accounts where you will be able to view your courses, open assignments, submit your work and see instructor feedback.</p>
-<div class="note">Student registration and sign-in are not active yet. Your courses and submissions will remain private when student access launches.</div>
-<a class="btn" href="/">Return to MTI home →</a><div class="contact">Questions? <a href="mailto:MTInstitute1@gmail.com">Contact Ministry Training Institute</a></div></div></div></section></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MTI Student Portal — My Learning</title>
+<style>
+:root{--navy:#102e42;--sage:#6b927e;--gold:#cbb184;--bg:#f4f6f2;--line:#dfe7e1}*{box-sizing:border-box}body{margin:0;font:14px/1.6 Inter,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--navy)}
+a{color:inherit;text-decoration:none}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:wait}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #7ba993;outline-offset:3px}
+.wrap{max-width:1120px;margin:auto;padding:0 25px}.hidden{display:none!important}
+header{background:#fff;border-bottom:1px solid #e2e8e2;height:83px}header .wrap{height:100%;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:900}.mark{background:var(--navy);border-radius:10px;color:#fff;padding:10px 13px;font-size:22px;letter-spacing:-2px}.brand small{display:block;font-size:10px;letter-spacing:1.7px;color:#7c9299;margin-top:2px}
+.link{font-size:12px;color:#527586;font-weight:750}
+.primary{display:inline-block;background:var(--navy);color:white;border:0;border-radius:9px;padding:12px 18px;font-size:12px;font-weight:800}
+.outline{background:#fff;color:var(--navy);border:1px solid #d9e4de;padding:11px 15px;border-radius:9px;font-size:12px;font-weight:750}
+.auth{min-height:calc(100vh - 83px);display:grid;place-items:center;padding:45px 22px}.auth-card{background:#fff;border:1px solid #e0e9e2;border-radius:18px;padding:40px;max-width:475px;width:100%;box-shadow:0 20px 65px #254c3510}
+.eyebrow{color:#af8d5a;font-weight:800;font-size:11px;letter-spacing:2.2px;text-transform:uppercase}
+h1{font:normal 43px/1.15 Georgia,serif;letter-spacing:-.8px;margin:12px 0 14px}
+p{color:#6b8087}label{display:block;font-weight:750;font-size:12px;margin-bottom:7px;color:#536d75}
+.field{margin:17px 0}input,textarea{background:#fff;width:100%;padding:12px;border:1px solid #d8e3dd;border-radius:9px;color:var(--navy)}
+textarea{min-height:230px;resize:vertical;line-height:1.7}.error{color:#ab4b45;font-size:12px;margin:10px 0}
+.small{color:#819397;font-size:12px}#portal{padding:37px 0 90px}.intro{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:27px}.intro p{margin:4px 0}.intro h1{margin:3px 0;font-size:37px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:28px}.card{background:white;border:1px solid var(--line);border-radius:12px;padding:21px}.card small{font-size:11px;color:#829796}.card b{display:block;font:normal 25px Georgia,serif;margin:7px 0 0}
+.layout{display:grid;grid-template-columns:350px 1fr;gap:21px;align-items:start}.panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}.panel-top{padding:22px;border-bottom:1px solid var(--line)}.panel-top h2{font-size:16px;margin:0}.panel-top p{font-size:12px;margin:5px 0 0}
+.assignment{display:block;width:100%;text-align:left;background:#fff;color:inherit;border:0;border-bottom:1px solid #e7ede9;padding:18px 20px}.assignment:hover,.assignment.active{background:#f1f7f3}.assignment strong{display:block;font-size:13px}.assignment small{display:block;color:#859797;margin:6px 0}.status{display:inline-block;background:#f8eddd;color:#98703b;font-size:10px;border-radius:18px;padding:5px 9px;font-weight:800;text-transform:capitalize}.status.submitted{background:#e5f2e8;color:#4b8063}.status.graded{background:#e7edf7;color:#496e97}
+.details{padding:28px}.details h2{font:normal 32px/1.2 Georgia,serif;margin:0 0 10px}.details p{font-size:13px;line-height:1.75}.detail-box{padding:17px 19px;background:#f4f7f2;border-radius:10px;margin:18px 0;white-space:pre-wrap;line-height:1.75;font-size:13px}
+.detail-title{font-weight:800;font-size:12px;margin-top:26px;text-transform:uppercase;letter-spacing:.9px;color:#577466}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:17px}
+.grade{border:1px solid #d9e6e0;padding:20px;background:#f3f7f3;border-radius:10px;margin:20px 0}.grade strong{font:normal 26px Georgia,serif}
+.notice{padding:15px 17px;background:#f4eee0;color:#85673a;border-radius:9px;font-size:12px}
+#paper{display:none}#passwordPanel{padding:30px;max-width:550px;margin:26px auto}#passwordPanel h2{margin-top:0}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr 1fr}.panel-top{padding:15px}}
+@media(max-width:600px){.wrap{padding:0 15px}.brand{font-size:12px}.brand small{font-size:8px}.mark{font-size:16px;padding:8px}.auth-card{padding:30px 21px}.cards{grid-template-columns:1fr}.intro h1{font-size:30px}.details{padding:22px}.details h2{font-size:27px}}
+@media print{header,#auth,#portal,#passwordPanel{display:none!important}#paper{display:block!important;background:#fff;color:#000;font:12pt/1.4 Georgia,serif;padding:1in;white-space:normal}#paper h1{font-size:25pt}#paper h2{font-size:16pt;margin-top:23px}#paper p{color:#000;white-space:pre-wrap}body{background:#fff}@page{size:letter;margin:12mm}}
+</style></head>
+<body><header><div class="wrap"><a href="/" class="brand"><span class="mark">MTI</span><span>MINISTRY TRAINING<small>STUDENT LEARNING PORTAL</small></span></a><div style="display:flex;gap:18px;align-items:center"><a class="link" href="/">Website</a><button id="logout" class="outline hidden">Sign out</button></div></div></header>
+<section id="auth" class="auth"><div class="auth-card"><div class="eyebrow">MTI Student Portal</div><h1 id="authHeading">Welcome back.</h1><p id="authIntro">Access your assigned lessons, write your responses, and see feedback from your instructors.</p>
+<form id="signin"><div class="field"><label for="email">Student email</label><input id="email" type="email" autocomplete="username" required placeholder="you@example.com"></div><div class="field"><label for="password">Password</label><input id="password" type="password" required autocomplete="current-password"></div><div id="authError" class="error" role="alert"></div><button class="primary" style="width:100%" type="submit">Sign in →</button></form>
+<form id="activate" class="hidden"><div class="field"><label for="newPassword">Choose password (at least 12 characters)</label><input id="newPassword" type="password" minlength="12" autocomplete="new-password" required></div><div class="field"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" minlength="12" autocomplete="new-password" required></div><div id="activateError" class="error" role="alert"></div><button type="submit" class="primary" style="width:100%">Activate student account →</button></form>
+<p class="small" style="margin-top:24px">New to MTI? Your administrator will send you a private invitation link once your student record has been added.</p></div></section>
+<div id="portal" class="hidden"><div class="wrap"><div class="intro"><div><div class="eyebrow">Your MTI learning home</div><h1 id="welcome">My learning</h1><p>Grow at your pace, stay organized and keep moving forward.</p></div><button class="outline" id="changePassword">Change password</button></div><div class="cards"><div class="card"><small>My current program</small><b id="statProgram">—</b></div><div class="card"><small>Current year</small><b id="statYear">—</b></div><div class="card"><small>Assignments completed</small><b id="statCompleted">0</b></div></div>
+<div class="layout"><div class="panel"><div class="panel-top"><h2>My assignments</h2><p>Select an assignment to view instructions and submit your response.</p></div><div id="assignmentList"></div></div><div class="panel"><div class="panel-top"><h2>Assignment details</h2><p>Instructions, submission and instructor grading.</p></div><div id="assignmentDetail" class="details"><h2>Choose an assignment</h2><p>Your assignments will appear here when assigned by the institute.</p></div></div></div></div></div>
+<section id="passwordPanel" class="panel hidden"><h2>Change password</h2><form id="passwordForm"><div class="field"><label>Current password<input name="old_password" type="password" required></label></div><div class="field"><label>New password (12+ characters)<input name="new_password" type="password" minlength="12" required></label></div><div class="field"><label>Confirm new password<input name="confirm_password" type="password" minlength="12" required></label></div><div class="error" id="passwordError"></div><button class="primary">Save new password</button> <button type="button" class="outline" id="cancelChange">Cancel</button></form></section>
+<div id="paper" aria-hidden="true"></div>
+<script>
+var DATA=null,selected=null,invite=new URLSearchParams(location.search).get("invite");
+function el(id){return document.getElementById(id)}function esc(x){return String(x==null?"":x).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+async function api(path,opt){var res=await fetch(path,Object.assign({credentials:"same-origin"},opt||{}));var data=await res.json();if(!res.ok)throw Error(data.error||"Request failed");return data}
+function showAuth(){el("auth").classList.remove("hidden");el("portal").classList.add("hidden");el("logout").classList.add("hidden");el("passwordPanel").classList.add("hidden")}
+function showPortal(){el("auth").classList.add("hidden");el("portal").classList.remove("hidden");el("logout").classList.remove("hidden")}
+function status(s){return '<span class="status '+esc(s)+'">'+esc(s)+'</span>'}
+async function boot(){
+ if(invite){
+  showAuth();el("signin").classList.add("hidden");el("activate").classList.remove("hidden");el("authHeading").textContent="Create your account.";
+  el("authIntro").textContent="Welcome to MTI. Set a password to activate your private student portal.";return;
+ }
+ try{var me=await api("/api/student/me");if(me.authenticated){await refresh();showPortal()}else showAuth()}catch{showAuth()}
+}
+async function refresh(){
+ DATA=await api("/api/student/data");showPortal();
+ el("welcome").textContent="Hello, "+(DATA.student.full_name||"student").split(" ")[0]+".";
+ el("statProgram").textContent=DATA.assignments.find(function(a){return a.course_id})?.course_id?"Your enrolled course":"My learning";
+ el("statYear").textContent="Year "+DATA.student.current_year;
+ el("statCompleted").textContent=DATA.assignments.filter(function(a){return a.status==="graded"}).length+" / "+DATA.assignments.length;
+ el("assignmentList").innerHTML=DATA.assignments.length?DATA.assignments.map(function(a){
+  return '<button class="assignment '+(selected===a.id?"active":"")+'" onclick="selectAssignment('+JSON.stringify(a.id)+')"><strong>'+esc(a.title)+'</strong><small>'+(a.year?"Year "+esc(a.year)+" · Lesson "+esc(a.lesson_number):"Custom assignment")+' · Due: '+esc(a.due_date||"Not set")+'</small>'+status(a.status)+'</button>';
+ }).join(""):'<div class="details"><h2>No assignments yet</h2><p>Your instructors will add assignments as you progress.</p></div>';
+ if(!selected&&DATA.assignments.length)selected=DATA.assignments[0].id;
+ if(selected)selectAssignment(selected);
+}
+function selectAssignment(id){
+ selected=id;var a=DATA.assignments.find(function(x){return x.id===id});if(!a)return;
+ document.querySelectorAll(".assignment").forEach(function(e){e.classList.remove("active")});
+ var index=DATA.assignments.indexOf(a),btn=el("assignmentList").querySelectorAll(".assignment")[index];if(btn)btn.classList.add("active");
+ var html='<h2>'+esc(a.title)+'</h2><p>'+status(a.status)+' &nbsp; '+(a.year?"Year "+esc(a.year)+" · Lesson "+esc(a.lesson_number)+" · "+esc(a.credits)+" credits":"Individual assignment")+' · Due '+esc(a.due_date||"Not set")+'</p>';
+ if(a.memory_verse_reference||a.memory_verse_text)html+='<div class="detail-title">Scripture to memorize</div><div class="detail-box"><b>'+esc(a.memory_verse_reference)+'</b>\n'+esc(a.memory_verse_text)+'</div>';
+ if(a.bible_instruction)html+='<div class="detail-title">Bible instructions</div><div class="detail-box">'+esc(a.bible_instruction)+'</div>';
+ if(a.assignment_instructions)html+='<div class="detail-title">Assignment instructions</div><div class="detail-box">'+esc(a.assignment_instructions)+'</div>';
+ if(a.materials_list)html+='<div class="detail-title">Materials</div><div class="detail-box">'+esc(a.materials_list)+'</div>';
+ if(a.submission_notes)html+='<div class="detail-title">Submission notes</div><div class="detail-box">'+esc(a.submission_notes)+'</div>';
+ if(a.status==="graded"){
+  html+='<div class="grade"><strong>'+esc(a.grade_points==null?"—":a.grade_points+"/100")+'</strong><p>Core assignment score · Additional activities: '+esc(a.bonus_points||0)+' points</p><p>'+esc(a.feedback||"No written feedback")+'</p></div>';
+ }
+ html+='<div class="detail-title">Your response</div><p>You can type your assignment below. Please include chapter and question numbers where applicable.</p>';
+ if(a.status!=="graded"){
+  html+='<form id="responseForm"><textarea id="responseText" maxlength="20000" required placeholder="Type your answers here...">'+esc(a.response_text||"")+'</textarea><div class="error" id="submitError"></div><div class="actions"><button class="primary" type="submit">'+(a.status==="submitted"?"Update my submission":"Submit assignment")+'</button><button type="button" class="outline" id="printLesson">Print assignment / Save PDF</button></div></form>';
+ }else{
+  html+='<div class="detail-box">'+esc(a.response_text||"No written response saved.")+'</div><button type="button" class="outline" id="printLesson">Print assignment / Save PDF</button>';
+ }
+ el("assignmentDetail").innerHTML=html;
+ el("responseForm")?.addEventListener("submit",async function(e){e.preventDefault();var btn=this.querySelector("button[type=submit]");btn.disabled=true;
+  try{await api("/api/student/assignments/"+id+"/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({response_text:el("responseText").value})});await refresh();alert("Your assignment was submitted successfully.")}
+  catch(e){el("submitError").textContent=e.message}finally{btn.disabled=false}
+ });
+ el("printLesson")?.addEventListener("click",function(){printAssignment(a)});
+}
+function printAssignment(a){
+ var rows=[["Student",DATA.student.full_name],["Assignment",a.title],["Year / Lesson",a.year?"Year "+a.year+" — Lesson "+a.lesson_number:"Individual assignment"],["Due date",a.due_date||"Not set"]];
+ var h='<h1>MINISTRY TRAINING INSTITUTE</h1>'+rows.map(function(x){return '<p><strong>'+esc(x[0])+':</strong> '+esc(x[1])+'</p>'}).join("");
+ for(var x of [["Scripture",String(a.memory_verse_reference||"")+" "+String(a.memory_verse_text||"")],["Bible instruction",a.bible_instruction],["Assignment",a.assignment_instructions],["Materials",a.materials_list],["Submission notes",a.submission_notes],["Student response",a.response_text]]){
+  if(x[1])h+='<h2>'+esc(x[0])+'</h2><p>'+esc(x[1])+'</p>';
+ }
+ el("paper").innerHTML=h;window.print();
+}
+el("signin").addEventListener("submit",async function(e){e.preventDefault();var btn=this.querySelector("button");btn.disabled=true;el("authError").textContent="";
+ try{await api("/api/student/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:el("email").value,password:el("password").value})});el("password").value="";await refresh();}
+ catch(err){el("authError").textContent=err.message}finally{btn.disabled=false}});
+el("activate").addEventListener("submit",async function(e){e.preventDefault();el("activateError").textContent="";
+ var p=el("newPassword").value;if(p!==el("confirmPassword").value){el("activateError").textContent="Passwords do not match.";return}
+ try{await api("/api/auth/accept-invite",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:invite,password:p})});history.replaceState(null,"","/student");invite=null;await refresh();}
+ catch(err){el("activateError").textContent=err.message}});
+el("logout").addEventListener("click",async function(){await api("/api/student/logout",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});DATA=null;showAuth()});
+el("changePassword").addEventListener("click",function(){el("portal").classList.add("hidden");el("passwordPanel").classList.remove("hidden")});
+el("cancelChange").addEventListener("click",function(){el("portal").classList.remove("hidden");el("passwordPanel").classList.add("hidden")});
+el("passwordForm").addEventListener("submit",async function(e){e.preventDefault();var b={};new FormData(this).forEach(function(v,k){b[k]=v});
+ if(b.new_password!==b.confirm_password){el("passwordError").textContent="Passwords do not match.";return}
+ try{await api("/api/student/change-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});this.reset();el("passwordPanel").classList.add("hidden");el("portal").classList.remove("hidden");alert("Password changed successfully.")}
+ catch(err){el("passwordError").textContent=err.message}});
+boot();
+</script></body></html>
