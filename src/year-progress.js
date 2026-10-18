@@ -216,6 +216,14 @@ export default {
     const r=await env.DB.prepare("SELECT y.student_id,y.course_id,y.year,y.status,y.payment_confirmed,y.enrolled_at,y.completed_at,c.name AS course_name FROM student_year_enrollments y JOIN courses c ON c.id=y.course_id ORDER BY y.year DESC,y.enrolled_at DESC").all();
     return json({enrollments:r.results});
    }
+   if(p==="/api/admin/learning-paths/progress"&&req.method==="GET"){
+    const user=await currentUser(req,env);
+    if(!user||user.role==="student")return json({error:"Unauthorized"},401);
+    const studentId=string(new URL(req.url).searchParams.get("student_id"),100);
+    if(!studentId)return json({error:"Choose a student."},400);
+    const years=await yearCardData(env,studentId);
+    return json({history:years.history,current:years.current,cards:years.cards});
+   }
    if(p==="/api/admin/learning-paths/enroll"&&req.method==="POST"){
     const user=await currentUser(req,env);
     if(!user||user.role==="student"||user.must_change_password)return json({error:"Unauthorized"},401);
