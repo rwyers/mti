@@ -41,8 +41,33 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 15px}.span2{grid-column:span 2}.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:19px;border-top:1px solid #e9efea;padding-top:19px}
 #formError{color:#b24640;font-size:12px}.rubric{display:grid;grid-template-columns:1fr 1fr;gap:12px 17px}.rubric-line{display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:12px;border-bottom:1px solid #e9efea;padding-bottom:9px}.rubric-line input{max-width:74px;text-align:center;padding:8px}
 .score-total{margin:17px 0;background:#edf3ee;padding:13px 15px;border-radius:9px;font-weight:800}.score-total span{float:right}
-@media(max-width:1040px){.stats{grid-template-columns:repeat(2,1fr)}.app{grid-template-columns:70px 1fr}aside .brand span:nth-child(2),.nav-title,.nav-item span,.aside-bottom{display:none}aside .brand{padding:0;margin-bottom:34px}aside{padding:15px 8px}.nav-item{justify-content:center;padding:11px 4px}.nav-item i{font-size:22px}}
-@media(max-width:700px){#loginPage{grid-template-columns:1fr}.login-left{display:none}.top{height:71px;padding:0 18px}.maininner{padding:21px 15px}.heading h1{font-size:27px}.stats{grid-template-columns:1fr 1fr;gap:8px}.stat{padding:15px}.stat strong{font-size:27px}.stat span{font-size:11px}.panel-head{padding:17px}.app{grid-template-columns:56px 1fr}aside{padding:12px 4px}aside .mark{font-size:14px;padding:8px 5px}.nav-item{padding:10px 0}.nav-item i{font-size:19px}.formgrid,.rubric{grid-template-columns:1fr}.span2{grid-column:span 1}td,th{padding:12px;white-space:nowrap}}
+@media(max-width:1040px){
+ .stats{grid-template-columns:repeat(2,1fr)}
+ .app{grid-template-columns:88px minmax(0,1fr)}
+ aside .brand span:nth-child(2),.nav-title,.aside-bottom{display:none}
+ aside .brand{padding:0;margin-bottom:25px}
+ aside{padding:15px 7px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+ aside .nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:11px 3px;min-height:58px;text-align:center}
+ aside .nav-item i{font-size:21px;line-height:1.1;width:auto;flex:none}
+ aside .nav-item span{display:block;color:#fff;font-size:10px;line-height:1.25;font-weight:700;white-space:normal;overflow-wrap:normal;text-align:center}
+ aside .nav-item.active span{color:#17334a}
+ aside .nav-item:hover span{color:#fff}
+ aside .nav-item.active:hover span{color:#17334a}
+}
+@media(max-width:700px){
+ #loginPage{grid-template-columns:1fr}.login-left{display:none}
+ .top{height:71px;padding:0 18px}.maininner{padding:21px 15px}
+ .heading h1{font-size:27px}.stats{grid-template-columns:1fr 1fr;gap:8px}
+ .stat{padding:15px}.stat strong{font-size:27px}.stat span{font-size:11px}.panel-head{padding:17px}
+ .app{grid-template-columns:78px minmax(0,1fr)}
+ aside{padding:12px 5px}
+ aside .mark{font-size:14px;padding:8px 5px}
+ aside .nav-item{min-height:57px;padding:9px 2px;gap:4px}
+ aside .nav-item i{font-size:20px}
+ aside .nav-item span{font-size:9px;line-height:1.2;letter-spacing:0}
+ .formgrid,.rubric{grid-template-columns:1fr}.span2{grid-column:span 1}
+ td,th{padding:12px;white-space:nowrap}
+}
 </style></head>
 <body>
 <div id="loginPage"><section class="login-left"><div class="login-left-inner"><div class="brand"><span class="mark">MTI</span><span>MINISTRY TRAINING<small>INSTITUTE · ADMIN</small></span></div><div class="eyebrow">Your ministry, organized</div><h1>Everything in one <em>thoughtful</em> place.</h1><p>Manage students, plan courses, prepare assignments and celebrate progress in one secure workspace.</p><p style="margin-top:45px;color:#dbbf91;font:italic 23px Georgia,serif">Equipping Today. Empowering Tomorrow.</p></div></section>
