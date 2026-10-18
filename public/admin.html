@@ -1,0 +1,175 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MTI Admin · Ministry Training Institute</title>
+<style>
+:root{--navy:#102b43;--deep:#0b2538;--sage:#7e9b8e;--gold:#c7a97b;--bg:#f5f7f5;--line:#e2e9e7;--muted:#758589;--white:#fff}
+*{box-sizing:border-box}body{margin:0;font:14px/1.5 Inter,Arial,Helvetica,sans-serif;color:var(--navy);background:var(--bg)}button,input,select,textarea{font:inherit}button{cursor:pointer}a{text-decoration:none;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #83af9b;outline-offset:2px}
+.hidden{display:none!important}.brand{display:flex;align-items:center;gap:12px;font-weight:850}.mark{background:#17364b;color:white;padding:11px 13px;border-radius:10px;font-size:21px;letter-spacing:-2px}
+.brand small{display:block;color:#93a6b2;font-size:10px;letter-spacing:1.4px;margin-top:1px}
+button.primary,.primary{border:0;background:var(--navy);color:white;padding:11px 16px;border-radius:9px;font-size:12px;font-weight:750}button.primary:hover{background:#214b64}
+button.outline{border:1px solid #d8e2dc;color:var(--navy);background:#fff;border-radius:9px;padding:10px 14px;font-size:12px;font-weight:750}
+button.soft{border:0;background:#edf3f0;color:#326050;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:750}
+label{display:block;color:#506571;font-weight:750;font-size:12px;margin-bottom:6px}input,select,textarea{width:100%;border:1px solid #d9e4df;background:white;border-radius:9px;padding:12px;color:#142f41}input:focus,select:focus,textarea:focus{border-color:#91b0a2}textarea{min-height:85px;resize:vertical}
+.field{margin-bottom:16px}.hint{color:#8a9b9b;font-size:11px;margin-top:4px}.warning{padding:13px 16px;border-radius:9px;background:#fdf4e4;color:#7d5d31;font-size:12px;margin-bottom:16px}
+#loginPage{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:white}
+.login-left{background:radial-gradient(circle at 80% 25%,#255367,transparent 46%),#0e3046;color:white;display:flex;align-items:center;justify-content:center;padding:55px}
+.login-left-inner{max-width:445px}.login-left .mark{background:#d0b487;color:var(--navy)}
+.login-left h1{font:normal clamp(42px,4.4vw,68px)/1.13 Georgia,serif;margin:52px 0 19px}.login-left h1 em{color:#d6b98b}
+.login-left p{color:#bdcfd2;line-height:1.85}.login-left .eyebrow{font-size:11px;color:#d0b487;letter-spacing:2.5px;font-weight:800}
+.login-right{display:flex;align-items:center;justify-content:center;padding:30px}.login-box{max-width:390px;width:100%}.login-box h2{font:normal 34px Georgia,serif;margin:0 0 8px}.login-box p{color:#728589;margin-bottom:32px;line-height:1.7}.login-box .primary{width:100%;padding:14px}.backlink{margin-top:28px;text-align:center;font-size:12px;color:#7e9295}
+#loginError{color:#a4423e;font-size:12px;margin:10px 0}
+.app{min-height:100vh;display:grid;grid-template-columns:245px 1fr}
+aside{background:#102f43;color:white;padding:29px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+aside .brand{padding-left:10px;margin-bottom:47px}aside .mark{background:#d7bb8d;color:#173449}aside .brand small{color:#93aebb}
+.nav-title{font-size:9px;color:#7f9ca7;letter-spacing:2px;padding:0 18px;margin-bottom:11px;font-weight:900}
+.nav-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;color:#b8ccd3;background:transparent;border:0;padding:12px 14px;margin-bottom:4px;border-radius:8px;font-size:13px;font-weight:650}
+.nav-item:hover{background:#1c455b;color:white}.nav-item.active{background:#d1b487;color:#17334a}.nav-item i{font-size:18px;font-style:normal;width:22px;text-align:center}
+.aside-bottom{margin-top:auto;padding:18px 12px;border-top:1px solid #325465;font-size:12px;color:#b0c2c8}.aside-bottom a{display:block;margin:11px 0}
+main{min-width:0}.top{height:89px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 37px;gap:20px}
+.top .crumb{font-size:12px;color:#7b8c8e}.top .crumb strong{display:block;font-size:16px;color:#1b3c4d;margin-top:2px}.avatar{width:36px;height:36px;border-radius:50%;background:#e7eee8;color:#567a64;display:grid;place-items:center;font-weight:800}
+.maininner{padding:37px;max-width:1390px;margin:auto}.heading{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:24px;flex-wrap:wrap}.heading h1{font:normal 35px Georgia,serif;margin:0}.heading p{color:#7b8a8c;font-size:13px;margin:7px 0 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:25px}.stat{background:white;border:1px solid var(--line);border-radius:12px;padding:21px 22px}.stat span{display:block;color:#73898e;font-size:12px;margin-bottom:14px}.stat strong{font:normal 36px Georgia,serif;line-height:1}.stat small{display:block;margin-top:12px;color:#7a9b83;font-size:11px}
+.panel{background:white;border:1px solid var(--line);border-radius:13px;margin-bottom:24px;overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:23px 24px;border-bottom:1px solid var(--line)}.panel-head h2{font-size:16px;margin:0}.panel-head p{font-size:12px;color:#8a999a;margin:4px 0 0}
+.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;text-align:left}th{font-size:10px;text-transform:uppercase;color:#889a9b;letter-spacing:1.3px;background:#fbfcfb;font-weight:800}
+td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:#49606b}tr:last-child td{border-bottom:0}td strong{color:#1a3b4d;font-weight:800;font-size:12px}
+.pill{display:inline-block;padding:5px 9px;border-radius:30px;font-size:10px;font-weight:800;background:#e6f1e9;color:#47785d}.pill.assigned{background:#f6efdf;color:#a17a3f}.pill.graded{background:#e7edf6;color:#486e98}.pill.submitted{background:#e1f0e8;color:#437960}
+.empty{padding:55px 25px;text-align:center}.empty .round{margin:0 auto 15px;background:#eff4f1;color:#6c9981;border-radius:50%;width:52px;height:52px;display:grid;place-items:center;font-size:25px}.empty h3{margin:0 0 6px;font-size:16px}.empty p{color:#87989a;font-size:12px;margin:0 auto 19px;max-width:400px}
+.search{width:min(100%,300px);padding:10px 13px;font-size:12px}.page{display:none}.page.show{display:block}
+.callout{padding:18px 22px;background:#eaf0e9;border:1px solid #dce7de;border-radius:10px;margin:0 0 22px;color:#3b6051;font-size:12px;line-height:1.65}
+#overlay{position:fixed;inset:0;background:#061c2bb0;display:grid;place-items:center;padding:22px;z-index:100}
+.modal{width:min(100%,670px);max-height:92vh;overflow:auto;background:white;border-radius:15px;box-shadow:0 24px 80px #0315236b;padding:27px}.modal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:21px}.modal h2{font:normal 28px Georgia,serif;margin:0}.close{border:0;background:#eff3f0;color:#2f5160;width:34px;height:34px;border-radius:8px;font-size:20px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 15px}.span2{grid-column:span 2}.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:19px;border-top:1px solid #e9efea;padding-top:19px}
+#formError{color:#b24640;font-size:12px}.rubric{display:grid;grid-template-columns:1fr 1fr;gap:12px 17px}.rubric-line{display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:12px;border-bottom:1px solid #e9efea;padding-bottom:9px}.rubric-line input{max-width:74px;text-align:center;padding:8px}
+.score-total{margin:17px 0;background:#edf3ee;padding:13px 15px;border-radius:9px;font-weight:800}.score-total span{float:right}
+@media(max-width:1040px){.stats{grid-template-columns:repeat(2,1fr)}.app{grid-template-columns:70px 1fr}aside .brand span:nth-child(2),.nav-title,.nav-item span,.aside-bottom{display:none}aside .brand{padding:0;margin-bottom:34px}aside{padding:15px 8px}.nav-item{justify-content:center;padding:11px 4px}.nav-item i{font-size:22px}}
+@media(max-width:700px){#loginPage{grid-template-columns:1fr}.login-left{display:none}.top{height:71px;padding:0 18px}.maininner{padding:21px 15px}.heading h1{font-size:27px}.stats{grid-template-columns:1fr 1fr;gap:8px}.stat{padding:15px}.stat strong{font-size:27px}.stat span{font-size:11px}.panel-head{padding:17px}.app{grid-template-columns:56px 1fr}aside{padding:12px 4px}aside .mark{font-size:14px;padding:8px 5px}.nav-item{padding:10px 0}.nav-item i{font-size:19px}.formgrid,.rubric{grid-template-columns:1fr}.span2{grid-column:span 1}td,th{padding:12px;white-space:nowrap}}
+</style></head>
+<body>
+<div id="loginPage"><section class="login-left"><div class="login-left-inner"><div class="brand"><span class="mark">MTI</span><span>MINISTRY TRAINING<small>INSTITUTE · ADMIN</small></span></div><div class="eyebrow">Your ministry, organized</div><h1>Everything in one <em>thoughtful</em> place.</h1><p>Manage students, plan courses, prepare assignments and celebrate progress in one secure workspace.</p><p style="margin-top:45px;color:#dbbf91;font:italic 23px Georgia,serif">Equipping Today. Empowering Tomorrow.</p></div></section>
+<section class="login-right"><div class="login-box"><div class="eyebrow" style="color:#b18d5f;font-size:11px;letter-spacing:2px;font-weight:800;margin-bottom:12px">MTI STAFF PORTAL</div><h2>Welcome back.</h2><p>Sign in to your MTI administration workspace.</p>
+<form id="loginForm"><div class="field"><label for="password">Administrator password</label><input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password"></div>
+<div id="loginError" role="alert"></div><button class="primary" type="submit">Sign in to dashboard →</button></form><div class="backlink"><a href="/">← Back to MTI website</a></div></div></section></div>
+<div class="app hidden" id="app"><aside><a class="brand" href="/"><span class="mark">MTI</span><span>MINISTRY TRAINING<small>ADMINISTRATION</small></span></a><div class="nav-title">WORKSPACE</div>
+<button class="nav-item active" data-tab="overview"><i>⌂</i><span>Overview</span></button>
+<button class="nav-item" data-tab="students"><i>♙</i><span>Students</span></button>
+<button class="nav-item" data-tab="courses"><i>▤</i><span>Courses & lessons</span></button>
+<button class="nav-item" data-tab="assignments"><i>▣</i><span>Assignments</span></button>
+<button class="nav-item" data-tab="grading"><i>✎</i><span>Grading</span></button>
+<div class="aside-bottom"><a href="/">↗ View website</a><button class="nav-item" id="logout" style="padding-left:0"><i>⇥</i><span>Sign out</span></button><div>MTI · Staff workspace</div></div></aside>
+<main><div class="top"><div class="crumb">MINISTRY TRAINING INSTITUTE <strong id="topTitle">Admin overview</strong></div><div style="display:flex;align-items:center;gap:13px"><span style="color:#87999a;font-size:12px">Administrator</span><div class="avatar">A</div></div></div>
+<div class="maininner">
+<section class="page show" id="page-overview"><div class="heading"><div><h1>Welcome to MTI.</h1><p>Here is what's happening across your institute.</p></div><button class="primary" onclick="openForm('assignment')">+ Create assignment</button></div>
+<div class="stats" id="stats"></div><div class="callout">Your MTI database is live and private. The course catalog has been started from the existing MTI materials. Student enrollment is empty until you add or import students. Student self-service access is being built separately.</div>
+<div class="panel"><div class="panel-head"><div><h2>Recent assignments</h2><p>Keep an eye on what's assigned, received and marked.</p></div><button class="outline" onclick="switchTab('assignments')">View all →</button></div><div id="recent"></div></div></section>
+<section class="page" id="page-students"><div class="heading"><div><h1>Students</h1><p>Manage student records and course enrollment.</p></div><button class="primary" onclick="openForm('student')">+ Add student</button></div>
+<div class="panel"><div class="panel-head"><div><h2>Student directory</h2><p>Only signed-in administrators can view this information.</p></div><input class="search" id="studentSearch" placeholder="Search students..." aria-label="Search students"></div><div id="studentTable"></div></div></section>
+<section class="page" id="page-courses"><div class="heading"><div><h1>Courses & lessons</h1><p>Manage learning pathways and create new lessons.</p></div><div style="display:flex;gap:10px"><button class="outline" onclick="openForm('course')">+ New course</button><button class="primary" onclick="openForm('lesson')">+ New lesson</button></div></div>
+<div class="panel"><div class="panel-head"><div><h2>Course catalog</h2><p>Based on the MTI source workbooks.</p></div></div><div id="courseTable"></div></div>
+<div class="panel"><div class="panel-head"><div><h2>Lesson library</h2><p>Scripture, Bible instructions, assignments and supporting materials.</p></div></div><div id="lessonTable"></div></div></section>
+<section class="page" id="page-assignments"><div class="heading"><div><h1>Assignments</h1><p>Give a student a lesson, track submissions and record progress.</p></div><button class="primary" onclick="openForm('assignment')">+ New assignment</button></div>
+<div class="panel"><div class="panel-head"><div><h2>All assignments</h2><p>Submitted work can be marked in the Grading area.</p></div></div><div id="assignmentTable"></div></div></section>
+<section class="page" id="page-grading"><div class="heading"><div><h1>Grading</h1><p>Score student work using MTI's original marking rubric.</p></div></div>
+<div class="callout">Core scores total 100 points. The remaining tracked activities are recorded separately as additional points. All marks stay private.</div>
+<div class="panel"><div class="panel-head"><div><h2>Mark assignments</h2><p>Select an assignment to score it and add feedback.</p></div></div><div id="gradingTable"></div></div></section>
+</div></main></div>
+<div id="overlay" class="hidden" role="dialog" aria-modal="true"><div class="modal"><div class="modal-top"><h2 id="modalTitle">New record</h2><button class="close" aria-label="Close form" onclick="closeForm()">×</button></div><div id="modalBody"></div><div id="formError" role="alert"></div></div></div>
+<script>
+var DATA={courses:[],lessons:[],students:[],assignments:[]};var CURRENT="overview";
+var CORE=[["scripture","Scripture memorized",5],["practical","Practical service",10],["bible","Bible reading and questions",5],["outreach","Outreach",10],["intensive","Spiritual Intensive Course",10],["assignment","Assignment",30],["attendance","Church attendance",12],["mentorship","Mentorship Assignment",12],["groups","Small Groups / Worship Encounter",6]];
+var BONUS=[["opportunity","Opportunity 101/102",5],["growth","Growth Tracks",10],["videos","Weekly YouTube Videos",12],["confessions","Confessions",3],["study","MTI Study Group",3]];
+function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function nameOf(id,type){var r=DATA[type].find(function(x){return x.id===id});return r?(type==="students"?r.full_name:r.name):"—"}
+function lessonName(id){var l=DATA.lessons.find(function(x){return x.id===id});return l?nameOf(l.course_id,"courses")+" · Year "+l.year+" · Lesson "+l.lesson_number:"Custom assignment"}
+function badge(s){return '<span class="pill '+esc(s)+'">'+esc(s)+'</span>'}
+function empty(msg,fn,text){return '<div class="empty"><div class="round">✦</div><h3>'+esc(msg)+'</h3><p>Your workspace will show records here when you add them.</p>'+(fn?'<button class="primary" onclick="openForm(\''+fn+'\')">+ '+esc(text)+'</button>':"")+'</div>'}
+function table(headers,rows){return '<div class="table-scroll"><table><thead><tr>'+headers.map(function(h){return '<th>'+esc(h)+'</th>'}).join("")+'</tr></thead><tbody>'+rows.join("")+'</tbody></table></div>'}
+function td(s){return "<td>"+s+"</td>"}
+function row(cells){return "<tr>"+cells.map(td).join("")+"</tr>"}
+function el(id){return document.getElementById(id)}
+function switchTab(name){CURRENT=name;document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){b.classList.toggle("active",b.dataset.tab===name)});document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("show",p.id==="page-"+name)});el("topTitle").textContent=({overview:"Admin overview",students:"Students",courses:"Courses & lessons",assignments:"Assignments",grading:"Grading"})[name];window.scrollTo({top:0,behavior:"smooth"})}
+window.switchTab=switchTab;
+function render(){
+ var assignments=DATA.assignments,students=DATA.students,lessons=DATA.lessons;
+ el("stats").innerHTML=[
+  ["Active students",students.filter(function(s){return s.status==="active"}).length,"Enrolled learner records"],
+  ["Course pathways",DATA.courses.length,"Available MTI fields"],
+  ["Lessons available",lessons.length,"Curriculum records"],
+  ["To be graded",assignments.filter(function(a){return a.status==="submitted"}).length,"Awaiting review"]
+ ].map(function(a){return '<div class="stat"><span>'+a[0]+'</span><strong>'+a[1]+'</strong><small>'+a[2]+'</small></div>'}).join("");
+ function assignmentRows(items,gradingMode){
+  return items.map(function(a){return row([
+    "<strong>"+esc(a.title)+"</strong><br><small>"+esc(lessonName(a.lesson_id))+"</small>",
+    esc(nameOf(a.student_id,"students")),esc(a.due_date||"Not set"),
+    badge(a.status),a.grade_points==null?"—":"<strong>"+a.grade_points+"/100</strong>",
+    gradingMode?'<button class="soft" onclick="openForm(\'grade\',\''+a.id+'\')">'+(a.status==="graded"?"Edit marks":"Mark")+'</button>':
+     '<button class="outline" onclick="openForm(\'grade\',\''+a.id+'\')">Review →</button>'
+  ])}).join("");
+ }
+ el("recent").innerHTML=assignments.length?table(["Assignment","Student","Due","Status","Grade",""],[assignmentRows(assignments.slice(0,5),false)]):empty("No assignments yet","assignment","Create assignment");
+ el("assignmentTable").innerHTML=assignments.length?table(["Assignment","Student","Due","Status","Grade",""],[assignmentRows(assignments,false)]):empty("No assignments yet","assignment","Create assignment");
+ el("gradingTable").innerHTML=assignments.length?table(["Assignment","Student","Due","Status","Grade",""],[assignmentRows(assignments,true)]):empty("Nothing to grade","assignment","Create assignment");
+ var term=el("studentSearch").value.toLowerCase();var match=students.filter(function(s){return [s.full_name,s.email,s.phone].join(" ").toLowerCase().includes(term)});
+ el("studentTable").innerHTML=match.length?table(["Student","Email","Program","Year","Status"],match.map(function(s){return row(["<strong>"+esc(s.full_name)+"</strong><br><small>"+esc(s.phone)+"</small>",esc(s.email||"—"),esc(nameOf(s.course_id,"courses")),"Year "+esc(s.current_year),badge(s.status)])})):empty("No matching students","student","Add student");
+ el("courseTable").innerHTML=DATA.courses.length?table(["Course","Lessons","Status"],DATA.courses.map(function(c){return row(["<strong>"+esc(c.name)+"</strong>",String(lessons.filter(function(l){return l.course_id===c.id}).length),badge(c.active?"active":"inactive")])})):empty("No courses","course","Add course");
+ el("lessonTable").innerHTML=lessons.length?table(["Course","Lesson","Scripture","Credits",""],lessons.map(function(l){return row(["<strong>"+esc(nameOf(l.course_id,"courses"))+"</strong>","Year "+esc(l.year)+" · Lesson "+esc(l.lesson_number),esc(l.memory_verse_reference),esc(l.credits),'<button class="soft" onclick="openForm(\'viewlesson\',\''+l.id+'\')">View →</button>'])})):empty("No lessons","lesson","New lesson");
+}
+async function api(path,options){var r=await fetch(path,Object.assign({credentials:"same-origin"},options||{}));var j=await r.json();if(!r.ok)throw new Error(j.error||"Request failed");return j}
+async function refresh(){DATA=await api("/api/admin/data");render()}
+function selectOptions(rows,emptyLabel,labelFn){return '<option value="">'+esc(emptyLabel)+'</option>'+rows.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(labelFn(x))+'</option>'}).join("")}
+function input(name,label,type,value,attributes){return '<div class="field"><label for="f_'+name+'">'+esc(label)+'</label><input name="'+name+'" id="f_'+name+'" type="'+(type||"text")+'" value="'+esc(value||"")+'" '+(attributes||"")+'></div>'}
+function area(name,label,value,attributes){return '<div class="field"><label for="f_'+name+'">'+esc(label)+'</label><textarea name="'+name+'" id="f_'+name+'" '+(attributes||"")+'>'+esc(value||"")+'</textarea></div>'}
+function select(name,label,options,attributes){return '<div class="field"><label for="f_'+name+'">'+esc(label)+'</label><select name="'+name+'" id="f_'+name+'" '+(attributes||"")+'>'+options+'</select></div>'}
+function optsNums(n,initial){var h="";for(var i=1;i<=n;i++)h+='<option value="'+i+'" '+(i===initial?"selected":"")+">"+i+"</option>";return h}
+function buttons(label){return '<div class="modal-actions"><button type="button" class="outline" onclick="closeForm()">Cancel</button><button class="primary" type="submit">'+esc(label)+'</button></div>'}
+function closeForm(){el("overlay").classList.add("hidden");el("modalBody").innerHTML=""}window.closeForm=closeForm;
+function openForm(type,id){
+ var title="",fields="",mode=type,rowData;
+ var copt=selectOptions(DATA.courses,"Select a course",function(c){return c.name});
+ if(type==="student"){title="Add student";fields='<div class="formgrid">'+input("full_name","Student full name","text","","required maxlength=160")+input("email","Email address","email")+input("phone","Phone number","tel")+select("course_id","Course / field of study",copt)+select("current_year","Current year",optsNums(5,1))+select("current_lesson","Current lesson",optsNums(12,1))+'<div class="span2">'+area("notes","Private administrator notes")+'</div></div>'+buttons("Save student")}
+ if(type==="course"){title="Create course";fields=input("name","Course name","text","","required")+area("description","Course description")+buttons("Add course")}
+ if(type==="lesson"){title="Create lesson";fields='<div class="formgrid">'+select("course_id","Course",copt,"required")+select("year","Year",optsNums(5,1))+input("lesson_number","Lesson number","number","1",'min="1" max="52" required')+input("credits","Credits","number","3",'min="0"')+input("memory_verse_reference","Scripture reference")+input("memory_verse_text","Scripture text")+'<div class="span2">'+area("bible_instruction","Bible study instructions")+area("assignment_instructions","Assignment instructions")+area("submission_notes","Submission instructions")+area("materials_list","Materials list")+'</div></div>'+buttons("Save lesson")}
+ if(type==="assignment"){title="Create assignment";fields=select("student_id","Assign to student",selectOptions(DATA.students,"Select student",function(s){return s.full_name}),"required")+select("lesson_id","Lesson",selectOptions(DATA.lessons,"Custom / not linked",function(l){return lessonName(l.id)}))+input("title","Assignment title","text","","required")+input("due_date","Due date","date")+buttons("Assign lesson")}
+ if(type==="viewlesson"){rowData=DATA.lessons.find(function(l){return l.id===id});if(!rowData)return;title="Lesson details";fields='<div class="callout"><strong>'+esc(lessonName(id))+'</strong> · '+esc(rowData.credits)+' credits</div><h3>Scripture to memorize</h3><p>'+esc(rowData.memory_verse_reference)+" — "+esc(rowData.memory_verse_text)+'</p><h3>Bible study</h3><p style="white-space:pre-wrap">'+esc(rowData.bible_instruction)+'</p><h3>Assignment</h3><p style="white-space:pre-wrap">'+esc(rowData.assignment_instructions)+'</p><h3>Submission notes</h3><p style="white-space:pre-wrap">'+esc(rowData.submission_notes)+'</p><h3>Materials</h3><p style="white-space:pre-wrap">'+esc(rowData.materials_list)+'</p>'+buttons("Close");mode="viewlesson"}
+ if(type==="grade"){
+  rowData=DATA.assignments.find(function(a){return a.id===id});if(!rowData)return;title="Mark assignment";var scores={};try{scores=JSON.parse(rowData.grading_json||"{}")}catch{}
+  fields='<div class="callout"><b>'+esc(rowData.title)+'</b><br>'+esc(nameOf(rowData.student_id,"students"))+'</div>';
+  fields+=select("status","Assignment status",'<option value="assigned">Assigned</option><option value="submitted">Submitted</option><option value="graded">Graded</option>');
+  fields+='<h3 style="margin:20px 0 13px">Core marking · out of 100</h3><div class="rubric">'+CORE.map(function(x){return '<div class="rubric-line"><label style="margin:0">'+esc(x[1])+' /'+x[2]+'</label><input data-score="'+x[0]+'" type="number" min="0" max="'+x[2]+'" value="'+esc(scores[x[0]]||0)+'"></div>'}).join("")+'</div>';
+  fields+='<h3 style="margin:25px 0 13px">Additional activities</h3><div class="rubric">'+BONUS.map(function(x){return '<div class="rubric-line"><label style="margin:0">'+esc(x[1])+' /'+x[2]+'</label><input data-score="'+x[0]+'" type="number" min="0" max="'+x[2]+'" value="'+esc(scores[x[0]]||0)+'"></div>'}).join("")+'</div>';
+  fields+='<div class="score-total">Core total <span id="coreTotal">0 / 100</span><br><small>Additional points: <span id="bonusTotal">0</span></small></div>'+area("feedback","Instructor feedback",rowData.feedback)+buttons("Save marks & status");mode="grade:"+id;
+ }
+ el("modalTitle").textContent=title;el("formError").textContent="";
+ el("modalBody").innerHTML='<form id="recordForm">'+fields+'</form>';el("overlay").classList.remove("hidden");
+ if(type==="grade"){el("f_status").value=rowData.status;el("recordForm").addEventListener("input",calcScore);calcScore()}
+ el("recordForm").addEventListener("submit",function(e){e.preventDefault();submitForm(mode)});
+ var first=el("recordForm").querySelector("input,select,textarea");if(first)first.focus();
+}window.openForm=openForm;
+function calcScore(){var scores={};document.querySelectorAll("[data-score]").forEach(function(x){scores[x.dataset.score]=Number(x.value)||0});el("coreTotal").textContent=CORE.reduce(function(s,x){return s+(scores[x[0]]||0)},0)+" / 100";el("bonusTotal").textContent=BONUS.reduce(function(s,x){return s+(scores[x[0]]||0)},0)} 
+async function submitForm(mode){
+ if(mode==="viewlesson"){closeForm();return}
+ var form=el("recordForm"),button=form.querySelector('[type="submit"]'),b={};new FormData(form).forEach(function(v,k){b[k]=v});var path="/api/admin/"+mode+"s",method="POST";
+ if(mode.startsWith("grade:")){
+  path="/api/admin/assignments/"+mode.slice(6);method="PATCH";b.grading={};
+  form.querySelectorAll("[data-score]").forEach(function(x){b.grading[x.dataset.score]=Number(x.value)});
+ }
+ if(mode==="student")path="/api/admin/students";
+ if(mode==="course")path="/api/admin/courses";
+ if(mode==="lesson")path="/api/admin/lessons";
+ if(mode==="assignment")path="/api/admin/assignments";
+ button.disabled=true;el("formError").textContent="";
+ try{await api(path,{method:method,headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});closeForm();await refresh()}
+ catch(e){el("formError").textContent=e.message}finally{button.disabled=false}
+}
+el("loginForm").addEventListener("submit",async function(e){
+ e.preventDefault();var button=this.querySelector("button");button.disabled=true;el("loginError").textContent="";
+ try{await api("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:el("password").value})});el("password").value="";await start()}
+ catch(err){el("loginError").textContent=err.message}finally{button.disabled=false}
+});
+async function start(){var session=await api("/api/admin/me");if(!session.authenticated){el("loginPage").classList.remove("hidden");el("app").classList.add("hidden");return}el("loginPage").classList.add("hidden");el("app").classList.remove("hidden");try{await refresh()}catch(e){alert("Unable to load admin data: "+e.message)}}
+document.querySelectorAll("[data-tab]").forEach(function(b){b.addEventListener("click",function(){switchTab(b.dataset.tab)})});
+el("logout").addEventListener("click",async function(){await api("/api/admin/logout",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});start()});
+el("studentSearch").addEventListener("input",render);
+el("overlay").addEventListener("click",function(e){if(e.target===this)closeForm()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeForm()});
+start();
+</script></body></html>
