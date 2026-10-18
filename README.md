@@ -146,6 +146,15 @@ Under **Admin overview → Recent assignments** or **Assignments → All assignm
 - Do **not** reuse the existing church website's welcome-team sender identity for MTI.
 - **Sending remains disabled** pending confirmation that `mti@greatchurch.ca` exists as a Microsoft 365 mailbox or shared mailbox (or supported send-as identity), and a secure, scoped cross-account relay. No Microsoft credentials are copied into GitHub or the MTI Worker. MTI queued notifications remain pending until delivery is tested.
 
+## Microsoft 365 MTI notifications — activated October 2026
+
+- MTI sends email from the shared Microsoft 365 mailbox **mti@greatchurch.ca**. The mailbox is hosted in the existing Great Church Microsoft 365 tenant; no Cloudflare Email Sending subscription or SMTP2GO provider was added.
+- `src/progression-notifications.js` sends notifications through a private bearer-authenticated relay at `https://greatchurch.ca/api/mti/email/send`. The relay reuses the church worker's existing Microsoft Graph client credentials; those credentials **never** leave the GlobalConnectionsChurch Cloudflare account. The church's existing giving-system email routes are unchanged.
+- Configuration: `MTI_RELAY_TOKEN` secret in the Great Church Worker; matching `MTI_MAIL_RELAY_TOKEN`, `MTI_EMAIL_FROM`, and `MTI_EMAIL_DELIVERY_ENABLED=true` secrets in the MTI Worker. Never commit secret values to GitHub.
+- Verified with a direct test to the MTI shared mailbox; Microsoft Graph accepted the message with HTTP 202. Two previously queued student notifications were then submitted, and both are marked **sent** in the private D1 notification outbox (one attempt each, no errors). As usual, provider acceptance does not prove final inbox delivery.
+- Temporary release/test endpoints were removed immediately afterward. Administrators can review delivery status and retry future failed messages through the existing Email notifications page.
+- Church integration source: `globalconnectionschurch-eng/greatchurch` `worker.js`; pre-change church backup branch `backup/pre-mti-email-relay-2026-10-18`.
+
 ## Upcoming work
 
 Complete private roster review and account onboarding; connect a verified sender and test automatic delivery, finish reports, printable template refinements, backup and recovery, and full GitHub-to-Cloudflare continuous deployment.
