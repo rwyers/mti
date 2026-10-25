@@ -7,7 +7,7 @@ const MTI_ACTIVITY_SECTIONS=[
  {title:"Invites to Church",note:"Invited 5 people personally to church in the last 6 weeks. List their names.",rows:
   Array.from({length:5},(_,i)=>[{key:"evangelism_"+(i+1),label:"Person "+(i+1)}])},
  {title:"Confessions",note:"Write out 9 confessions, including scripture references from Champion Confessions by Dr. Carmen Lynne, that you spoke out loud in the last 6 weeks.",rows:[
-  [{key:"confessions",label:"Nine confessions and scripture references",multiline:true,lines:9}]
+  [{key:"confessions",label:"9 confessions and scripture references",multiline:true,lines:9}]
  ]},
  {title:"Attendance — Sunday Services",note:"List the theme of each Sunday service you attended and how it personally applied to your life.",rows:
   Array.from({length:6},(_,i)=>[
@@ -24,6 +24,12 @@ const MTI_ACTIVITY_SECTIONS=[
    {key:"small_"+(i+1)+"_date",label:"Meeting "+(i+1)+" — Date"},
    {key:"small_"+(i+1)+"_taught",label:"What was taught",multiline:true,lines:2},
    {key:"small_"+(i+1)+"_application",label:"Personal application",multiline:true,lines:2}
+  ])},
+ {title:"Next Steps",note:"Write 2 things you learned from each session you attended.",rows:
+  Array.from({length:4},(_,i)=>[
+   {key:"next_steps_"+(i+1)+"_date",label:"Session "+(i+1)+" — Date Attended"},
+   {key:"next_steps_"+(i+1)+"_learned_1",label:"Thing 1 you learned",multiline:true,lines:2},
+   {key:"next_steps_"+(i+1)+"_learned_2",label:"Thing 2 you learned",multiline:true,lines:2}
   ])},
  {title:"Spiritual Intensive Night",note:"Record the date and what was taught.",rows:[
   [{key:"intensive_date",label:"Date"},{key:"intensive_taught",label:"What was taught",multiline:true,lines:2}]
@@ -123,6 +129,16 @@ const MTI_HANDWRITING_PRINT_CSS='<style>'+
 '.mti-hand-sheet .mh-entry:last-child{border-bottom:0}'+
 '.mti-hand-sheet .mh-entry .mh-line{margin:2px 0}'+
 '.mti-hand-sheet .mh-entry-num{flex:0 0 20px;width:20px;font-size:9pt}'+
+'.mti-hand-sheet .mh-next-steps{margin-top:4px}'+
+'.mti-hand-sheet .mh-next-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 12px;margin-top:9px}'+
+'.mti-hand-sheet .mh-next-session{border:1px solid #cbd9cf;border-radius:7px;padding:9px 10px 10px;background:white;break-inside:avoid-page}'+
+'.mti-hand-sheet .mh-next-session-top{display:flex;align-items:baseline;gap:8px;margin-bottom:5px;font-size:9pt}'+
+'.mti-hand-sheet .mh-next-session-title{font-weight:800;white-space:nowrap}'+
+'.mti-hand-sheet .mh-next-session .mh-field{font-size:8.4pt}'+
+'.mti-hand-sheet .mh-next-session .mh-field b{font-size:8.4pt}'+
+'.mti-hand-sheet .mh-next-learning{display:flex;gap:7px;align-items:baseline;min-width:0;margin-top:8px;font-size:8.7pt}'+
+'.mti-hand-sheet .mh-next-learning b{flex:0 0 14px;white-space:nowrap}'+
+'.mti-hand-sheet .mh-next-learning .mh-answer{min-height:19px}'+
 '.mti-hand-sheet .mh-footer{padding-top:8px;margin-top:8px;border-top:1px solid #a8b7aa;font-size:8pt;color:#586c60;display:flex;justify-content:space-between}'+
 '@media print{'+
 '.mti-hand-sheet{break-before:page!important;page-break-before:always!important;break-after:auto;page-break-after:auto;break-inside:avoid-page;page-break-inside:avoid-page;height:9.28in!important;max-height:9.28in!important;max-width:none!important;border:0!important;margin:0!important;padding:0!important;display:flex;flex-direction:column;color:black;font:10pt/1.3 Arial,Helvetica,sans-serif}'+
@@ -166,6 +182,14 @@ function mtiActivityPrintHtml(raw){
     '<div class="mh-line"><b>Application:</b><span class="mh-answer">'+(value(p+"application")||'&nbsp;')+'</span></div>'+
     (n===6||value(p+"application")?'':'<div class="mh-rule"><span class="mh-rule-line"></span></div>')+'</div>';
   }).join(""));
+ const nextSteps=heading("Next Steps","Write 2 things you learned from each session you attended.",
+  '<div class="mh-next-grid">'+Array.from({length:4},(_,i)=>{
+   const n=i+1,p="next_steps_"+n+"_";
+   const item=(key,index)=>'<div class="mh-next-learning"><b>'+index+'.</b><span class="mh-answer">'+(value(key)||'&nbsp;')+'</span></div>';
+   return '<div class="mh-next-session"><div class="mh-next-session-top"><span class="mh-next-session-title">Session '+n+'</span>'+
+    field(p+"date","Date Attended")+'</div>'+
+    item(p+"learned_1",1)+item(p+"learned_2",2)+'</div>';
+  }).join("")+'</div>');
  const sheet=(sections,finalSheet)=>
   '<section class="mti-hand-sheet" aria-label="MTI printable lesson activity record">'+
    '<div class="mh-head"><h3>MTI Lesson Activity Record</h3>'+
@@ -176,7 +200,7 @@ function mtiActivityPrintHtml(raw){
    '</section>';
  return MTI_HANDWRITING_PRINT_CSS+
   sheet(service+evangelism+attendance,false)+
-  sheet(group,true);
+  sheet(group+nextSteps,true);
 }
 
 
@@ -255,7 +279,7 @@ function mtiLessonPrintCoverHtml(record){
  ].filter(Boolean).join("");
  const submittedResponse=fullResponse?card("Submitted Response",prose(shorten(fullResponse,420))+
   (clippedResponse?'<div class="mti-cover-online-note">The complete submitted response is available online.</div>':""),"mti-cover-response"):"";
- const confessionInstructions="Write nine confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne that you spoke aloud in the last six weeks. Complete this separately; no answers need to be written in this box.";
+ const confessionInstructions="Write 9 confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne that you spoke out loud in the last six weeks. Complete this separately; no answers need to be written in this box.";
  const confessionCard=card("Confessions",prose(confessionInstructions),"mti-cover-confessions");
  const title=plain(data.course)||plain(data.assignmentTitle)||"MTI Lesson";
  const name=plain(data.student),due=plain(data.due),credits=plain(data.credits);
