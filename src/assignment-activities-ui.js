@@ -273,7 +273,7 @@ function mtiLessonPrintCoverHtml(record){
  '.mti-cover-page .mti-cover-titleline h1{font:bold 18pt/1.16 Arial,Helvetica,sans-serif!important;color:#1a4030!important;margin:0 0 5px!important;letter-spacing:-.35px}'+
  
  '.mti-cover-page .mti-cover-year{white-space:nowrap;padding:3px 12px;font:bold 16pt/1.2 Arial,Helvetica,sans-serif;color:#214a37;letter-spacing:.3px;text-align:center}'+
- '.mti-cover-page .mti-cover-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px 14px;padding:11px 13px;background:#f6f9f6;border:1px solid #dce7dd;border-radius:8px;margin-bottom:10px}'+
+ '.mti-cover-page .mti-cover-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px 14px;padding:11px 13px;background:#fff;border:1px solid #ceded2;border-left:3px solid #47785c;border-radius:9px;margin-bottom:10px;box-shadow:3px 3px 0 #e3ede6}'+
  '.mti-cover-page .mti-cover-meta-student{grid-column:1/-1}'+
  '.mti-cover-page .mti-cover-meta-date{display:flex;flex-direction:column;gap:5px}'+
  '.mti-cover-page .mti-cover-meta-cell{display:flex;align-items:baseline;gap:8px;min-width:0}'+
@@ -296,7 +296,7 @@ function mtiLessonPrintCoverHtml(record){
  '.mti-cover-page .mti-office-marks .mti-office-title{font-size:8pt}'+
  '.mti-cover-page .mti-office-marks .mti-office-columns{grid-template-columns:minmax(0,1.03fr) minmax(0,1.37fr)}'+
  
- '@media print{.mti-cover-page{height:9.25in!important;max-height:9.25in!important;overflow:hidden!important;page-break-after:auto;break-after:auto;background:#fff!important;margin:0!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}.mti-cover-page .mti-cover-meta{background:#fff}.mti-cover-page .mti-cover-card,.mti-cover-page .mti-office-marks{box-shadow:3px 3px 0 #e3ede6!important}.mti-cover-page .mti-office-marks{background:#fff!important}}'+
+ '@media print{.mti-cover-page{height:9.25in!important;max-height:9.25in!important;overflow:hidden!important;page-break-after:auto;break-after:auto;background:#fff!important;margin:0!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}.mti-cover-page .mti-cover-meta{background:#fff}.mti-cover-page .mti-cover-meta,.mti-cover-page .mti-cover-card,.mti-cover-page .mti-office-marks{box-shadow:3px 3px 0 #e3ede6!important}.mti-cover-page .mti-office-marks{background:#fff!important}}'+
  '</style>'+
  '<section class="mti-cover-page" aria-label="MTI printable assignment cover"><div class="mti-cover-content">'+
  '<div class="mti-cover-topline"><span class="mti-cover-brand">Ministry Training Institute</span><span class="mti-cover-page-number">1 of 3</span></div>'+
