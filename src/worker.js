@@ -532,7 +532,7 @@ async function studentAPI(req,env,path) {
   const b=await payload(req),response=string(b.response_text,20000);
   if(b.activity_form!=null&&(typeof b.activity_form!=="object"||Array.isArray(b.activity_form)))return json({error:"Invalid lesson activity form"},400);
   const activity={};
-  const allowed=/^(?:service_(?:what|when|where|approved)|evangelism_[1-5]|confessions|sunday_[1-6]_(?:date|theme|application)|study_(?:date|taught|application)|small_[1-6]_(?:date|taught|application)|intensive_(?:date|taught)|mentorship_(?:date|signature))$/;
+  const allowed=/^(?:service_(?:what|when|where|approved)|evangelism_[1-5]|confessions|sunday_[1-6]_(?:date|theme|application)|study_(?:date|taught|application)|small_[1-6]_(?:date|taught|application)|next_steps_[1-4]_(?:date|learned_[12])|intensive_(?:date|taught)|mentorship_(?:date|signature))$/;
   for(const [key,value] of Object.entries(b.activity_form||{})){
    if(!allowed.test(key)||typeof value!=="string")return json({error:"Invalid lesson activity field"},400);
    const clean=value.trim();
