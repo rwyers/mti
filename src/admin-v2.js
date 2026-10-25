@@ -178,7 +178,7 @@ openForm=function(type,id){
  if(type==="editstudent")el("f_status").value=record.status;
  el("recordForm").addEventListener("submit",async function(e){
   e.preventDefault();var data={};new FormData(this).forEach(function(v,k){data[k]=v});
-  var btn=this.querySelector('[type="submit"]');btn.disabled=true;el("formError").textContent="";
+  var btn=this.querySelector('[type="submit"]')||document.querySelector('#overlay.mti-lesson-fullscreen button[form="recordForm"][type="submit"]');if(!btn)return;btn.disabled=true;el("formError").textContent="";
   try{await onSave(data)}catch(err){el("formError").textContent=err.message}finally{btn.disabled=false;}
  });
 };window.openForm=openForm;
