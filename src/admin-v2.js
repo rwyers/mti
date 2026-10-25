@@ -93,6 +93,12 @@ openForm=function(type,id){
  if(!["staff","password","editstudent","editcourse","editlesson"].includes(type)){
   previousOpenForm(type,id);
   if(type==="grade"){
+   var gradedAssignment=DATA.assignments.find(a=>a.id===id);
+   var linkedLesson=DATA.lessons.find(l=>l.id===gradedAssignment?.lesson_id);
+   if(linkedLesson&&Number(linkedLesson.is_current)!==1){
+    const warning='<div class="callout" role="status" style="background:#fff0f1;border:1px solid #efbfc3;color:#913d48;margin-bottom:14px"><strong>Lesson needs updating</strong><p style="margin:7px 0 0">This lesson has not been marked Current in Courses &amp; Lessons. Review it before assigning it to more students. You can still grade work already submitted.</p></div>';
+    el("recordForm")?.insertAdjacentHTML("afterbegin",warning);
+   }
    var submission=DATA.submissions?.find(function(s){return s.assignment_id===id});
    var form=el("recordForm");
    if(submission&&form)form.insertAdjacentHTML("afterbegin",'<div class="callout" style="background:#f3f8f5"><strong>Student submitted:</strong><p style="white-space:pre-wrap;margin:12px 0 0">'+esc(submission.response_text)+'</p><small>Submitted '+esc(submission.submitted_at)+'</small></div>');
@@ -148,7 +154,13 @@ openForm=function(type,id){
  if(type==="editlesson"){
   record=DATA.lessons.find(function(x){return x.id===id});if(!record)return;
   title="Edit lesson";
-  fields='<div class="formgrid">'+select("course_id","Course",copt,"required")+
+  const current=Number(record.is_current)===1;
+  fields='<style>.mti-review-panel{background:#f7f9fb;border:1px solid #dbe3ec;border-radius:12px;padding:16px;margin-bottom:19px}.mti-review-panel h3{margin:0 0 4px;font-size:15px;color:#243e4e}.mti-review-panel p{margin:0 0 13px;font-size:12px;color:#5c7079;line-height:1.5}.mti-review-tabs{display:flex;gap:10px;flex-wrap:wrap}.mti-review-tabs label{cursor:pointer;flex:1;min-width:170px;margin:0}.mti-review-tabs input{position:absolute;opacity:0;width:1px;height:1px}.mti-review-tabs span{display:block;padding:12px 14px;background:#fff;border:2px solid #d7e0e7;border-radius:9px;font-size:13px;font-weight:750}.mti-review-tabs input[value="0"]:checked+span{background:#fff0f1;border-color:#e8a9b0;color:#843643}.mti-review-tabs input[value="1"]:checked+span{background:#eaf3ff;border-color:#96bae8;color:#254c81}.mti-review-tabs input:focus-visible+span{outline:2px solid #456a87;outline-offset:2px}</style>'+
+   '<section class="mti-review-panel"><h3>Lesson review status</h3><p>All older lessons begin as needing an update. After reviewing the contents, select Current and click Save lesson. Editing alone does not mark it as current.</p>'+
+   '<div class="mti-review-tabs" role="radiogroup" aria-label="Lesson review status">'+
+   '<label><input type="radio" name="is_current" value="0" '+(!current?'checked':'')+'><span>Needs updating · Red</span></label>'+
+   '<label><input type="radio" name="is_current" value="1" '+(current?'checked':'')+'><span>Current · Blue</span></label></div></section>'+
+   '<div class="formgrid">'+select("course_id","Course",copt,"required")+
    select("year","Year",optsNums(5,Number(record.year)))+
    input("lesson_number","Lesson number","number",record.lesson_number,'min=1 max=52 required')+
    input("credits","Credits","number",record.credits,'min=0')+
