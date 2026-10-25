@@ -66,7 +66,7 @@ function printMtiLesson(id){
   section("Bible study",lesson.bible_instruction)+
   section("Lesson assignment",lesson.assignment_instructions)+
   section("Required materials",lesson.materials_list)+
-  section("Submission notes",lesson.submission_notes)+
+
   '<section class="lesson-section"><h2>Student responses / notes</h2>'+responseLines+'</section>'+
   mtiActivityPrintHtml({})+'</main></body></html>';
  const printWindow=window.open("","_blank");
