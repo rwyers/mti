@@ -17,6 +17,36 @@ function page(value) {
  "Content-Security-Policy":"default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"}});
 }
 const string = (v,max=5000) => String(v==null?"":v).trim().slice(0,max);
+
+/* The material cards stay independently editable in Admin; students/printing read
+   the already-expanded assignment_instructions, so all existing paths keep working. */
+function mtiPrepareMaterialAssignments(raw,base,stored=null){
+ const manual=String(base==null?"":base).trim();
+ if(manual.length>12000)throw Error("Regular assignment instructions must be shorter than 12,000 characters.");
+ const old=mtiMaterialCardsFrom(stored);
+ if(raw===undefined||raw===null){
+  if(old.cards.length)throw Error("Please refresh Edit lesson before saving material assignment cards.");
+  return {instructions:manual,json:"{}"};
+ }
+ let input;
+ try{input=typeof raw==="string"?JSON.parse(raw):raw}catch{throw Error("Invalid material assignment cards; please refresh and retry.")}
+ if(!input||typeof input!=="object"||Array.isArray(input)||!Array.isArray(input.cards))
+  throw Error("Invalid material assignment card list.");
+ if(input.cards.length>30)throw Error("You can add at most 30 material cards to a lesson.");
+ const cards=input.cards.map((item,i)=>{
+  if(!item||typeof item!=="object"||Array.isArray(item)||typeof item.title!=="string"||
+   typeof item.author!=="string"||typeof item.type!=="string"||
+   item.title.length>180||item.author.length>140||
+   !MTI_MATERIAL_CARD_TYPES.some(t=>t.value===item.type))throw Error("Invalid material details on card "+(i+1)+".");
+  const title=mtiMaterialClean(item.title,180),author=mtiMaterialClean(item.author,140);
+  if(!title)throw Error("Material name is required on card "+(i+1)+".");
+  return {type:item.type,title,author};
+ });
+ const instructions=mtiMaterialCombinedText(manual,cards);
+ if(instructions.length>12000)throw Error("This lesson has too much assignment text. Reduce the manual instructions or number of cards before saving.");
+ return {instructions,json:JSON.stringify({version:1,base:manual,cards})};
+}
+
 const epoch=()=>Math.floor(Date.now()/1000);
 const hex = (buf)=>Array.from(new Uint8Array(buf)).map(x=>x.toString(16).padStart(2,"0")).join("");
 async function digest(v) {return hex(await crypto.subtle.digest("SHA-256",enc.encode(v)));}
@@ -343,14 +373,17 @@ async function adminAPI(req,env,path){
   if(!before)return json({error:"Lesson not found"},404);
   const course=string(b.course_id,80),year=Number(b.year),n=Number(b.lesson_number);
   if(!course||!Number.isInteger(year)||year<1||year>5||!Number.isInteger(n)||n<1||n>52)return json({error:"Invalid lesson details"},400);
+  let materialState;
+  try{materialState=mtiPrepareMaterialAssignments(b.material_assignment_cards_json,b.assignment_instructions,before.material_assignment_cards_json);}
+  catch(error){return json({error:error.message},400);}
   const after={...before,course_id:course,year,lesson_number:n,credits:Math.max(0,Number(b.credits)||0),
    memory_verse_reference:string(b.memory_verse_reference,200),memory_verse_text:string(b.memory_verse_text,2000),
-   bible_instruction:string(b.bible_instruction,6000),assignment_instructions:string(b.assignment_instructions,12000),
+   bible_instruction:string(b.bible_instruction,6000),assignment_instructions:materialState.instructions,material_assignment_cards_json:materialState.json,
    submission_notes:string(b.submission_notes,3000),materials_list:string(b.materials_list,4000),
    is_current:b.is_current===undefined?Number(before.is_current)||0:Number(b.is_current)};
   if(![0,1].includes(after.is_current))return json({error:"Invalid lesson review status"},400);
-  await env.DB.prepare("UPDATE lessons SET course_id=?,year=?,lesson_number=?,credits=?,memory_verse_reference=?,memory_verse_text=?,bible_instruction=?,assignment_instructions=?,submission_notes=?,materials_list=?,is_current=? WHERE id=?")
-   .bind(after.course_id,after.year,after.lesson_number,after.credits,after.memory_verse_reference,after.memory_verse_text,after.bible_instruction,after.assignment_instructions,after.submission_notes,after.materials_list,after.is_current,id).run();
+  await env.DB.prepare("UPDATE lessons SET course_id=?,year=?,lesson_number=?,credits=?,memory_verse_reference=?,memory_verse_text=?,bible_instruction=?,assignment_instructions=?,submission_notes=?,materials_list=?,is_current=?,material_assignment_cards_json=? WHERE id=?")
+   .bind(after.course_id,after.year,after.lesson_number,after.credits,after.memory_verse_reference,after.memory_verse_text,after.bible_instruction,after.assignment_instructions,after.submission_notes,after.materials_list,after.is_current,after.material_assignment_cards_json,id).run();
   await auditAction(env,u,"update","lesson",id,before,after);return json({ok:true});
  }
  if(path==="/api/admin/assignments"&&req.method==="POST"){
