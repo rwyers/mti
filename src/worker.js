@@ -364,8 +364,8 @@ async function adminAPI(req,env,path){
   const id=crypto.randomUUID(),course=string(b.course_id,80);
   const year=Number(b.year),n=Number(b.lesson_number);
   if(!course||!Number.isInteger(year)||year<1||year>5||!Number.isInteger(n)||n<1||n>52)return json({error:"Choose course, year and lesson"},400);
-  await env.DB.prepare("INSERT INTO lessons(id,course_id,year,lesson_number,credits,memory_verse_reference,memory_verse_text,bible_instruction,assignment_instructions,submission_notes,materials_list) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
-  .bind(id,course,year,n,Math.max(0,Number(b.credits)||0),string(b.memory_verse_reference,200),string(b.memory_verse_text,2000),(year===1?(string(b.bible_instruction,6000)||MTI_YEAR1_BIBLE_INSTRUCTION):string(b.bible_instruction,6000)),string(b.assignment_instructions,12000),string(b.submission_notes,3000),string(b.materials_list,4000)).run();
+  await env.DB.prepare("INSERT INTO lessons(id,course_id,year,lesson_number,credits,memory_verse_reference,memory_verse_text,bible_instruction,assignment_instructions,materials_list) VALUES(?,?,?,?,?,?,?,?,?,?)")
+  .bind(id,course,year,n,Math.max(0,Number(b.credits)||0),string(b.memory_verse_reference,200),string(b.memory_verse_text,2000),(year===1?(string(b.bible_instruction,6000)||MTI_YEAR1_BIBLE_INSTRUCTION):string(b.bible_instruction,6000)),string(b.assignment_instructions,12000),string(b.materials_list,4000)).run();
   await auditAction(env,u,"create","lesson",id,null,{course_id:course,year,lesson_number:n});return json({ok:true,id},201);
  }
  if(path.startsWith("/api/admin/lessons/")&&req.method==="PATCH"){
@@ -379,11 +379,11 @@ async function adminAPI(req,env,path){
   const after={...before,course_id:course,year,lesson_number:n,credits:Math.max(0,Number(b.credits)||0),
    memory_verse_reference:string(b.memory_verse_reference,200),memory_verse_text:string(b.memory_verse_text,2000),
    bible_instruction:string(b.bible_instruction,6000),assignment_instructions:materialState.instructions,material_assignment_cards_json:materialState.json,
-   submission_notes:string(b.submission_notes,3000),materials_list:string(b.materials_list,4000),
+   materials_list:string(b.materials_list,4000),
    is_current:b.is_current===undefined?Number(before.is_current)||0:Number(b.is_current)};
   if(![0,1].includes(after.is_current))return json({error:"Invalid lesson review status"},400);
-  await env.DB.prepare("UPDATE lessons SET course_id=?,year=?,lesson_number=?,credits=?,memory_verse_reference=?,memory_verse_text=?,bible_instruction=?,assignment_instructions=?,submission_notes=?,materials_list=?,is_current=?,material_assignment_cards_json=? WHERE id=?")
-   .bind(after.course_id,after.year,after.lesson_number,after.credits,after.memory_verse_reference,after.memory_verse_text,after.bible_instruction,after.assignment_instructions,after.submission_notes,after.materials_list,after.is_current,after.material_assignment_cards_json,id).run();
+  await env.DB.prepare("UPDATE lessons SET course_id=?,year=?,lesson_number=?,credits=?,memory_verse_reference=?,memory_verse_text=?,bible_instruction=?,assignment_instructions=?,materials_list=?,is_current=?,material_assignment_cards_json=? WHERE id=?")
+   .bind(after.course_id,after.year,after.lesson_number,after.credits,after.memory_verse_reference,after.memory_verse_text,after.bible_instruction,after.assignment_instructions,after.materials_list,after.is_current,after.material_assignment_cards_json,id).run();
   await auditAction(env,u,"update","lesson",id,before,after);return json({ok:true});
  }
  if(path==="/api/admin/assignments"&&req.method==="POST"){
@@ -494,7 +494,7 @@ async function studentAPI(req,env,path) {
  if(path==="/api/student/change-password"&&req.method==="POST")return changePassword(req,env,user);
  if(path==="/api/student/data"&&req.method==="GET"){
   const s=await env.DB.prepare("SELECT s.id,s.full_name,s.email,s.course_id,s.current_year,s.current_lesson,s.status,c.name AS course_name FROM students s LEFT JOIN courses c ON c.id=s.course_id WHERE s.id=?").bind(user.student_id).first();
-  const assignments=await env.DB.prepare("SELECT a.*, l.course_id,c.name AS course_name,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.submission_notes,l.materials_list,s.response_text,s.activity_form_json,s.submitted_at AS response_submitted_at FROM assignments a LEFT JOIN lessons l ON l.id=a.lesson_id LEFT JOIN courses c ON c.id=l.course_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? ORDER BY a.created_at DESC").bind(user.student_id).all();
+  const assignments=await env.DB.prepare("SELECT a.*, l.course_id,c.name AS course_name,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.materials_list,s.response_text,s.activity_form_json,s.submitted_at AS response_submitted_at FROM assignments a LEFT JOIN lessons l ON l.id=a.lesson_id LEFT JOIN courses c ON c.id=l.course_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? ORDER BY a.created_at DESC").bind(user.student_id).all();
   const files=await env.DB.prepare("SELECT id,assignment_id,filename,content_type,size_bytes,created_at FROM submission_files WHERE student_id=? ORDER BY created_at DESC").bind(user.student_id).all();
   return json({student:s,assignments:assignments.results,files:files.results});
  }
