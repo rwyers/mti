@@ -110,7 +110,7 @@ const MTI_HANDWRITING_PRINT_CSS='<style>'+
 '.mti-hand-sheet .mh-rule-num{flex:0 0 20px;font-size:9pt;font-weight:700}'+
 '.mti-hand-sheet .mh-rule-line{flex:1;border-bottom:1px solid #a6b5aa;min-width:0;min-height:18px}'+
 '.mti-hand-sheet .mh-filled{white-space:pre-wrap;overflow-wrap:anywhere;border-bottom:1px solid #a6b5aa;padding:2px 0 5px;font-size:9pt;line-height:1.4}'+
-'.mti-hand-sheet .mh-entry{padding:1px 0 2px;border-bottom:1px dotted #d5ded6;break-inside:avoid-page}'+
+'.mti-hand-sheet .mh-entry{padding:3px 0 6px;border-bottom:1px dotted #d5ded6;break-inside:avoid-page}'+
 '.mti-hand-sheet .mh-entry:last-child{border-bottom:0}'+
 '.mti-hand-sheet .mh-entry .mh-line{margin:2px 0}'+
 '.mti-hand-sheet .mh-entry-num{flex:0 0 20px;width:20px;font-size:9pt}'+
@@ -149,23 +149,17 @@ function mtiActivityPrintHtml(raw){
    const n=i+1,p="sunday_"+n+"_";
    return '<div class="mh-entry"><div class="mh-line"><b class="mh-entry-num">'+n+'.</b>'+
     field(p+"date","Date")+field(p+"theme","Theme")+'</div>'+
-    '<div class="mh-line"><b>Application:</b><span class="mh-answer">'+(value(p+"application")||'&nbsp;')+'</span></div></div>';
+    '<div class="mh-line"><b>Application:</b><span class="mh-answer">'+(value(p+"application")||'&nbsp;')+'</span></div>'+
+    (value(p+"application")?'':'<div class="mh-rule"><span class="mh-rule-line"></span></div>')+'</div>';
   }).join(""));
- const study=heading("MTI Study Night","Record one thing you learned and how you will apply it.",
-  pair(field("study_date","Date"),field("study_taught","What was taught"))+
-  writing("study_application","How I will apply it",3));
  const group=heading("Small Group / Worship Encounter","For each of six meetings, write what you learned and how it applies to your Christian walk.",
   Array.from({length:6},(_,i)=>{
    const n=i+1,p="small_"+n+"_";
    return '<div class="mh-entry"><div class="mh-line"><b class="mh-entry-num">'+n+'.</b>'+
     field(p+"date","Date")+field(p+"taught","Taught")+'</div>'+
-    '<div class="mh-line"><b>Application:</b><span class="mh-answer">'+(value(p+"application")||'&nbsp;')+'</span></div></div>';
+    '<div class="mh-line"><b>Application:</b><span class="mh-answer">'+(value(p+"application")||'&nbsp;')+'</span></div>'+
+    (value(p+"application")?'':'<div class="mh-rule"><span class="mh-rule-line"></span></div>')+'</div>';
   }).join(""));
- const intensive=heading("Spiritual Intensive Night","Record the date and what you learned.",
-  pair(field("intensive_date","Date"),field("intensive_taught","What was taught"))+
-  '<div class="mh-rule"><span class="mh-rule-line"></span></div>');
- const mentor=heading("Mentorship Assignment","Record the date and obtain your mentor's signature or confirmation.",
-  pair(field("mentorship_date","Date"),field("mentorship_signature","Signature / confirmation")));
  const sheet=(n,topic,sections)=>
   '<section class="mti-hand-sheet" aria-label="MTI activity record printable page '+n+' of 2">'+
    '<div class="mh-head"><div><h3>MTI Lesson Activity Record</h3><span class="mh-page">Page '+n+' of 2 · '+topic+'</span></div>'+
@@ -174,6 +168,6 @@ function mtiActivityPrintHtml(raw){
    '<div class="mh-footer"><span>'+(n===2?'Return completed paper assignment to your MTI instructor.':'Ministry Training Institute · Handwritten activity record')+'</span><span>Page '+n+' / 2</span></div>'+
    '</section>';
  return MTI_HANDWRITING_PRINT_CSS+
-  sheet(1,"Service, outreach, Sunday attendance and study night",service+evangelism+attendance+study)+
-  sheet(2,"Confessions, groups, spiritual intensive and mentorship",confessions+group+intensive+mentor);
+  sheet(1,"Service, personal evangelism and Sunday attendance",service+evangelism+attendance)+
+  sheet(2,"Confessions and small-group / worship encounters",confessions+group);
 }
