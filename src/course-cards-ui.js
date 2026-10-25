@@ -24,60 +24,41 @@
  });
 })();
 
-/* Print a standalone copy of any curriculum lesson, without a student login or assignment. */
+/* Print one clean lesson/marking cover followed by the two existing activity sheets. */
 function printMtiLesson(id){
  const lesson=DATA.lessons.find(l=>String(l.id)===String(id));
  if(!lesson){alert("Lesson not found. Refresh the page and try again.");return;}
  const course=DATA.courses.find(c=>String(c.id)===String(lesson.course_id));
- const safe=value=>esc(value==null?"":value);
- const section=(label,value)=>String(value==null?"":value).trim()?
-  '<section class="lesson-section"><h2>'+safe(label)+'</h2><div class="lesson-copy">'+safe(value)+'</div></section>':"";
- const scripture=lesson.memory_verse_reference||lesson.memory_verse_text?
-  '<section class="lesson-section"><h2>Scripture to memorize</h2>'+
-  (lesson.memory_verse_reference?'<p class="scripture-ref">'+safe(lesson.memory_verse_reference)+'</p>':"")+
-  (lesson.memory_verse_text?'<div class="lesson-copy">'+safe(lesson.memory_verse_text)+'</div>':"")+
-  '</section>':"";
- const title=(course?.name||"MTI Course")+' — Year '+lesson.year+' Lesson '+lesson.lesson_number;
- const responseLines=Array.from({length:8},()=>'<div class="writing-line"></div>').join("");
+ const title=(course?.name||"MTI Course")+" — Year "+lesson.year+" Lesson "+lesson.lesson_number;
+ const cover=mtiLessonPrintCoverHtml({
+  course:course?.name||"MTI Course",
+  year:lesson.year,lesson:lesson.lesson_number,credits:lesson.credits,
+  verseRef:lesson.memory_verse_reference,verseText:lesson.memory_verse_text,
+  bible:lesson.bible_instruction,assignment:lesson.assignment_instructions,
+  materials:lesson.materials_list
+ });
  const documentHtml='<!doctype html><html lang="en"><head><meta charset="utf-8">'+
-  '<meta name="viewport" content="width=device-width, initial-scale=1"><title>'+safe(title)+'</title>'+
+  '<meta name="viewport" content="width=device-width, initial-scale=1"><title>'+esc(title)+'</title>'+
   '<style>'+
-  '@page{size:letter;margin:.7in}*{box-sizing:border-box}body{margin:0;background:#f1f4f2;color:#1b2924;font:12pt/1.5 Arial,Helvetica,sans-serif}'+
-  '.print-tools{max-width:820px;margin:18px auto 0;display:flex;justify-content:space-between;align-items:center;gap:12px;font:14px Arial,Helvetica,sans-serif}'+
-  '.print-tools button{background:#1e5341;color:white;border:0;border-radius:8px;padding:10px 18px;font-weight:700;cursor:pointer}'+
-  'main{max-width:820px;background:white;margin:14px auto 45px;padding:48px;box-shadow:0 7px 32px #0001}'+
-  '.brand{text-transform:uppercase;letter-spacing:2px;font-size:11pt;font-weight:700;color:#325f4f}'+
-  'h1{font-size:21pt;line-height:1.2;margin:8px 0 12px}'+
-  '.metadata{display:flex;flex-wrap:wrap;gap:10px 24px;font-size:10.5pt;color:#4c5a54;margin-bottom:22px}'+
-  '.student-fields{border-top:1px solid #aebdb5;border-bottom:1px solid #aebdb5;padding:13px 0;display:flex;gap:32px;font-size:11pt;margin-bottom:24px}'+
-  '.student-fields span{flex:1}.blank{display:inline-block;border-bottom:1px solid #88998f;width:70%;height:1em;vertical-align:bottom}'+
-  '.lesson-section{margin:0 0 23px;break-inside:avoid-page}h2{font-size:13pt;margin:0 0 8px;color:#244d3e;border-bottom:1px solid #d7e3dc;padding-bottom:4px}'+
-  '.lesson-copy{white-space:pre-wrap;overflow-wrap:anywhere}.scripture-ref{font-weight:700;margin:4px 0 6px}'+
-  '.writing-line{height:28px;border-bottom:1px solid #cbd7d0}'+
-  '.paper-note{margin:25px 0 0;color:#64736b;font-size:9pt}'+
-  '@media(max-width:650px){main{margin:12px;padding:25px}.print-tools{margin:12px;padding:0 12px}.student-fields{gap:12px;flex-direction:column}.blank{width:65%}}'+
-  '@media print{body{background:white}main{margin:0;max-width:none;padding:0;box-shadow:none}.print-tools{display:none!important}.lesson-section{break-inside:avoid-page}.paper-note{color:#444}}'+
+  '@page{size:letter;margin:.6in}*{box-sizing:border-box}body{margin:0;background:#edf2ee;color:#1a3327;font:12px/1.45 Arial,Helvetica,sans-serif}'+
+  '.print-tools{max-width:850px;margin:18px auto 10px;display:flex;justify-content:space-between;align-items:center;gap:12px;font:14px Arial,Helvetica,sans-serif}'+
+  '.print-tools button{background:#22533c;color:white;border:0;border-radius:8px;padding:11px 18px;font-weight:750;cursor:pointer}'+
+  'main{max-width:850px;background:white;margin:12px auto 40px;padding:25px;box-shadow:0 8px 30px #152c1d12}'+
+  '@media print{body{background:#fff!important}main{max-width:none!important;padding:0!important;margin:0!important;box-shadow:none!important}.print-tools{display:none!important}'+
+  '.mti-cover-page{height:9.25in!important}'+
+  '}'+
   '</style></head><body>'+
-  '<div class="print-tools"><strong>MTI printable lesson</strong><button type="button" id="mtiPrintNow">Print / Save PDF</button></div>'+
-  '<main><header><div class="brand">Ministry Training Institute</div><h1>'+safe(course?.name||"MTI Course")+'</h1>'+
-  '<div class="metadata"><span>Year '+safe(lesson.year)+' · Lesson '+safe(lesson.lesson_number)+'</span><span>Credits: '+safe(lesson.credits)+'</span></div></header>'+
-  '<div class="student-fields"><span>Student: <i class="blank"></i></span><span>Date: <i class="blank"></i></span></div>'+
-  scripture+
-  section("Bible study",lesson.bible_instruction)+
-  section("Lesson assignment",lesson.assignment_instructions)+
-  section("Required materials",lesson.materials_list)+
-
-  '<section class="lesson-section"><h2>Student responses / notes</h2>'+responseLines+'</section>'+
-  mtiOfficeGradingPrintHtml()+
-  mtiActivityPrintHtml({})+'</main></body></html>';
- const printWindow=window.open("","_blank");
- if(!printWindow){alert("Your browser blocked the print window. Allow pop-ups for MTI and try again.");return;}
- printWindow.document.open();
- printWindow.document.write(documentHtml);
- printWindow.document.close();
- printWindow.document.getElementById("mtiPrintNow").addEventListener("click",function(){printWindow.focus();printWindow.print()});
- if(printWindow.document.readyState==="complete"){printWindow.focus();printWindow.print();}
- else printWindow.addEventListener("load",function(){printWindow.focus();printWindow.print()},{once:true});
+  '<div class="print-tools"><strong>MTI · Lesson &amp; grading sheet</strong><button type="button" id="mtiPrintNow">Print / Save PDF</button></div>'+
+  '<main>'+cover+mtiActivityPrintHtml({})+'</main></body></html>';
+ const win=window.open("","_blank");
+ if(!win){alert("Your browser blocked the print window. Allow pop-ups for MTI and try again.");return;}
+ win.document.open();win.document.write(documentHtml);win.document.close();
+ const scaleCover=()=>mtiFitLessonPrintCover(win.document.querySelector(".mti-cover-page"));
+ const doPrint=()=>{scaleCover();win.focus();win.print();};
+ win.document.getElementById("mtiPrintNow").addEventListener("click",doPrint);
+ win.addEventListener("beforeprint",scaleCover);
+ if(win.document.readyState==="complete")doPrint();
+ else win.addEventListener("load",doPrint,{once:true});
 }
 
 function mtiGroupName(name){
