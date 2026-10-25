@@ -25,7 +25,7 @@
 })();
 
 /* Print one clean lesson/marking cover followed by the two existing activity sheets. */
-function printMtiLesson(id){
+function printMtiLesson(id,studentName="",targetWindow=null){
  const lesson=DATA.lessons.find(l=>String(l.id)===String(id));
  if(!lesson){alert("Lesson not found. Refresh the page and try again.");return;}
  const course=DATA.courses.find(c=>String(c.id)===String(lesson.course_id));
@@ -33,6 +33,7 @@ function printMtiLesson(id){
  const cover=mtiLessonPrintCoverHtml({
   course:course?.name||"MTI Course",
   year:lesson.year,lesson:lesson.lesson_number,credits:lesson.credits,
+  student:studentName,
   verseRef:lesson.memory_verse_reference,verseText:lesson.memory_verse_text,
   bible:lesson.bible_instruction,assignment:lesson.assignment_instructions,
   materials:lesson.materials_list
@@ -50,7 +51,7 @@ function printMtiLesson(id){
   '</style></head><body>'+
   '<div class="print-tools"><strong>MTI · Lesson &amp; grading sheet</strong><button type="button" id="mtiPrintNow">Print / Save PDF</button></div>'+
   '<main>'+cover+mtiActivityPrintHtml({})+'</main></body></html>';
- const win=window.open("","_blank");
+ const win=targetWindow||window.open("","_blank");
  if(!win){alert("Your browser blocked the print window. Allow pop-ups for MTI and try again.");return;}
  win.document.open();win.document.write(documentHtml);win.document.close();
  const scaleCover=()=>mtiFitLessonPrintCover(win.document.querySelector(".mti-cover-page"));
