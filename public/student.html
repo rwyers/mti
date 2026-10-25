@@ -28,7 +28,7 @@ textarea{min-height:230px;resize:vertical;line-height:1.7}.error{color:#ab4b45;f
 #paper{display:none}#passwordPanel{padding:30px;max-width:550px;margin:26px auto}#passwordPanel h2{margin-top:0}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr 1fr}.panel-top{padding:15px}}
 @media(max-width:600px){.wrap{padding:0 15px}.brand{font-size:12px}.brand small{font-size:8px}.mark{font-size:16px;padding:8px}.auth-card{padding:30px 21px}.cards{grid-template-columns:1fr}.intro h1{font-size:30px}.details{padding:22px}.details h2{font-size:27px}}
-@media print{header,#auth,#portal,#passwordPanel{display:none!important}#paper{display:block!important;background:#fff;color:#000;font:12pt/1.4 Georgia,serif;padding:0;white-space:normal}#paper h1{font-size:25pt}#paper h2{font-size:16pt;margin-top:23px}#paper p{color:#000;white-space:pre-wrap}body{background:#fff}@page{size:letter;margin:12mm}}
+@media print{header,#auth,#portal,#passwordPanel{display:none!important}#paper{display:block!important;background:#fff;color:#000;font:12pt/1.4 Georgia,serif;padding:0;white-space:normal}#paper h1{font-size:25pt}#paper h2{font-size:16pt;margin-top:23px}#paper p{color:#000;white-space:pre-wrap}body{background:#fff}@page{size:letter;margin:.6in .4in .6in .9in}}
 </style></head>
 <body><header><div class="wrap"><a href="/" class="brand"><span class="mark">MTI</span><span>MINISTRY TRAINING<small>STUDENT LEARNING PORTAL</small></span></a><div style="display:flex;gap:18px;align-items:center"><a class="link" href="/">Website</a><button id="logout" class="outline hidden">Sign out</button></div></div></header>
 <section id="auth" class="auth"><div class="auth-card"><div class="eyebrow">MTI Student Portal</div><h1 id="authHeading">Welcome back.</h1><p id="authIntro">Access your assigned lessons, write your responses, and see feedback from your instructors.</p>
@@ -206,7 +206,7 @@ function printAssignment(a){
  // Measure in a letter-paper-width, off-screen box even when #paper is hidden
  // on the student dashboard. Remove the temporary display styles before print.
  const paper=el("paper"),before=paper.getAttribute("style");
- paper.style.cssText="display:block!important;position:absolute!important;left:-9999px!important;top:0!important;width:7.3in!important;visibility:hidden!important";
+ paper.style.cssText="display:block!important;position:absolute!important;left:-9999px!important;top:0!important;width:7.2in!important;visibility:hidden!important";
  mtiFitLessonPrintCover(paper.querySelector(".mti-cover-page"));
  if(before==null)paper.removeAttribute("style");else paper.setAttribute("style",before);
  window.print();
