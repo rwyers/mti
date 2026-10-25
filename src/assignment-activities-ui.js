@@ -185,21 +185,27 @@ function mtiOfficeGradingPrintHtml(){
  const bonuses=[
   ["Invite someone to church (2 pts each)",10],["Confessions",3],["Next Steps",4]
  ];
- const line=([name,max])=>'<div class="mti-office-mark-row"><span>'+name+'</span><span class="mti-office-score-fill">______ /'+max+'</span></div>';
+ // One fixed-width line and one right-aligned maximum in every scoring row.
+ const score=max=>'<span class="mti-office-score-fill"><span class="mti-office-score-line" aria-hidden="true"></span><span class="mti-office-score-max">/'+max+'</span></span>';
+ const line=([name,max])=>'<div class="mti-office-mark-row"><span>'+name+'</span>'+score(max)+'</div>';
  return '<style>'+
  '.mti-office-marks{border:1.5px solid #344c3c;border-radius:3px;margin:18px 0 22px;padding:13px 16px 15px;background:white;color:#1b2820;font:10pt/1.25 Arial,Helvetica,sans-serif;break-inside:avoid-page;page-break-inside:avoid}'+
  '.mti-office-marks *{box-sizing:border-box}'+
  '.mti-office-marks .mti-office-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-bottom:1px solid #a9b6ae;padding:0 0 5px;margin-bottom:9px}'+
  '.mti-office-marks h2{font:bold 13pt/1.2 Arial,Helvetica,sans-serif!important;color:#213b2c!important;border:0!important;padding:0!important;margin:0!important}'+
  '.mti-office-marks .mti-office-heading span{font-size:8pt;color:#56675d}'+
- '.mti-office-marks .mti-office-columns{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px}'+
+ '.mti-office-marks .mti-office-columns{display:grid;grid-template-columns:minmax(0,1.03fr) minmax(0,1.37fr);gap:9px}'+
  '.mti-office-marks .mti-office-title{font-weight:bold;font-size:9pt;margin:0 0 5px;color:#40574b}'+
  '.mti-office-marks .mti-office-mark-row{display:flex;justify-content:space-between;gap:9px;align-items:baseline;min-height:19px;margin:3px 0}'+
  '.mti-office-marks .mti-office-mark-row>span:first-child{flex:1;min-width:0}'+
- '.mti-office-marks .mti-office-score-fill{font-weight:700;white-space:nowrap;min-width:69px;text-align:right}'+
- '.mti-office-marks .mti-office-bonus{padding-left:12px;border-left:1px solid #d1d9d3}'+
+ '.mti-office-marks .mti-office-score-fill{display:grid;grid-template-columns:50px 38px;flex:0 0 88px;min-width:88px;align-items:end;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}'+
+ '.mti-office-marks .mti-office-score-line{display:block;width:50px;height:1em;border-bottom:1px solid #33493d}'+
+ '.mti-office-marks .mti-office-score-max{display:block;min-width:38px;text-align:right;line-height:1.2}'+
+ '.mti-office-marks .mti-office-bonus .mti-office-mark-row>span:first-child{white-space:nowrap;font-size:8.5pt;letter-spacing:-.1px}'+
+ '.mti-office-marks .mti-office-bonus{padding-left:9px;border-left:1px solid #d1d9d3;min-width:0}'+
  '.mti-office-marks .mti-office-total{border-top:1px solid #9dab9f;display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding-top:8px;margin-top:9px;font-size:11pt;font-weight:800}'+
- '.mti-office-marks .mti-office-total span:last-child{white-space:nowrap}'+
+ '.mti-office-marks .mti-office-total .mti-office-score-fill{font-size:11pt}'+
+ '.mti-office-marks .mti-office-bonus-subtotal{display:flex;align-items:baseline;justify-content:space-between;gap:9px;margin-top:8px;padding-top:7px;border-top:1px solid #d1d9d3;font-size:8.5pt;font-weight:700}'+
  '.mti-office-marks .mti-office-note{font-size:8pt;color:#536759;margin-top:6px}'+
  '@media print{.mti-office-marks{break-inside:avoid-page!important;page-break-inside:avoid!important;background:#fff!important;max-width:none!important;margin:16px 0 18px;padding:12px 14px}.mti-office-marks .mti-office-heading span,.mti-office-marks .mti-office-note{color:#333!important}}'+
  '@media(max-width:520px){.mti-office-marks .mti-office-columns{grid-template-columns:1fr}.mti-office-marks .mti-office-bonus{border-left:0;padding-left:0;border-top:1px solid #ddd;padding-top:8px}}'+
@@ -208,8 +214,8 @@ function mtiOfficeGradingPrintHtml(){
  '<div class="mti-office-heading"><h2>For Office Use Only</h2><span>MTI grading sheet</span></div>'+
  '<div class="mti-office-columns">'+
  '<div><div class="mti-office-title">Core marking · out of 100</div>'+core.map(line).join("")+
- '<div class="mti-office-total"><span>Total</span><span>______ /100</span></div></div>'+
+ '<div class="mti-office-total"><span>Total</span>'+score(100)+'</div></div>'+
  '<div class="mti-office-bonus"><div class="mti-office-title">Bonus · separate from /100</div>'+bonuses.map(line).join("")+
- '<div class="mti-office-note">Bonus subtotal: ______ /17</div></div></div>'+
+ '<div class="mti-office-bonus-subtotal"><span>Bonus subtotal</span>'+score(17)+'</div></div></div>'+
  '</section>';
 }
