@@ -101,8 +101,8 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 <div class="panel"><div class="panel-head"><div><h2>Lesson library</h2><p>Scripture, Bible instructions, assignments and supporting materials.</p></div></div><div id="lessonTable"></div></div></section>
 <section class="page" id="page-assignments"><div class="heading"><div><h1>Assignments</h1><p>Give a student a lesson, track submissions and record progress.</p></div><button class="primary" onclick="openForm('assignment')">+ New assignment</button></div>
 <div class="panel"><div class="panel-head"><div><h2>All assignments</h2><p>Submitted work can be marked in the Grading area.</p></div></div><div id="assignmentTable"></div></div></section>
-<section class="page" id="page-grading"><div class="heading"><div><h1>Grading</h1><p>Score student work using MTI's original marking rubric.</p></div></div>
-<div class="callout">Core scores total 100 points. The remaining tracked activities are recorded separately as additional points. All marks stay private.</div>
+<section class="page" id="page-grading"><div class="heading"><div><h1>Grading</h1><p>Mark work using the updated MTI office scoring sheet. Save individual scores as you go.</p></div></div>
+<div class="callout">The six main items total 100 points. Bonuses are tracked separately (up to 17). Enter just the items you have checked, then <strong>Save grading progress</strong>. Nothing is finalized or released to the student until <strong>Finish grading</strong>.</div>
 <div class="panel"><div class="panel-head"><div><h2>Mark assignments</h2><p>Select an assignment to score it and add feedback.</p></div></div><div id="gradingTable"></div></div></section>
 <section class="page" id="page-notifications"><div class="heading"><div><h1>Email notifications</h1><p>Control automatic email alerts while building and testing MTI.</p></div></div>
 <div class="panel" style="padding:24px;max-width:760px">
@@ -134,8 +134,8 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 <script>
 var DATA={courses:[],lessons:[],students:[],assignments:[],submissions:[]};var ACCOUNT=null;var CURRENT="overview";
 var MTI_YEAR1_BIBLE_INSTRUCTION="Write down one of your favorite verses you read in your devotional times this month and discuss how it spoke to you.";
-var CORE=[["scripture","Scripture memorized",5],["practical","Practical service",10],["bible","Bible reading and questions",5],["outreach","Outreach",10],["intensive","Spiritual Intensive Course",10],["assignment","Assignment",30],["attendance","Church attendance",12],["mentorship","Mentorship Assignment",12],["groups","Small Groups / Worship Encounter",6]];
-var BONUS=[["opportunity","Opportunity 101/102",5],["growth","Growth Tracks",10],["videos","Weekly YouTube Videos",12],["confessions","Confessions",3],["study","MTI Study Group",3]];
+var CORE=[["scripture","Scripture Memorized",5],["practical","Practical Service",18],["bible","Bible Reading",6],["assignment","Assignment",35],["attendance","Church Attendance",18],["groups","Small Groups",18]];
+var BONUS=[["invite","Invite someone to church (2 pts each)",10],["confessions","Confessions",3],["next_steps","Next Steps",4]];
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function nameOf(id,type){var r=DATA[type].find(function(x){return x.id===id});return r?(type==="students"?r.full_name:r.name):"—"}
 function lessonName(id){var l=DATA.lessons.find(function(x){return x.id===id});return l?nameOf(l.course_id,"courses")+" · Year "+l.year+" · Lesson "+l.lesson_number:"Custom assignment"}
@@ -157,13 +157,19 @@ function render(){
   ["Lessons available",lessons.length,"Curriculum records"],
   ["To be graded",assignments.filter(function(a){return a.status==="submitted"}).length,"Awaiting review"]
  ].map(function(a){return '<div class="stat"><span>'+a[0]+'</span><strong>'+a[1]+'</strong><small>'+a[2]+'</small></div>'}).join("");
+ function mtiDraftGradeSummary(a){
+  let draft={};
+  try{draft=JSON.parse(a.grading_draft_json||"{}")||{}}catch{}
+  var count=CORE.filter(function(x){return Object.prototype.hasOwnProperty.call(draft,x[0])}).length;
+  return count?'<small style="display:block;color:#876443;font-weight:700">Draft: '+count+'/6 items marked</small>':'';
+ }
  function assignmentRows(items,gradingMode){
   return items.map(function(a){return row([
     "<strong>"+esc(a.title)+"</strong><br><small>"+esc(lessonName(a.lesson_id))+(a.lesson_id?' · <span style=\"color:'+(lessonNeedsUpdate(a.lesson_id)?'#a14b56':'#3766a1')+';font-weight:700\">'+esc(lessonReviewLabel(a.lesson_id))+'</span>':'')+"</small>",
     esc(nameOf(a.student_id,"students")),esc(a.due_date||"Not set"),
-    badge(a.status),a.grade_points==null?"—":"<strong>"+a.grade_points+"/100</strong>",
+    badge(a.status),(a.grade_points==null?"—":"<strong>"+a.grade_points+"/100</strong>")+mtiDraftGradeSummary(a),
     '<div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">'+
-    (gradingMode?'<button class="soft" onclick="openForm(\'grade\',\''+a.id+'\')">'+(a.status==="graded"?"Edit marks":"Mark")+'</button>':
+    (gradingMode?'<button class="soft" onclick="openForm(\'grade\',\''+a.id+'\')">'+((a.grading_draft_json&&a.grading_draft_json!=="{}"?"Resume marking":a.status==="graded"?"Edit marks":"Mark"))+'</button>':
      '<button class="outline" onclick="openForm(\'grade\',\''+a.id+'\')">Review →</button>')+
     (a.status==="assigned"&&ACCOUNT&&["owner","admin"].includes(ACCOUNT.role)?
       '<button type="button" class="outline" data-unassign-id="'+esc(a.id)+'" style="color:#9b4742;border-color:#e9ccc8" aria-label="Unassign '+esc(a.title)+'">Unassign</button>':"")+'</div>'
@@ -197,12 +203,45 @@ function openForm(type,id){
  input("title","Assignment title","text","","required")+input("due_date","Due date","date")+buttons("Assign lesson")}
  if(type==="viewlesson"){rowData=DATA.lessons.find(function(l){return l.id===id});if(!rowData)return;title="Lesson details";fields='<div class="callout"><strong>'+esc(lessonName(id))+'</strong> · '+esc(rowData.credits)+' credits</div><h3>Scripture to memorize</h3><p>'+esc(rowData.memory_verse_reference)+" — "+esc(rowData.memory_verse_text)+'</p><h3>Bible study</h3><p style="white-space:pre-wrap">'+esc(rowData.bible_instruction)+'</p><h3>Assignment</h3><p style="white-space:pre-wrap">'+esc(rowData.assignment_instructions)+'</p><h3>Materials</h3><p style="white-space:pre-wrap">'+esc(rowData.materials_list)+'</p>'+buttons("Close");mode="viewlesson"}
  if(type==="grade"){
-  rowData=DATA.assignments.find(function(a){return a.id===id});if(!rowData)return;title="Mark assignment";var scores={};try{scores=JSON.parse(rowData.grading_json||"{}")}catch{}
-  fields='<div class="callout"><b>'+esc(rowData.title)+'</b><br>'+esc(nameOf(rowData.student_id,"students"))+'</div>';
-  fields+=select("status","Assignment status",'<option value="assigned">Assigned</option><option value="submitted">Submitted</option><option value="graded">Graded</option>');
-  fields+='<h3 style="margin:20px 0 13px">Core marking · out of 100</h3><div class="rubric">'+CORE.map(function(x){return '<div class="rubric-line"><label style="margin:0">'+esc(x[1])+' /'+x[2]+'</label><input data-score="'+x[0]+'" type="number" min="0" max="'+x[2]+'" value="'+esc(scores[x[0]]||0)+'"></div>'}).join("")+'</div>';
-  fields+='<h3 style="margin:25px 0 13px">Additional activities</h3><div class="rubric">'+BONUS.map(function(x){return '<div class="rubric-line"><label style="margin:0">'+esc(x[1])+' /'+x[2]+'</label><input data-score="'+x[0]+'" type="number" min="0" max="'+x[2]+'" value="'+esc(scores[x[0]]||0)+'"></div>'}).join("")+'</div>';
-  fields+='<div class="score-total">Core total <span id="coreTotal">0 / 100</span><br><small>Additional points: <span id="bonusTotal">0</span></small></div>'+area("feedback","Instructor feedback",rowData.feedback)+buttons("Save marks & status");mode="grade:"+id;
+  rowData=DATA.assignments.find(function(a){return a.id===id});if(!rowData)return;
+  title="Mark assignment";
+  var official={},draft={};
+  try{official=JSON.parse(rowData.grading_json||"{}")||{}}catch{}
+  try{draft=JSON.parse(rowData.grading_draft_json||"{}")||{}}catch{}
+  var newRubric=official.rubric_version==="office_2026";
+  var hasDraft=Object.keys(draft).length>0||!!rowData.grading_draft_feedback;
+  var scores=hasDraft?draft:(newRubric?official:{});
+  var oldGrade=rowData.status==="graded"&&!newRubric;
+  fields='<div class="callout" style="margin-bottom:13px"><b>'+esc(rowData.title)+'</b><br>'+esc(nameOf(rowData.student_id,"students"))+
+   '<br><span style="font-weight:700">Assignment status: '+esc(rowData.status)+
+   (rowData.status==="graded"?' · Official grade: '+esc(rowData.grade_points)+'/100':'')+'</span></div>';
+  fields+='<div class="callout" style="background:#edf5ff;color:#2f5a80;margin-bottom:15px">'+
+   '<strong>Mark in stages.</strong> Blank boxes mean not marked yet. Enter 0 when you have checked something and awarded no points. '+
+   'Save your progress anytime; finishing is a separate action.</div>';
+  if(oldGrade){
+   fields+='<div class="callout" style="background:#fff6e9;color:#785326"><strong>Previously graded using the older rubric.</strong> '+
+    'The existing '+esc(rowData.grade_points)+'/100 grade and bonus marks are preserved. The revised categories begin blank until you intentionally complete and publish a new grade.'+
+    '<details style="margin-top:7px"><summary>Show saved historical category marks</summary><pre style="white-space:pre-wrap;font-size:11px">'+esc(JSON.stringify(official,null,2))+'</pre></details></div>';
+  }
+  var scoreLine=function(x){
+   return '<div class="rubric-line"><label for="mtiScore_'+esc(x[0])+'" style="margin:0;font-size:13px">'+esc(x[1])+' <strong>/'+x[2]+'</strong></label>'+
+    '<input id="mtiScore_'+esc(x[0])+'" data-score="'+esc(x[0])+'" type="number" min="0" max="'+x[2]+'" step="'+(x[0]==="invite"?2:1)+'" placeholder="—" inputmode="numeric"'+
+    ' value="'+(Object.prototype.hasOwnProperty.call(scores,x[0])?esc(scores[x[0]]):'')+'"></div>';
+  };
+  fields+='<h3 style="margin:20px 0 13px">Core marking · out of 100</h3>'+
+   '<div class="rubric">'+CORE.map(scoreLine).join("")+'</div>';
+  fields+='<h3 style="margin:24px 0 10px">Bonus points · separate from /100</h3>'+
+   '<p class="small" style="margin:-4px 0 12px">Church invitations earn 2 points per person, up to 10.</p>'+
+   '<div class="rubric">'+BONUS.map(scoreLine).join("")+'</div>';
+  fields+='<div class="score-total"><span id="gradingProgressCount" style="float:right">0 / 6 core items scored</span>Core marks entered: <span id="coreTotal" style="float:none">0 / 100</span>'+
+   '<br><small>Bonus marks entered: <span id="bonusTotal">0 / 17</span></small></div>'+
+   area("feedback","Instructor feedback (draft until grading is finished)",
+    hasDraft?rowData.grading_draft_feedback:(rowData.status==="graded"?rowData.feedback:""))+
+   '<p class="small" id="gradingSaveState" role="status" aria-live="polite">No new marks saved in this editing session yet.</p>'+
+   '<div class="modal-actions"><button type="button" class="outline" onclick="closeForm()">Close</button>'+
+   '<button type="submit" class="outline">Save grading progress</button>'+
+   '<button type="button" class="primary" onclick="finishGrading()">Finish grading</button></div>';
+  mode="grade:"+id;
  }
  el("modalTitle").textContent=title;el("formError").textContent="";
  el("modalBody").innerHTML='<form id="recordForm">'+fields+'</form>';el("overlay").classList.remove("hidden");
@@ -229,17 +268,33 @@ function openForm(type,id){
   };
   reviewChoice.addEventListener("change",showReview);showReview();
  }
- if(type==="grade"){el("f_status").value=rowData.status;el("recordForm").addEventListener("input",calcScore);calcScore()}
+ if(type==="grade"){el("recordForm").addEventListener("input",calcScore);el("recordForm").dataset.gradeAction="save_progress";calcScore()}
  el("recordForm").addEventListener("submit",function(e){e.preventDefault();submitForm(mode)});
  var first=el("recordForm").querySelector("input,select,textarea");if(first)first.focus();
 }window.openForm=openForm;
-function calcScore(){var scores={};document.querySelectorAll("[data-score]").forEach(function(x){scores[x.dataset.score]=Number(x.value)||0});el("coreTotal").textContent=CORE.reduce(function(s,x){return s+(scores[x[0]]||0)},0)+" / 100";el("bonusTotal").textContent=BONUS.reduce(function(s,x){return s+(scores[x[0]]||0)},0)} 
+function calcScore(){
+ var scoreInputs=Array.from(el("recordForm")?.querySelectorAll("[data-score]")||[]);
+ var scores={};
+ scoreInputs.forEach(function(x){if(x.value!=="")scores[x.dataset.score]=Number(x.value)});
+ var marked=CORE.filter(x=>Object.prototype.hasOwnProperty.call(scores,x[0])).length;
+ el("coreTotal").textContent=CORE.reduce(function(s,x){return s+(scores[x[0]]||0)},0)+" / 100";
+ el("bonusTotal").textContent=BONUS.reduce(function(s,x){return s+(scores[x[0]]||0)},0)+" / 17";
+ el("gradingProgressCount").textContent=marked+" / 6 core items scored";
+}
+function finishGrading(){
+ var form=el("recordForm");if(!form)return;
+ var missing=CORE.filter(function(x){return !form.querySelector('[data-score="'+x[0]+'"]')?.value.trim()}).map(x=>x[1]);
+ if(missing.length){el("formError").textContent="To finish grading, fill in all six core scores (use 0 where appropriate): "+missing.join(", ")+". Otherwise click Save grading progress.";return;}
+ if(!confirm("Finish grading and publish the grade to the student? This can unlock the next lesson. To save unfinished marks instead, choose Cancel and Save grading progress."))return;
+ form.dataset.gradeAction="finish_grading";form.requestSubmit();
+}
 async function submitForm(mode){
  if(mode==="viewlesson"){closeForm();return}
  var form=el("recordForm"),button=form.querySelector('[type="submit"]'),b={};new FormData(form).forEach(function(v,k){b[k]=v});var path="/api/admin/"+mode+"s",method="POST";
  if(mode.startsWith("grade:")){
   path="/api/admin/assignments/"+mode.slice(6);method="PATCH";b.grading={};
-  form.querySelectorAll("[data-score]").forEach(function(x){b.grading[x.dataset.score]=Number(x.value)});
+  b.action=form.dataset.gradeAction==="finish_grading"?"finish_grading":"save_progress";
+  form.querySelectorAll("[data-score]").forEach(function(x){if(x.value!=="")b.grading[x.dataset.score]=Number(x.value)});
  }
  if(mode==="student")path="/api/admin/students";
  if(mode==="course")path="/api/admin/courses";
@@ -251,6 +306,14 @@ async function submitForm(mode){
  button.disabled=true;el("formError").textContent="";
  try{
   const result=await api(path,{method:method,headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+  if(mode.startsWith("grade:")&&b.action==="save_progress"){
+   var current=DATA.assignments.find(function(a){return a.id===mode.slice(6)});
+   if(current){current.grading_draft_json=JSON.stringify(b.grading);current.grading_draft_feedback=b.feedback||"";}
+   form.dataset.gradeAction="save_progress";
+   var saved=el("gradingSaveState");
+   if(saved){saved.style.color="#24684d";saved.textContent="✓ Progress saved — "+result.marked_count+" of 6 core items marked. This is NOT a final grade. You may close the window and continue later.";}
+   calcScore();return;
+  }
   closeForm();await refresh();
   if(mode.startsWith("grade:")){
    if(result.year_complete)alert("This student has completed all nine sessions in this academic year! Their finished year is now archived. The next year stays locked until payment and administrator approval.");
