@@ -110,16 +110,16 @@ const MTI_HANDWRITING_PRINT_CSS='<style>'+
 '.mti-hand-sheet .mh-rule-num{flex:0 0 20px;font-size:9pt;font-weight:700}'+
 '.mti-hand-sheet .mh-rule-line{flex:1;border-bottom:1px solid #a6b5aa;min-width:0;min-height:18px}'+
 '.mti-hand-sheet .mh-filled{white-space:pre-wrap;overflow-wrap:anywhere;border-bottom:1px solid #a6b5aa;padding:2px 0 5px;font-size:9pt;line-height:1.4}'+
-'.mti-hand-sheet .mh-entry{padding:2px 0 5px;border-bottom:1px dotted #d5ded6;break-inside:avoid-page}'+
+'.mti-hand-sheet .mh-entry{padding:1px 0 2px;border-bottom:1px dotted #d5ded6;break-inside:avoid-page}'+
 '.mti-hand-sheet .mh-entry:last-child{border-bottom:0}'+
 '.mti-hand-sheet .mh-entry .mh-line{margin:2px 0}'+
-'.mti-hand-sheet .mh-entry-title{font-size:8.7pt;font-weight:800;color:#314f3b}'+
+'.mti-hand-sheet .mh-entry-num{flex:0 0 20px;width:20px;font-size:9pt}'+
 '.mti-hand-sheet .mh-footer{padding-top:8px;margin-top:8px;border-top:1px solid #a8b7aa;font-size:8pt;color:#586c60;display:flex;justify-content:space-between}'+
 '@media print{'+
 '.mti-hand-sheet{break-before:page!important;page-break-before:always!important;break-after:auto;page-break-after:auto;break-inside:avoid-page;page-break-inside:avoid-page;height:9.28in!important;max-height:9.28in!important;max-width:none!important;border:0!important;margin:0!important;padding:0!important;display:flex;flex-direction:column;color:black;font:10pt/1.3 Arial,Helvetica,sans-serif}'+
 '.mti-hand-sheet .mh-body{flex:1;min-height:0}'+
 '.mti-hand-sheet .mh-note,.mti-hand-sheet .mh-page,.mti-hand-sheet .mh-footer{color:#333}'+
-'.mti-hand-sheet .mh-section{margin:0 0 8px}'+
+'.mti-hand-sheet .mh-section{margin:0 0 5px}'+
 '}</style>';
 function mtiActivityPrintHtml(raw){
  const data=mtiActivityData(raw);
@@ -147,9 +147,9 @@ function mtiActivityPrintHtml(raw){
  const attendance=heading("Attendance — Sunday Services","For six Sunday services, note the date, theme and how the message personally applied to your life.",
   Array.from({length:6},(_,i)=>{
    const n=i+1,p="sunday_"+n+"_";
-   return '<div class="mh-entry"><div class="mh-entry-title">Sunday '+n+'</div>'+
-    pair(field(p+"date","Date"),field(p+"theme","Theme"))+
-    writing(p+"application","Personal application",1)+'</div>';
+   return '<div class="mh-entry"><div class="mh-line"><b class="mh-entry-num">'+n+'.</b>'+
+    field(p+"date","Date")+field(p+"theme","Theme")+'</div>'+
+    '<div class="mh-line"><b>Application:</b><span class="mh-answer">'+(value(p+"application")||'&nbsp;')+'</span></div></div>';
   }).join(""));
  const study=heading("MTI Study Night","Record one thing you learned and how you will apply it.",
   pair(field("study_date","Date"),field("study_taught","What was taught"))+
@@ -157,9 +157,9 @@ function mtiActivityPrintHtml(raw){
  const group=heading("Small Group / Worship Encounter","For each of six meetings, write what you learned and how it applies to your Christian walk.",
   Array.from({length:6},(_,i)=>{
    const n=i+1,p="small_"+n+"_";
-   return '<div class="mh-entry"><div class="mh-entry-title">Meeting '+n+'</div>'+
-    pair(field(p+"date","Date"),field(p+"taught","What was taught"))+
-    writing(p+"application","Personal application",2)+'</div>';
+   return '<div class="mh-entry"><div class="mh-line"><b class="mh-entry-num">'+n+'.</b>'+
+    field(p+"date","Date")+field(p+"taught","Taught")+'</div>'+
+    '<div class="mh-line"><b>Application:</b><span class="mh-answer">'+(value(p+"application")||'&nbsp;')+'</span></div></div>';
   }).join(""));
  const intensive=heading("Spiritual Intensive Night","Record the date and what you learned.",
   pair(field("intensive_date","Date"),field("intensive_taught","What was taught"))+
@@ -174,6 +174,6 @@ function mtiActivityPrintHtml(raw){
    '<div class="mh-footer"><span>'+(n===2?'Return completed paper assignment to your MTI instructor.':'Ministry Training Institute · Handwritten activity record')+'</span><span>Page '+n+' / 2</span></div>'+
    '</section>';
  return MTI_HANDWRITING_PRINT_CSS+
-  sheet(1,"Service, evangelism, confessions and attendance",service+evangelism+confessions+attendance)+
-  sheet(2,"Study nights, groups and mentorship",study+group+intensive+mentor);
+  sheet(1,"Service, outreach, Sunday attendance and study night",service+evangelism+attendance+study)+
+  sheet(2,"Confessions, groups, spiritual intensive and mentorship",confessions+group+intensive+mentor);
 }
