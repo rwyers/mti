@@ -88,67 +88,92 @@ function mtiActivityReadOnlyHtml(raw){
   section.rows.map(row=>'<div class="mti-act-row">'+row.map(field=>'<div><label>'+mtiActivityEscape(field.label)+'</label><div class="mti-act-value">'+mtiActivityEscape(data[field.key]||"—")+'</div></div>').join("")+'</div>').join("")+'</section>').join("")+
  '</div>';
 }
-/* Compact paper-only layout; mtiActivityFormHtml is unchanged for online submissions. */
-const MTI_COMPACT_PAPER_CSS='<style>'+
-'.mti-pa-page{max-width:7.6in;margin:20px auto;color:#17281e;font:9.2pt/1.23 Arial,Helvetica,sans-serif;box-sizing:border-box}'+
-'.mti-pa-page *{box-sizing:border-box}'+
-'.mti-pa-page .pa-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:5px;margin-bottom:8px;border-bottom:2px solid #557664}'+
-'.mti-pa-page h3{font:bold 14pt/1.18 Arial,Helvetica,sans-serif!important;margin:0!important;color:#214b37}'+
-'.mti-pa-page .pa-meta{font-size:8.5pt;white-space:nowrap}'+
-'.mti-pa-page .pa-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:23px;align-items:stretch}'+
-'.mti-pa-page .pa-col{min-width:0;display:flex;flex-direction:column;justify-content:space-between}'+
-'.mti-pa-page .pa-section{margin:0 0 12px;padding:0;break-inside:avoid-page;page-break-inside:avoid}'+
-'.mti-pa-page h4{font:bold 10.5pt/1.22 Arial,Helvetica,sans-serif;margin:0 0 4px;padding:0 0 3px;border-bottom:1px solid #a0b2a6;color:#244b37}'+
-'.mti-pa-page .pa-note{font:8.3pt/1.22 Arial,Helvetica,sans-serif;color:#49564c;margin:2px 0 5px}'+
-'.mti-pa-page .pa-row{display:flex;align-items:baseline;gap:5px;margin:5px 0;min-height:16px;min-width:0}'+
-'.mti-pa-page .pa-field{display:inline-flex;flex:1 1 0;align-items:baseline;gap:3px;min-width:0}'+
-'.mti-pa-page .pa-field b{font:bold 8.2pt/1.22 Arial,Helvetica,sans-serif;white-space:nowrap}'+
-'.mti-pa-page .pa-answer{display:inline-block;flex:1;min-width:0;min-height:15px;border-bottom:1px solid #94a49a;white-space:pre-wrap;overflow-wrap:anywhere;padding:0 1px 1px}'+
-'.mti-pa-page .pa-entry{padding:3px 0 5px;break-inside:avoid-page;page-break-inside:avoid}'+
-'.mti-pa-page .pa-entry .pa-row{margin:2px 0}'+
-'.mti-pa-page .pa-num{flex:0 0 16px;width:16px;font-weight:bold}'+
-'.mti-pa-page .pa-confession-text{white-space:pre-wrap;overflow-wrap:anywhere;padding:4px;border:1px solid #ced7ce;font-size:8.5pt}'+
-'.mti-pa-page .pa-attach{font-size:8pt}'+
-'@media print{.mti-pa-page{break-before:page;page-break-before:always;break-inside:avoid-page;page-break-inside:avoid;max-width:none!important;margin:0!important;padding:0!important;color:#000;font:9.2pt/1.23 Arial,Helvetica,sans-serif}'+
-'.mti-pa-page .pa-columns{grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:8.7in}'+
-'.mti-pa-page .pa-note{color:#222}'+
-'.mti-pa-page .pa-section{margin-bottom:10px}'+
+/* Print-only fallback: two spacious, handwriting-friendly letter sheets.
+   Online entry, read-only grading and saved activity fields are unchanged. */
+const MTI_HANDWRITING_PRINT_CSS='<style>'+
+'.mti-hand-sheet,.mti-hand-sheet *{box-sizing:border-box}'+
+'.mti-hand-sheet{background:white;color:#182922;border:1px solid #d9e2dc;max-width:8.1in;margin:24px auto;padding:24px 25px;font:10pt/1.3 Arial,Helvetica,sans-serif}'+
+'.mti-hand-sheet .mh-head{display:flex;align-items:start;justify-content:space-between;gap:12px;border-bottom:2px solid #365f49;padding:0 0 9px;margin:0 0 10px}'+
+'.mti-hand-sheet h3{font:bold 16pt/1.15 Arial,Helvetica,sans-serif!important;color:#214a37;margin:0 0 3px!important}'+
+'.mti-hand-sheet .mh-page{font-weight:700;font-size:9pt;color:#456254}'+
+'.mti-hand-sheet .mh-name{font-size:9pt;white-space:nowrap;margin-top:3px;line-height:2}'+
+'.mti-hand-sheet .mh-body{display:flex;flex-direction:column;justify-content:space-between;flex:1;min-height:0}'+
+'.mti-hand-sheet .mh-section{break-inside:avoid-page;page-break-inside:avoid;margin:0 0 10px}'+
+'.mti-hand-sheet h4{font:bold 11pt/1.2 Arial,Helvetica,sans-serif;color:#244c39;border-bottom:1px solid #a8b7aa;margin:0 0 3px;padding-bottom:3px}'+
+'.mti-hand-sheet .mh-note{font:8.5pt/1.3 Arial,Helvetica,sans-serif;margin:3px 0 7px;color:#4b6052}'+
+'.mti-hand-sheet .mh-line{display:flex;align-items:end;gap:8px;min-width:0;margin:6px 0;font-size:9.2pt}'+
+'.mti-hand-sheet .mh-field{display:flex;align-items:baseline;gap:6px;flex:1 1 0;min-width:0}'+
+'.mti-hand-sheet .mh-field b{white-space:nowrap;font-size:9pt}'+
+'.mti-hand-sheet .mh-answer{flex:1;min-width:0;border-bottom:1px solid #9faea3;min-height:19px;white-space:pre-wrap;overflow-wrap:anywhere;padding-bottom:2px}'+
+'.mti-hand-sheet .mh-long-label{font-size:8.7pt;font-weight:700;margin:4px 0 0}'+
+'.mti-hand-sheet .mh-rule{display:flex;align-items:end;gap:7px;margin:1px 0;min-height:21px}'+
+'.mti-hand-sheet .mh-rule-num{flex:0 0 20px;font-size:9pt;font-weight:700}'+
+'.mti-hand-sheet .mh-rule-line{flex:1;border-bottom:1px solid #a6b5aa;min-width:0;min-height:18px}'+
+'.mti-hand-sheet .mh-filled{white-space:pre-wrap;overflow-wrap:anywhere;border-bottom:1px solid #a6b5aa;padding:2px 0 5px;font-size:9pt;line-height:1.4}'+
+'.mti-hand-sheet .mh-entry{padding:2px 0 5px;border-bottom:1px dotted #d5ded6;break-inside:avoid-page}'+
+'.mti-hand-sheet .mh-entry:last-child{border-bottom:0}'+
+'.mti-hand-sheet .mh-entry .mh-line{margin:2px 0}'+
+'.mti-hand-sheet .mh-entry-title{font-size:8.7pt;font-weight:800;color:#314f3b}'+
+'.mti-hand-sheet .mh-footer{padding-top:8px;margin-top:8px;border-top:1px solid #a8b7aa;font-size:8pt;color:#586c60;display:flex;justify-content:space-between}'+
+'@media print{'+
+'.mti-hand-sheet{break-before:page!important;page-break-before:always!important;break-after:auto;page-break-after:auto;break-inside:avoid-page;page-break-inside:avoid-page;height:9.28in!important;max-height:9.28in!important;max-width:none!important;border:0!important;margin:0!important;padding:0!important;display:flex;flex-direction:column;color:black;font:10pt/1.3 Arial,Helvetica,sans-serif}'+
+'.mti-hand-sheet .mh-body{flex:1;min-height:0}'+
+'.mti-hand-sheet .mh-note,.mti-hand-sheet .mh-page,.mti-hand-sheet .mh-footer{color:#333}'+
+'.mti-hand-sheet .mh-section{margin:0 0 8px}'+
 '}</style>';
 function mtiActivityPrintHtml(raw){
  const data=mtiActivityData(raw);
- const answer=k=>mtiActivityEscape(String(data[k]||"").trim());
- const field=(key,label)=>'<span class="pa-field"><b>'+mtiActivityEscape(label)+':</b><span class="pa-answer">'+(answer(key)||'&nbsp;')+'</span></span>';
- const row=(...items)=>'<div class="pa-row">'+items.join("")+'</div>';
- const section=(heading,note,body)=>'<section class="pa-section"><h4>'+mtiActivityEscape(heading)+'</h4>'+
-   (note?'<p class="pa-note">'+mtiActivityEscape(note)+'</p>':"")+body+'</section>';
- const service=section("One Hour of Practical Service","Approved by Pastors Don & Tabatha Laing or Leslie Wyers.",
-   row(field("service_what","What"),field("service_when","When"))+row(field("service_where","Where"),field("service_approved","Approved by")));
- const outreach=section("Personal Evangelism","Invited 5 people personally to church in the last 6 weeks. List names:",
-   row(field("evangelism_1","1"),field("evangelism_2","2"))+
-   row(field("evangelism_3","3"),field("evangelism_4","4"))+row(field("evangelism_5","5")));
- const written=answer("confessions");
- const confessions=section("Confessions",
-   "On a separate sheet, write out 9 spoken confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne.",
-   written?'<div class="pa-confession-text">'+written+'</div>':
-   '<div class="pa-attach">Attach the nine confessions on a separate sheet.</div>');
- const attendance=section("Attendance — Sunday Services","Theme of each service and how it personally applied to your life.",
-   Array.from({length:6},(_,i)=>{
-     const n=i+1;
-     return '<div class="pa-entry">'+row('<span class="pa-num">'+n+'.</span>',field("sunday_"+n+"_date","Date"),field("sunday_"+n+"_theme","Theme"))+
-       row('<span class="pa-num"></span>',field("sunday_"+n+"_application","Application"))+'</div>';
-   }).join(""));
- const study=section("MTI Study Night","One thing learnt and how you will apply it to your life.",
-   row(field("study_date","Date"),field("study_taught","Taught"))+row(field("study_application","Application")));
- const groups=section("Small Group / Worship Encounter","One thing learnt from each meeting and how it personally applied to your Christian walk.",
-   Array.from({length:6},(_,i)=>{
-     const n=i+1;
-     return '<div class="pa-entry">'+row('<span class="pa-num">'+n+'.</span>',field("small_"+n+"_date","Date"),field("small_"+n+"_taught","Taught"))+
-       row('<span class="pa-num"></span>',field("small_"+n+"_application","Application"))+'</div>';
-   }).join(""));
- const intensive=section("Spiritual Intensive Night","",row(field("intensive_date","Date"),field("intensive_taught","Taught")));
- const mentor=section("Mentorship Assignment","",row(field("mentorship_date","Date"),field("mentorship_signature","Signature")));
- return MTI_COMPACT_PAPER_CSS+'<section class="mti-pa-page">'+
-  '<div class="pa-head"><h3>MTI Lesson Activity Record</h3><span class="pa-meta">Student: __________________  Date: __________</span></div>'+
-  '<div class="pa-columns"><div class="pa-col">'+service+outreach+confessions+attendance+'</div>'+
-  '<div class="pa-col">'+study+groups+intensive+mentor+'</div></div></section>';
+ const value=k=>mtiActivityEscape(String(data[k]||"").trim());
+ const field=(key,label)=>'<span class="mh-field"><b>'+mtiActivityEscape(label)+':</b><span class="mh-answer">'+(value(key)||'&nbsp;')+'</span></span>';
+ const pair=(a,b)=>'<div class="mh-line">'+a+b+'</div>';
+ const writing=(key,label,lines=1)=>{
+  const text=value(key);
+  return '<div class="mh-long-label">'+mtiActivityEscape(label)+'</div>'+
+   (text?'<div class="mh-filled">'+text+'</div>':
+    Array.from({length:lines},()=>'<div class="mh-rule"><span class="mh-rule-line"></span></div>').join(""));
+ };
+ const heading=(title,note,body)=>'<section class="mh-section"><h4>'+mtiActivityEscape(title)+'</h4>'+
+  (note?'<div class="mh-note">'+mtiActivityEscape(note)+'</div>':"")+body+'</section>';
+ const service=heading("One Hour of Practical Service","Service must be approved by Pastors Don & Tabatha Laing or Leslie Wyers.",
+  pair(field("service_what","What"),field("service_when","When"))+
+  pair(field("service_where","Where"),field("service_approved","Approved by / signature")));
+ const evangelism=heading("Personal Evangelism","Write the names of five people you personally invited to church in the last six weeks.",
+  Array.from({length:5},(_,i)=>'<div class="mh-rule"><span class="mh-rule-num">'+(i+1)+'.</span>'+
+  (value("evangelism_"+(i+1))?'<span class="mh-answer">'+value("evangelism_"+(i+1))+'</span>':'<span class="mh-rule-line"></span>')+'</div>').join(""));
+ const confessionText=value("confessions");
+ const confessions=heading("Confessions","Write nine confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne that you spoke aloud in the last six weeks. Use extra paper for longer confessions.",
+  confessionText?'<div class="mh-filled">'+confessionText+'</div>':
+  Array.from({length:9},(_,i)=>'<div class="mh-rule"><span class="mh-rule-num">'+(i+1)+'.</span><span class="mh-rule-line"></span></div>').join(""));
+ const attendance=heading("Attendance — Sunday Services","For six Sunday services, note the date, theme and how the message personally applied to your life.",
+  Array.from({length:6},(_,i)=>{
+   const n=i+1,p="sunday_"+n+"_";
+   return '<div class="mh-entry"><div class="mh-entry-title">Sunday '+n+'</div>'+
+    pair(field(p+"date","Date"),field(p+"theme","Theme"))+
+    writing(p+"application","Personal application",1)+'</div>';
+  }).join(""));
+ const study=heading("MTI Study Night","Record one thing you learned and how you will apply it.",
+  pair(field("study_date","Date"),field("study_taught","What was taught"))+
+  writing("study_application","How I will apply it",3));
+ const group=heading("Small Group / Worship Encounter","For each of six meetings, write what you learned and how it applies to your Christian walk.",
+  Array.from({length:6},(_,i)=>{
+   const n=i+1,p="small_"+n+"_";
+   return '<div class="mh-entry"><div class="mh-entry-title">Meeting '+n+'</div>'+
+    pair(field(p+"date","Date"),field(p+"taught","What was taught"))+
+    writing(p+"application","Personal application",2)+'</div>';
+  }).join(""));
+ const intensive=heading("Spiritual Intensive Night","Record the date and what you learned.",
+  pair(field("intensive_date","Date"),field("intensive_taught","What was taught"))+
+  '<div class="mh-rule"><span class="mh-rule-line"></span></div>');
+ const mentor=heading("Mentorship Assignment","Record the date and obtain your mentor's signature or confirmation.",
+  pair(field("mentorship_date","Date"),field("mentorship_signature","Signature / confirmation")));
+ const sheet=(n,topic,sections)=>
+  '<section class="mti-hand-sheet" aria-label="MTI activity record printable page '+n+' of 2">'+
+   '<div class="mh-head"><div><h3>MTI Lesson Activity Record</h3><span class="mh-page">Page '+n+' of 2 · '+topic+'</span></div>'+
+   '<div class="mh-name">Student: ______________________<br>Date: ________________________</div></div>'+
+   '<div class="mh-body">'+sections+'</div>'+
+   '<div class="mh-footer"><span>Ministry Training Institute · Handwritten activity record</span><span>Page '+n+' / 2</span></div>'+
+   '</section>';
+ return MTI_HANDWRITING_PRINT_CSS+
+  sheet(1,"Service, evangelism, confessions and attendance",service+evangelism+confessions+attendance)+
+  sheet(2,"Study nights, groups and mentorship",study+group+intensive+mentor);
 }
