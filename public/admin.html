@@ -382,6 +382,9 @@ function setupMtiGradeSlider(form,assignment){
  thumb.addEventListener("pointerup",function(e){
   if(activePointer!==e.pointerId)return;
   e.preventDefault();
+  const rect=track.getBoundingClientRect();
+  const finalPosition=e.clientX-rect.left-4-thumb.offsetWidth/2;
+  draw(range()?finalPosition/range()*100:0);
   const finished=amount>=96;
   activePointer=null;
   try{if(thumb.hasPointerCapture(e.pointerId))thumb.releasePointerCapture(e.pointerId)}catch{}
@@ -396,12 +399,12 @@ function setupMtiGradeSlider(form,assignment){
   if(e.key==="ArrowRight"){e.preventDefault();draw(amount+10);}
   else if(e.key==="ArrowLeft"){e.preventDefault();draw(amount-10);}
   else if(e.key==="Home"){e.preventDefault();draw(0);}
-  else if(e.key==="End"){e.preventDefault();draw(100);}
+  else if(e.key==="End"){e.preventDefault();draw(0);}
   else if(e.key==="Enter"||e.key===" "){e.preventDefault();}
  });
  thumb.addEventListener("keyup",function(e){
   if(thumb.disabled||submitting)return;
-  if((e.key==="ArrowRight"||e.key==="End")&&amount>=100){e.preventDefault();submitFinal();}
+  if(e.key==="ArrowRight"&&amount>=100){e.preventDefault();submitFinal();}
  });
  // Track clicks never finalize. Only dragging the thumb or intentionally
  // operating its keyboard slider can submit the final grade.
