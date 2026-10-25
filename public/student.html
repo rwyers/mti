@@ -203,12 +203,17 @@ function printAssignment(a){
  });
  const activity=(selected===a.id?mtiActivityCollect():null)||a.activity_form_json;
  el("paper").innerHTML=cover+mtiActivityPrintHtml(activity);
- // The screen-only #paper is display:none; browser print styling activates
- // during beforeprint so the cover can be fitted to the actual paper box.
+ // Measure in a letter-paper-width, off-screen box even when #paper is hidden
+ // on the student dashboard. Remove the temporary display styles before print.
+ const paper=el("paper"),before=paper.getAttribute("style");
+ paper.style.cssText="display:block!important;position:absolute!important;left:-9999px!important;top:0!important;width:7.3in!important;visibility:hidden!important";
+ mtiFitLessonPrintCover(paper.querySelector(".mti-cover-page"));
+ if(before==null)paper.removeAttribute("style");else paper.setAttribute("style",before);
  window.print();
 }
 window.addEventListener("beforeprint",function(){
- mtiFitLessonPrintCover(document.querySelector("#paper .mti-cover-page"));
+ const cover=document.querySelector("#paper .mti-cover-page");
+ if(cover&&cover.clientHeight)mtiFitLessonPrintCover(cover);
 });
 el("signin").addEventListener("submit",async function(e){e.preventDefault();var btn=this.querySelector("button");btn.disabled=true;el("authError").textContent="";
  try{await api("/api/student/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:el("email").value,password:el("password").value})});el("password").value="";await refresh();}
