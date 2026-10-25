@@ -150,10 +150,6 @@ function mtiActivityPrintHtml(raw){
   '<div class="mh-invites-grid">'+Array.from({length:5},(_,i)=>
     '<div class="mh-invite-entry"><span class="mh-invite-num">'+(i+1)+'.</span><span class="mh-invite-blank">'+
     (value("evangelism_"+(i+1))||'&nbsp;')+'</span></div>').join("")+'</div>');
- const confessions='<section class="mh-section mh-instruction-card">'+
-  '<h4>Confessions</h4>'+
-  '<p class="mh-note">Write nine confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne that you spoke aloud in the last six weeks. Complete this separately; no answers need to be written in this box.</p>'+
-  '</section>';
  const attendance=heading("Attendance — Sunday Services","For six Sunday services, note the date, theme and how the message personally applied to your life.",
   Array.from({length:6},(_,i)=>{
    const n=i+1,p="sunday_"+n+"_";
@@ -180,7 +176,7 @@ function mtiActivityPrintHtml(raw){
    '</section>';
  return MTI_HANDWRITING_PRINT_CSS+
   sheet(service+evangelism+attendance,false)+
-  sheet(confessions+group,true);
+  sheet(group,true);
 }
 
 
@@ -254,11 +250,13 @@ function mtiLessonPrintCoverHtml(record){
  const panels=[
   card("Memory Scripture",scriptureParts,"mti-cover-scripture"),
   card("Bible Reflection",prose(data.bible),"mti-cover-bible"),
-  card("Assignment Instructions",prose(data.assignment),"mti-cover-assignment"),
-  card("Required Materials",prose(shorten(fullResources,850))+(clippedResources?continuation:""),"mti-cover-materials")
+  card("Required Materials",prose(shorten(fullResources,850))+(clippedResources?continuation:""),"mti-cover-materials"),
+  card("Assignment Instructions",prose(data.assignment),"mti-cover-assignment")
  ].filter(Boolean).join("");
  const submittedResponse=fullResponse?card("Submitted Response",prose(shorten(fullResponse,420))+
   (clippedResponse?'<div class="mti-cover-online-note">The complete submitted response is available online.</div>':""),"mti-cover-response"):"";
+ const confessionInstructions="Write nine confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne that you spoke aloud in the last six weeks. Complete this separately; no answers need to be written in this box.";
+ const confessionCard=card("Confessions",prose(confessionInstructions),"mti-cover-confessions");
  const title=plain(data.course)||plain(data.assignmentTitle)||"MTI Lesson";
  const name=plain(data.student),due=plain(data.due),credits=plain(data.credits);
  const dateStarted=plain(data.dateStarted),dateCompleted=plain(data.dateCompleted);
@@ -282,23 +280,23 @@ function mtiLessonPrintCoverHtml(record){
  '.mti-cover-page .mti-cover-meta-cell strong{font-size:8pt;color:#55705f;white-space:nowrap;text-transform:uppercase;letter-spacing:.25px}'+
  '.mti-cover-page .mti-cover-meta-value{flex:1;min-width:0;border-bottom:1px solid #97b09e;font-size:9pt;min-height:13px;overflow-wrap:anywhere}'+
  '.mti-cover-page .mti-cover-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;align-items:start}'+
- '.mti-cover-page .mti-cover-card{background:#fff;border:1px solid #d6e2d9;border-radius:9px;padding:9px 11px;min-width:0;break-inside:avoid}'+
+ '.mti-cover-page .mti-cover-card{background:#fff;border:1px solid #ceded2;border-left:3px solid #47785c;border-radius:9px;padding:9px 11px;min-width:0;break-inside:avoid;box-shadow:3px 3px 0 #e3ede6}'+
  '.mti-cover-page .mti-cover-card-head{display:flex;align-items:center;gap:7px;margin:0 0 7px}'+
  
  '.mti-cover-page .mti-cover-card h2{margin:0!important;padding:0!important;font:bold 9.5pt/1.2 Arial,Helvetica,sans-serif!important;letter-spacing:.1px;color:#1e4431!important;border:0!important}'+
  '.mti-cover-page .mti-cover-card-copy{white-space:pre-wrap;overflow-wrap:anywhere;font:8.6pt/1.39 Arial,Helvetica,sans-serif;color:#273a30}'+
  '.mti-cover-page .mti-cover-scripture,.mti-cover-page .mti-cover-bible{grid-column:span 1}'+
- '.mti-cover-page .mti-cover-assignment,.mti-cover-page .mti-cover-materials,.mti-cover-page .mti-cover-response{grid-column:1/-1}'+
- '.mti-cover-page .mti-cover-assignment{border-left:3px solid #47785c}'+
+ '.mti-cover-page .mti-cover-assignment,.mti-cover-page .mti-cover-materials,.mti-cover-page .mti-cover-response,.mti-cover-page .mti-cover-confessions{grid-column:1/-1}'+
+ '.mti-cover-page .mti-cover-confessions .mti-cover-card-copy{font-size:8.4pt;line-height:1.3}'+
  '.mti-cover-page .mti-cover-verse-ref{display:block;margin-bottom:3px;color:#28533d}'+
  '.mti-cover-page .mti-cover-online-note{margin-top:7px;color:#66776e;font-size:7.3pt;font-style:italic;border-top:1px dashed #cedbd1;padding-top:5px}'+
- '.mti-cover-page .mti-office-marks{border:1px solid #ceded2;border-top:3px solid #45735b!important;border-radius:9px;margin:10px 0 0!important;padding:10px 12px 11px!important;font:8.5pt/1.23 Arial,Helvetica,sans-serif;break-inside:avoid;background:#fbfdfb}'+
+ '.mti-cover-page .mti-office-marks{border:1px solid #ceded2!important;border-left:3px solid #47785c!important;border-radius:9px;margin:10px 0 0!important;padding:10px 12px 11px!important;font:8.5pt/1.23 Arial,Helvetica,sans-serif;break-inside:avoid;background:#fff!important;box-shadow:3px 3px 0 #e3ede6!important}'+
  '.mti-cover-page .mti-office-marks h2{font-size:11pt!important;color:#1e4330!important}'+
  '.mti-cover-page .mti-office-marks .mti-office-mark-row{min-height:16px;margin:2px 0}'+
  '.mti-cover-page .mti-office-marks .mti-office-title{font-size:8pt}'+
  '.mti-cover-page .mti-office-marks .mti-office-columns{grid-template-columns:minmax(0,1.03fr) minmax(0,1.37fr)}'+
  
- '@media print{.mti-cover-page{height:9.25in!important;max-height:9.25in!important;overflow:hidden!important;page-break-after:auto;break-after:auto;background:#fff!important;margin:0!important}.mti-cover-page .mti-cover-meta{background:#fff}.mti-cover-page .mti-office-marks{background:#fff!important}}'+
+ '@media print{.mti-cover-page{height:9.25in!important;max-height:9.25in!important;overflow:hidden!important;page-break-after:auto;break-after:auto;background:#fff!important;margin:0!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}.mti-cover-page .mti-cover-meta{background:#fff}.mti-cover-page .mti-cover-card,.mti-cover-page .mti-office-marks{box-shadow:3px 3px 0 #e3ede6!important}.mti-cover-page .mti-office-marks{background:#fff!important}}'+
  '</style>'+
  '<section class="mti-cover-page" aria-label="MTI printable assignment cover"><div class="mti-cover-content">'+
  '<div class="mti-cover-topline"><span class="mti-cover-brand">Ministry Training Institute</span><span class="mti-cover-page-number">1 of 3</span></div>'+
@@ -308,7 +306,7 @@ function mtiLessonPrintCoverHtml(record){
  '<div class="mti-cover-meta-cell mti-cover-meta-date"><strong>Date Started</strong><span class="mti-cover-meta-value">'+escape(dateStarted)+'&nbsp;</span></div>'+
  '<div class="mti-cover-meta-cell mti-cover-meta-date"><strong>Date Completed</strong><span class="mti-cover-meta-value">'+escape(dateCompleted)+'&nbsp;</span></div>'+
  '<div class="mti-cover-meta-cell mti-cover-meta-date"><strong>Date Due</strong><span class="mti-cover-meta-value">'+escape(due||plain(data.date))+'&nbsp;</span></div></div>'+
- '<div class="mti-cover-grid">'+panels+submittedResponse+'</div>'+
+ '<div class="mti-cover-grid">'+panels+submittedResponse+confessionCard+'</div>'+
  mtiOfficeGradingPrintHtml()+
  '</div></section>';
 }
