@@ -219,3 +219,102 @@ function mtiOfficeGradingPrintHtml(){
  '<div class="mti-office-bonus-subtotal"><span>Bonus subtotal</span>'+score(17)+'</div></div></div>'+
  '</section>';
 }
+
+
+/* First page of printable MTI assignments. Keep the following two activity pages
+   unchanged. This cover contains the full assignment instructions + office rubric.
+   Large supplemental resource lists and submitted responses get an explicit online
+   continuation note instead of making the cover overflow and shifting the worksheets. */
+function mtiLessonPrintCoverHtml(record){
+ const data=record||{},escape=mtiActivityEscape;
+ const plain=(value)=>String(value==null?"":value).replace(/\r\n?/g,"\n").trim();
+ const card=(label,body,tag,extraClass="")=>body?
+  '<section class="mti-cover-card '+extraClass+'"><div class="mti-cover-card-head"><span class="mti-cover-card-icon">'+tag+'</span><h2>'+escape(label)+'</h2></div><div class="mti-cover-card-copy">'+body+'</div></section>':"";
+ const prose=(value)=>escape(plain(value));
+ const fullResources=plain(data.materials);
+ const fullResponse=plain(data.response);
+ const shorten=(value,limit)=>value.length<=limit?value:value.slice(0,limit).replace(/\s+\S*$/,"").trimEnd()+"…";
+ const clippedResources=fullResources.length>850,clippedResponse=fullResponse.length>420;
+ const continuation='<div class="mti-cover-online-note">Additional details are available in the online MTI lesson.</div>';
+ const scriptureParts=[
+  plain(data.verseRef)?'<strong class="mti-cover-verse-ref">'+prose(data.verseRef)+'</strong>':"",
+  plain(data.verseText)?'<div>'+prose(data.verseText)+'</div>':""
+ ].filter(Boolean).join("");
+ const panels=[
+  card("Memory Scripture",scriptureParts,"01","mti-cover-scripture"),
+  card("Bible Reflection",prose(data.bible),"02","mti-cover-bible"),
+  card("Assignment Instructions",prose(data.assignment),"03","mti-cover-assignment"),
+  card("Required Materials",prose(shorten(fullResources,850))+(clippedResources?continuation:""),"04","mti-cover-materials")
+ ].filter(Boolean).join("");
+ const submittedResponse=fullResponse?card("Submitted Response",prose(shorten(fullResponse,420))+
+  (clippedResponse?'<div class="mti-cover-online-note">The complete submitted response is available online.</div>':""),"05","mti-cover-response"):"";
+ const title=plain(data.course)||plain(data.assignmentTitle)||"MTI Lesson";
+ const name=plain(data.student);
+ const labelYear=plain(data.year),lesson=plain(data.lesson);
+ const sheet='Sheet 1 of 3';
+ return '<style>'+
+ '.mti-cover-page,.mti-cover-page *{box-sizing:border-box}'+
+ '.mti-cover-page{position:relative;width:100%;height:9.25in;max-height:9.25in;background:#fff;color:#1a3229;font:9pt/1.37 Arial,Helvetica,sans-serif;overflow:hidden}'+
+ '.mti-cover-page .mti-cover-content{position:absolute;left:0;top:0;width:100%;transform-origin:top left}'+
+ '.mti-cover-page .mti-cover-topline{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:8px;border-bottom:2px solid #35624c}'+
+ '.mti-cover-page .mti-cover-brand{font-size:8pt;font-weight:800;letter-spacing:1.25px;text-transform:uppercase;color:#35624c}'+
+ '.mti-cover-page .mti-cover-sheet{font-size:8pt;color:#667c71;font-weight:700}'+
+ '.mti-cover-page .mti-cover-titleline{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:11px 0 9px}'+
+ '.mti-cover-page .mti-cover-titleline h1{font:bold 18pt/1.16 Arial,Helvetica,sans-serif!important;color:#1a4030!important;margin:0 0 5px!important;letter-spacing:-.35px}'+
+ '.mti-cover-page .mti-cover-caption{font-size:8.5pt;color:#607468}'+
+ '.mti-cover-page .mti-cover-year{flex:0 0 auto;white-space:nowrap;background:#eff5f0;border:1px solid #d5e5d9;border-radius:7px;padding:6px 9px;font-size:8pt;font-weight:800;color:#305e48}'+
+ '.mti-cover-page .mti-cover-meta{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:14px;padding:10px 13px;background:#f6f9f6;border:1px solid #dce7dd;border-radius:8px;margin-bottom:10px}'+
+ '.mti-cover-page .mti-cover-meta-cell{display:flex;align-items:baseline;gap:8px;min-width:0}'+
+ '.mti-cover-page .mti-cover-meta-cell strong{font-size:8pt;color:#55705f;white-space:nowrap;text-transform:uppercase;letter-spacing:.25px}'+
+ '.mti-cover-page .mti-cover-meta-value{flex:1;min-width:0;border-bottom:1px solid #97b09e;font-size:9pt;min-height:13px;overflow-wrap:anywhere}'+
+ '.mti-cover-page .mti-cover-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;align-items:start}'+
+ '.mti-cover-page .mti-cover-card{background:#fff;border:1px solid #d6e2d9;border-radius:9px;padding:9px 11px;min-width:0;break-inside:avoid}'+
+ '.mti-cover-page .mti-cover-card-head{display:flex;align-items:center;gap:7px;margin:0 0 7px}'+
+ '.mti-cover-page .mti-cover-card-icon{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;flex:0 0 21px;border-radius:6px;background:#e5f0e9;color:#28543b;font:bold 8pt Arial,Helvetica,sans-serif}'+
+ '.mti-cover-page .mti-cover-card h2{margin:0!important;padding:0!important;font:bold 9.5pt/1.2 Arial,Helvetica,sans-serif!important;letter-spacing:.1px;color:#1e4431!important;border:0!important}'+
+ '.mti-cover-page .mti-cover-card-copy{white-space:pre-wrap;overflow-wrap:anywhere;font:8.6pt/1.39 Arial,Helvetica,sans-serif;color:#273a30}'+
+ '.mti-cover-page .mti-cover-scripture,.mti-cover-page .mti-cover-bible{grid-column:span 1}'+
+ '.mti-cover-page .mti-cover-assignment,.mti-cover-page .mti-cover-materials,.mti-cover-page .mti-cover-response{grid-column:1/-1}'+
+ '.mti-cover-page .mti-cover-assignment{border-left:3px solid #47785c}'+
+ '.mti-cover-page .mti-cover-verse-ref{display:block;margin-bottom:3px;color:#28533d}'+
+ '.mti-cover-page .mti-cover-online-note{margin-top:7px;color:#66776e;font-size:7.3pt;font-style:italic;border-top:1px dashed #cedbd1;padding-top:5px}'+
+ '.mti-cover-page .mti-office-marks{border:1px solid #ceded2;border-top:3px solid #45735b!important;border-radius:9px;margin:10px 0 0!important;padding:10px 12px 11px!important;font:8.5pt/1.23 Arial,Helvetica,sans-serif;break-inside:avoid;background:#fbfdfb}'+
+ '.mti-cover-page .mti-office-marks h2{font-size:11pt!important;color:#1e4330!important}'+
+ '.mti-cover-page .mti-office-marks .mti-office-mark-row{min-height:16px;margin:2px 0}'+
+ '.mti-cover-page .mti-office-marks .mti-office-title{font-size:8pt}'+
+ '.mti-cover-page .mti-office-marks .mti-office-columns{grid-template-columns:minmax(0,1.03fr) minmax(0,1.37fr)}'+
+ '.mti-cover-page .mti-cover-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #d7e2d9;margin-top:8px;padding:6px 2px 0;font-size:7pt;letter-spacing:.1px;color:#6b7c70}'+
+ '@media print{.mti-cover-page{height:9.25in!important;max-height:9.25in!important;overflow:hidden!important;page-break-after:auto;break-after:auto;background:#fff!important;margin:0!important}.mti-cover-page .mti-cover-meta{background:#fff}.mti-cover-page .mti-office-marks{background:#fff!important}}'+
+ '</style>'+
+ '<section class="mti-cover-page" aria-label="MTI printable assignment cover, '+sheet+'"><div class="mti-cover-content">'+
+ '<div class="mti-cover-topline"><span class="mti-cover-brand">Ministry Training Institute</span><span class="mti-cover-sheet">'+sheet+' · Assignment</span></div>'+
+ '<div class="mti-cover-titleline"><div><h1>'+escape(title)+'</h1><div class="mti-cover-caption">'+escape(plain(data.assignmentTitle)&&plain(data.assignmentTitle)!==title?data.assignmentTitle:"Lesson study & assignment")+'</div></div>'+
+ '<div class="mti-cover-year">'+(labelYear?'YEAR '+escape(labelYear)+' · ':'')+(lesson?'LESSON '+escape(lesson):'MTI')+'</div></div>'+
+ '<div class="mti-cover-meta"><div class="mti-cover-meta-cell"><strong>Student</strong><span class="mti-cover-meta-value">'+(name?escape(name):'&nbsp;')+'</span></div>'+
+ '<div class="mti-cover-meta-cell"><strong>Date</strong><span class="mti-cover-meta-value">'+escape(plain(data.date))+'&nbsp;</span></div></div>'+
+ '<div class="mti-cover-grid">'+panels+submittedResponse+'</div>'+
+ mtiOfficeGradingPrintHtml()+
+ '<div class="mti-cover-footer"><span>MTI · Lesson worksheet</span><span>Additional handwriting activities follow on sheets 2–3</span></div>'+
+ '</div></section>';
+}
+/* Shrink only when necessary so the complete assignment and grading area stay
+   inside page 1. The two following handwriting sheets are never changed. */
+function mtiFitLessonPrintCover(root){
+ if(!root)return 1;
+ const inner=root.querySelector(".mti-cover-content");
+ if(!inner)return 1;
+ let scale=1;
+ const available=root.clientHeight||Math.round(9.25*96);
+ if(!available)return scale;
+ for(let pass=0;pass<7;pass++){
+  inner.style.width=(100/scale).toFixed(2)+"%";
+  inner.style.transform="scale("+scale+")";
+  const needed=inner.scrollHeight*scale;
+  if(needed<=available-4)break;
+  scale=Math.max(.47,Math.min(scale*.93,scale*(available-10)/Math.max(needed,1)));
+  if(scale<=.47)break;
+ }
+ inner.style.width=(100/scale).toFixed(2)+"%";
+ inner.style.transform="scale("+scale+")";
+ return scale;
+}
