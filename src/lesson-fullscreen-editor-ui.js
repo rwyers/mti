@@ -67,7 +67,11 @@
   document.getElementById("overlay")?.classList.remove("mti-lesson-fullscreen");
   const close=state.closeButton;
   if(close){close.textContent="×";close.setAttribute("aria-label","Close form");}
-  state.subtitle?.remove();
+  if(state.titleStack?.isConnected){
+   const headingTitle=state.titleStack.querySelector("#modalTitle");
+   if(headingTitle)state.titleStack.replaceWith(headingTitle);
+   else state.titleStack.remove();
+  }
   document.body.style.overflow=state.previousBodyOverflow;
  }
  closeForm=function(saved){
@@ -98,7 +102,10 @@
   const subtitle=document.createElement("div");
   subtitle.className="mti-lesson-subtitle";
   subtitle.textContent=[course?.name||"Course",lesson?"Year "+lesson.year+" · Lesson "+lesson.lesson_number:""].filter(Boolean).join(" — ");
-  modal.querySelector("#modalTitle")?.after(subtitle);
+  const title=modal.querySelector("#modalTitle");
+  const titleStack=document.createElement("div");titleStack.className="mti-lesson-title-stack";
+  if(title){title.before(titleStack);titleStack.append(title,subtitle);}
+  else heading.prepend(subtitle);
   // Keep a deliberate labelled exit, with dirty-change protection.
   close.textContent="Close editor";
   close.setAttribute("aria-label","Close lesson editor");
@@ -128,7 +135,7 @@
   modal.appendChild(actions);
   const previousBodyOverflow=document.body.style.overflow;
   document.body.style.overflow="hidden";
-  active={form,actions,closeButton:close,subtitle,initial:values(form),previousBodyOverflow};
+  active={form,actions,closeButton:close,titleStack,initial:values(form),previousBodyOverflow};
   modal.querySelector("#modalBody")?.scrollTo(0,0);
  };
  window.openForm=openForm;
