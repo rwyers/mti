@@ -68,7 +68,7 @@ function printMtiLesson(id){
   section("Required materials",lesson.materials_list)+
   section("Submission notes",lesson.submission_notes)+
   '<section class="lesson-section"><h2>Student responses / notes</h2>'+responseLines+'</section>'+
-  '<p class="paper-note">Complete this lesson on paper and return it to your MTI instructor.</p></main></body></html>';
+  mtiActivityPrintHtml({})+'<p class="paper-note">Complete this lesson on paper and return it to your MTI instructor.</p></main></body></html>';
  const printWindow=window.open("","_blank");
  if(!printWindow){alert("Your browser blocked the print window. Allow pop-ups for MTI and try again.");return;}
  printWindow.document.open();
