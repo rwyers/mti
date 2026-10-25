@@ -239,7 +239,7 @@ function openForm(type,id){
     hasDraft?rowData.grading_draft_feedback:(rowData.status==="graded"?rowData.feedback:""))+
    '<p class="small" id="gradingSaveState" role="status" aria-live="polite">No new marks saved in this editing session yet.</p>'+
    '<div class="modal-actions"><button type="button" class="outline" onclick="closeForm()">Close</button>'+
-   '<button type="submit" class="outline">Save grading progress</button>'+
+   '<button type="submit" class="outline" onclick="el(&quot;recordForm&quot;).dataset.gradeAction=&quot;save_progress&quot;">Save grading progress</button>'+
    '<button type="button" class="primary" onclick="finishGrading()">Finish grading</button></div>';
   mode="grade:"+id;
  }
