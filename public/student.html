@@ -196,6 +196,7 @@ function printAssignment(a){
  for(var x of [["Scripture",String(a.memory_verse_reference||"")+" "+String(a.memory_verse_text||"")],["Bible instruction",a.bible_instruction],["Assignment",a.assignment_instructions],["Materials",a.materials_list],["Student response",a.response_text]]){
   if(x[1])h+='<h2>'+esc(x[0])+'</h2><p>'+esc(x[1])+'</p>';
  }
+ h+=mtiOfficeGradingPrintHtml();
  h+=mtiActivityPrintHtml(selected===a.id?(mtiActivityCollect()||a.activity_form_json):a.activity_form_json);el("paper").innerHTML=h;window.print();
 }
 el("signin").addEventListener("submit",async function(e){e.preventDefault();var btn=this.querySelector("button");btn.disabled=true;el("authError").textContent="";
