@@ -190,6 +190,31 @@ async function adminAPI(req,env,path){
  if(!u||u.role==="student")return json({error:"Not authenticated"},401);
  if(path==="/api/admin/change-password"&&req.method==="POST")return changePassword(req,env,u);
  if(u.must_change_password)return json({error:"Change your administrator password before continuing.",password_change_required:true},403);
+ if(path==="/api/admin/email-notifications"&&(req.method==="GET"||req.method==="PATCH")){
+  if(!["owner","admin"].includes(u.role))return json({error:"Only MTI administrators can change email notifications."},403);
+  const existing=await env.DB.prepare("SELECT setting_value,updated_at FROM mti_settings WHERE setting_key='email_notifications_enabled'").first();
+  if(req.method==="PATCH"){
+   if(!originOK(req))return json({error:"Invalid request origin"},403);
+   const requested=await payload(req);
+   if(typeof requested.enabled!=="boolean")return json({error:"Choose On or Off."},400);
+   const before=existing?.setting_value==="true";
+   if(!requested.enabled){
+    // Cancel undelivered alerts. Never replay emails generated during development.
+    await env.DB.prepare("INSERT INTO mti_settings(setting_key,setting_value,updated_at) VALUES('email_notifications_enabled','false',CURRENT_TIMESTAMP) ON CONFLICT(setting_key) DO UPDATE SET setting_value='false',updated_at=CURRENT_TIMESTAMP").run();
+    await env.DB.prepare("DELETE FROM notification_outbox WHERE status IN ('pending','failed')").run();
+   }else{
+    await env.DB.prepare("INSERT INTO mti_settings(setting_key,setting_value,updated_at) VALUES('email_notifications_enabled','true',CURRENT_TIMESTAMP) ON CONFLICT(setting_key) DO UPDATE SET setting_value='true',updated_at=CURRENT_TIMESTAMP").run();
+   }
+   if(before!==requested.enabled)await auditAction(env,u,"update","email_notifications","master_switch",
+    {enabled:before},{enabled:requested.enabled});
+  }
+  const row=await env.DB.prepare("SELECT setting_value,updated_at FROM mti_settings WHERE setting_key='email_notifications_enabled'").first();
+  const counts=await env.DB.prepare("SELECT status,COUNT(*) AS count FROM notification_outbox GROUP BY status").all();
+  return json({enabled:row?.setting_value==="true",
+   delivery_configured:emailSendingEnabled(env),
+   pending:(counts.results||[]).filter(x=>x.status==="pending"||x.status==="failed").reduce((s,x)=>s+x.count,0),
+   updated_at:row?.updated_at||null});
+ }
  if(path==="/api/admin/data"&&req.method==="GET")return json(await dataset(env));
  if(path==="/api/admin/curriculum/import-status"&&req.method==="GET"){
   if(u.role!=="owner"&&u.role!=="admin")return json({error:"Only administrators may import curriculum"},403);
