@@ -7,7 +7,6 @@ const MTI_AI_LABELS={
  memory_verse_text:"Memory verse text",
  bible_instruction:"Bible study instructions",
  assignment_instructions:"Assignment instructions",
- submission_notes:"Submission instructions",
  materials_list:"Materials list"
 };
 var MTI_ACTIVE_AI_EDIT=null;
