@@ -320,9 +320,11 @@ async function adminAPI(req,env,path){
   const after={...before,course_id:course,year,lesson_number:n,credits:Math.max(0,Number(b.credits)||0),
    memory_verse_reference:string(b.memory_verse_reference,200),memory_verse_text:string(b.memory_verse_text,2000),
    bible_instruction:string(b.bible_instruction,6000),assignment_instructions:string(b.assignment_instructions,12000),
-   submission_notes:string(b.submission_notes,3000),materials_list:string(b.materials_list,4000)};
-  await env.DB.prepare("UPDATE lessons SET course_id=?,year=?,lesson_number=?,credits=?,memory_verse_reference=?,memory_verse_text=?,bible_instruction=?,assignment_instructions=?,submission_notes=?,materials_list=? WHERE id=?")
-   .bind(after.course_id,after.year,after.lesson_number,after.credits,after.memory_verse_reference,after.memory_verse_text,after.bible_instruction,after.assignment_instructions,after.submission_notes,after.materials_list,id).run();
+   submission_notes:string(b.submission_notes,3000),materials_list:string(b.materials_list,4000),
+   is_current:b.is_current===undefined?Number(before.is_current)||0:Number(b.is_current)};
+  if(![0,1].includes(after.is_current))return json({error:"Invalid lesson review status"},400);
+  await env.DB.prepare("UPDATE lessons SET course_id=?,year=?,lesson_number=?,credits=?,memory_verse_reference=?,memory_verse_text=?,bible_instruction=?,assignment_instructions=?,submission_notes=?,materials_list=?,is_current=? WHERE id=?")
+   .bind(after.course_id,after.year,after.lesson_number,after.credits,after.memory_verse_reference,after.memory_verse_text,after.bible_instruction,after.assignment_instructions,after.submission_notes,after.materials_list,after.is_current,id).run();
   await auditAction(env,u,"update","lesson",id,before,after);return json({ok:true});
  }
  if(path==="/api/admin/assignments"&&req.method==="POST"){
