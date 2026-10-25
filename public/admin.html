@@ -319,7 +319,7 @@ async function submitForm(mode){
    if(result.year_complete)alert("This student has completed all nine sessions in this academic year! Their finished year is now archived. The next year stays locked until payment and administrator approval.");
    else if(result.next_unlocked?.length)alert(result.next_unlocked.map(x=>"Session "+x.lesson_number+" is now unlocked for the student.").join("\n"));
   }
- }catch(e){el("formError").textContent=e.message}finally{button.disabled=false}
+ }catch(e){el("formError").textContent=e.message}finally{if(mode.startsWith("grade:"))form.dataset.gradeAction="save_progress";button.disabled=false}
 }
 el("loginForm").addEventListener("submit",async function(e){
  e.preventDefault();var button=this.querySelector("button");button.disabled=true;el("loginError").textContent="";
