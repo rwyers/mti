@@ -1,11 +1,10 @@
 /* MTI Portal — Cloudflare Worker. Source of truth: rwyers/mti. No real student data in source. */
 const STATIC = {};
 const MTI_YEAR1_BIBLE_INSTRUCTION="Write down one of your favorite verses you read in your devotional times this month and discuss how it spoke to you.";
-const RUBRIC = [
- ["scripture",5],["practical",10],["bible",5],["outreach",10],
- ["intensive",10],["assignment",30],["attendance",12],["mentorship",12],["groups",6]
-];
-const BONUS = [["opportunity",5],["growth",10],["videos",12],["confessions",3],["study",3]];
+// MTI October 2026 office-use rubric. Bonus is tracked separately from /100.
+const RUBRIC = [["scripture",5],["practical",18],["bible",6],["assignment",35],["attendance",18],["groups",18]];
+const BONUS = [["invite",10],["confessions",3],["next_steps",4]];
+const MTI_RUBRIC_VERSION="office_2026";
 const enc = new TextEncoder();
 function json(data,status=200,extra={}) {
  return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8",
@@ -397,20 +396,47 @@ async function adminAPI(req,env,path){
  if(req.method==="PATCH"&&path.startsWith("/api/admin/assignments/")){
   const id=path.split("/")[4],before=await env.DB.prepare("SELECT * FROM assignments WHERE id=?").bind(id).first();
   if(!before)return json({error:"Assignment not found"},404);
-  const status=string(b.status,20);if(!["assigned","submitted","graded"].includes(status))return json({error:"Invalid status"},400);
-  let grading={},total=null,bonus=null;
-  if(status==="graded"){
-   total=0;bonus=0;
-   for(const [key,max] of RUBRIC){const n=Number(b.grading?.[key]??0);if(!Number.isInteger(n)||n<0||n>max)return json({error:"Invalid score for "+key},400);grading[key]=n;total+=n}
-   for(const [key,max] of BONUS){const n=Number(b.grading?.[key]??0);if(!Number.isInteger(n)||n<0||n>max)return json({error:"Invalid score for "+key},400);grading[key]=n;bonus+=n}
+  const action=string(b.action,30);
+  if(!["save_progress","finish_grading"].includes(action))
+   return json({error:"Please refresh MTI Admin and use Save grading progress or Finish grading."},400);
+  if(!b.grading||typeof b.grading!=="object"||Array.isArray(b.grading))
+   return json({error:"Invalid marking form"},400);
+  const grading={};
+  const rubricFields=new Map([...RUBRIC,...BONUS]);
+  for(const [key,raw] of Object.entries(b.grading)){
+   if(!rubricFields.has(key))return json({error:"Unknown scoring category: "+key},400);
+   if(raw===null||raw===undefined||raw==="")continue; // Blank means not marked yet. Zero is an explicit mark.
+   const score=Number(raw),maximum=rubricFields.get(key);
+   if(!Number.isInteger(score)||score<0||score>maximum)
+    return json({error:"Invalid score for "+key+" (0–"+maximum+")"},400);
+   if(key==="invite"&&score%2!==0)return json({error:"Invitations score must be 2 points per person (0, 2, 4, 6, 8 or 10)."},400);
+   grading[key]=score;
   }
   const feedback=string(b.feedback,3000);
-  await env.DB.prepare("UPDATE assignments SET status=?,submitted_at=CASE WHEN ?='submitted' AND submitted_at IS NULL THEN CURRENT_TIMESTAMP ELSE submitted_at END,grade_points=?,bonus_points=?,grading_json=?,feedback=?,updated_at=CURRENT_TIMESTAMP WHERE id=?")
-  .bind(status,status,total,bonus,JSON.stringify(grading),feedback,id).run();
-  await auditAction(env,u,status==="graded"?"grade":"update","assignment",id,
-  {status:before.status,grade_points:before.grade_points,bonus_points:before.bonus_points,feedback:before.feedback,grading_json:before.grading_json},
-  {status,grade_points:total,bonus_points:bonus,feedback,grading_json:JSON.stringify(grading)});
-  return json({ok:true});
+  if(action==="save_progress"){
+   // Draft never changes the submission status or officially published grade,
+   // and will never unlock sessions or send student grade emails.
+   await env.DB.prepare("UPDATE assignments SET grading_draft_json=?,grading_draft_feedback=?,updated_at=CURRENT_TIMESTAMP WHERE id=?")
+    .bind(JSON.stringify(grading),feedback,id).run();
+   await auditAction(env,u,"save_grading_progress","assignment",id,
+    {status:before.status,draft:before.grading_draft_json},{status:before.status,draft:grading});
+   return json({ok:true,saved_progress:true,status:before.status,marked_count:RUBRIC.filter(([k])=>Object.hasOwn(grading,k)).length});
+  }
+  const missing=RUBRIC.filter(([key])=>!Object.hasOwn(grading,key)).map(([key])=>key);
+  if(missing.length)return json({error:"Finish grading requires all six core scores. Still missing: "+missing.join(", ")+". Use Save grading progress for incomplete work."},400);
+  if(before.status==="assigned"&&!before.submitted_at)
+   return json({error:"The student must submit this assignment before you finish grading. Save grading progress in the meantime."},409);
+  let total=0,bonus=0;
+  for(const [key] of RUBRIC)total+=grading[key];
+  for(const [key] of BONUS)bonus+=grading[key]??0;
+  const final={rubric_version:MTI_RUBRIC_VERSION,...grading};
+  for(const [key] of BONUS)if(!Object.hasOwn(final,key))final[key]=0;
+  await env.DB.prepare("UPDATE assignments SET status='graded',grade_points=?,bonus_points=?,grading_json=?,feedback=?,grading_draft_json='{}',grading_draft_feedback='',updated_at=CURRENT_TIMESTAMP WHERE id=?")
+   .bind(total,bonus,JSON.stringify(final),feedback,id).run();
+  await auditAction(env,u,"grade","assignment",id,
+   {status:before.status,grade_points:before.grade_points,bonus_points:before.bonus_points,feedback:before.feedback,grading_json:before.grading_json},
+   {status:"graded",grade_points:total,bonus_points:bonus,feedback,grading_json:JSON.stringify(final)});
+  return json({ok:true,status:"graded",grade_points:total,bonus_points:bonus});
  }
  return json({error:"Not found"},404);
 }
