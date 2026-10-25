@@ -1,5 +1,6 @@
 /* MTI Portal — Cloudflare Worker. Source of truth: rwyers/mti. No real student data in source. */
 const STATIC = {};
+const MTI_YEAR1_BIBLE_INSTRUCTION="Write down one of your favorite verses you read in your devotional times this month and discuss how it spoke to you.";
 const RUBRIC = [
  ["scripture",5],["practical",10],["bible",5],["outreach",10],
  ["intensive",10],["assignment",30],["attendance",12],["mentorship",12],["groups",6]
@@ -334,7 +335,7 @@ async function adminAPI(req,env,path){
   const year=Number(b.year),n=Number(b.lesson_number);
   if(!course||!Number.isInteger(year)||year<1||year>5||!Number.isInteger(n)||n<1||n>52)return json({error:"Choose course, year and lesson"},400);
   await env.DB.prepare("INSERT INTO lessons(id,course_id,year,lesson_number,credits,memory_verse_reference,memory_verse_text,bible_instruction,assignment_instructions,submission_notes,materials_list) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
-  .bind(id,course,year,n,Math.max(0,Number(b.credits)||0),string(b.memory_verse_reference,200),string(b.memory_verse_text,2000),string(b.bible_instruction,6000),string(b.assignment_instructions,12000),string(b.submission_notes,3000),string(b.materials_list,4000)).run();
+  .bind(id,course,year,n,Math.max(0,Number(b.credits)||0),string(b.memory_verse_reference,200),string(b.memory_verse_text,2000),(year===1?(string(b.bible_instruction,6000)||MTI_YEAR1_BIBLE_INSTRUCTION):string(b.bible_instruction,6000)),string(b.assignment_instructions,12000),string(b.submission_notes,3000),string(b.materials_list,4000)).run();
   await auditAction(env,u,"create","lesson",id,null,{course_id:course,year,lesson_number:n});return json({ok:true,id},201);
  }
  if(path.startsWith("/api/admin/lessons/")&&req.method==="PATCH"){
