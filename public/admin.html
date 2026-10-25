@@ -133,6 +133,7 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 <div id="overlay" class="hidden" role="dialog" aria-modal="true"><div class="modal"><div class="modal-top"><h2 id="modalTitle">New record</h2><button class="close" aria-label="Close form" onclick="closeForm()">×</button></div><div id="modalBody"></div><div id="formError" role="alert"></div></div></div>
 <script>
 var DATA={courses:[],lessons:[],students:[],assignments:[],submissions:[]};var ACCOUNT=null;var CURRENT="overview";
+var MTI_YEAR1_BIBLE_INSTRUCTION="Write down one of your favorite verses you read in your devotional times this month and discuss how it spoke to you.";
 var CORE=[["scripture","Scripture memorized",5],["practical","Practical service",10],["bible","Bible reading and questions",5],["outreach","Outreach",10],["intensive","Spiritual Intensive Course",10],["assignment","Assignment",30],["attendance","Church attendance",12],["mentorship","Mentorship Assignment",12],["groups","Small Groups / Worship Encounter",6]];
 var BONUS=[["opportunity","Opportunity 101/102",5],["growth","Growth Tracks",10],["videos","Weekly YouTube Videos",12],["confessions","Confessions",3],["study","MTI Study Group",3]];
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -190,7 +191,7 @@ function openForm(type,id){
  var copt=selectOptions(DATA.courses,"Select a course",function(c){return c.name});
  if(type==="student"){title="Add student";fields='<div class="formgrid">'+input("full_name","Student full name","text","","required maxlength=160")+input("email","Email address","email")+input("phone","Phone number","tel")+select("course_id","Course / field of study",copt)+select("current_year","Current year",optsNums(5,1))+select("current_lesson","Current lesson",optsNums(12,1))+'<div class="span2">'+area("notes","Private administrator notes")+'</div></div>'+buttons("Save student")}
  if(type==="course"){title="Create course";fields=input("name","Course name","text","","required")+area("description","Course description")+buttons("Add course")}
- if(type==="lesson"){title="Create lesson";fields='<div class="formgrid">'+select("course_id","Course",copt,"required")+select("year","Year",optsNums(5,1))+input("lesson_number","Lesson number","number","1",'min="1" max="52" required')+input("credits","Credits","number","3",'min="0"')+input("memory_verse_reference","Scripture reference")+input("memory_verse_text","Scripture text")+'<div class="span2">'+area("bible_instruction","Bible study instructions")+area("assignment_instructions","Assignment instructions")+area("submission_notes","Submission instructions")+area("materials_list","Materials list")+'</div></div>'+buttons("Save lesson")}
+ if(type==="lesson"){title="Create lesson";fields='<div class="formgrid">'+select("course_id","Course",copt,"required")+select("year","Year",optsNums(5,1))+input("lesson_number","Lesson number","number","1",'min="1" max="52" required')+input("credits","Credits","number","3",'min="0"')+input("memory_verse_reference","Scripture reference")+input("memory_verse_text","Scripture text")+'<div class="span2">'+area("bible_instruction","Bible study instructions",MTI_YEAR1_BIBLE_INSTRUCTION)+area("assignment_instructions","Assignment instructions")+area("submission_notes","Submission instructions")+area("materials_list","Materials list")+'</div></div>'+buttons("Save lesson")}
  if(type==="assignment"){title="Create assignment";fields=select("student_id","Assign to student",selectOptions(DATA.students,"Select student",function(s){return s.full_name}),"required")+select("lesson_id","Lesson review status",selectOptions(DATA.lessons,"Custom / not linked",function(l){return (Number(l.is_current)===1?"CURRENT — ":"NEEDS UPDATING — ")+lessonName(l.id)}))+
  '<div id="mtiAssignReviewNotice" role="status" class="callout" style="display:none;margin-bottom:12px"></div>'+
  input("title","Assignment title","text","","required")+input("due_date","Due date","date")+buttons("Assign lesson")}
@@ -205,6 +206,15 @@ function openForm(type,id){
  }
  el("modalTitle").textContent=title;el("formError").textContent="";
  el("modalBody").innerHTML='<form id="recordForm">'+fields+'</form>';el("overlay").classList.remove("hidden");
+ if(type==="lesson"){
+  var yearChoice=el("f_year"),bibleChoice=el("f_bible_instruction");
+  yearChoice?.addEventListener("change",function(){
+   if(!bibleChoice)return;
+   if(Number(yearChoice.value)===1){
+    if(!bibleChoice.value.trim())bibleChoice.value=MTI_YEAR1_BIBLE_INSTRUCTION;
+   }else if(bibleChoice.value===MTI_YEAR1_BIBLE_INSTRUCTION)bibleChoice.value="";
+  });
+ }
  if(type==="assignment"){
   var reviewChoice=el("f_lesson_id"),reviewNotice=el("mtiAssignReviewNotice");
   var showReview=function(){
