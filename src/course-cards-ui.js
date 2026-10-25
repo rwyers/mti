@@ -117,6 +117,12 @@ function renderCourseNavigator(){
  '#mtiCategoryCatalog .mti-lessons{padding:9px 14px}'+
  '#mtiCategoryCatalog .mti-session{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #ecf1ed;gap:8px;font-size:12px}'+
  '#mtiCategoryCatalog .mti-session:last-child{border-bottom:0}'+
+ '#mtiCategoryCatalog .mti-session.mti-needs-update{background:#fff0f1;border:1px solid #f1c6ca;border-radius:9px;padding:11px 12px;margin:7px 0}'+
+ '#mtiCategoryCatalog .mti-session.mti-is-current{background:#eaf3ff;border:1px solid #bad5f7;border-radius:9px;padding:11px 12px;margin:7px 0}'+
+ '#mtiCategoryCatalog .mti-session .mti-review-pill{display:inline-block;border-radius:5px;padding:3px 7px;margin-left:7px;font-size:10px;font-weight:800;vertical-align:middle}'+
+ '#mtiCategoryCatalog .mti-needs-update .mti-review-pill{background:#f9dbde;color:#963d46}'+
+ '#mtiCategoryCatalog .mti-is-current .mti-review-pill{background:#d8eaff;color:#20558c}'+
+ '#mtiCategoryCatalog .mti-needs-counter{color:#a14853;font-weight:700}'+
  '#mtiCategoryCatalog .mti-link{background:#fff;border:1px solid #d6e3dd;border-radius:7px;padding:7px 10px;font-size:11px;white-space:nowrap;cursor:pointer;color:#234c53}'+
  '#mtiCategoryCatalog .mti-session-actions{display:flex;align-items:center;gap:7px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}'+
  '#mtiCategoryCatalog .mti-print-button{background:#edf5ef;border-color:#aac9b6;color:#194838;font-weight:600}'+
@@ -129,11 +135,13 @@ function renderCourseNavigator(){
    const years=[...new Set(courseLessons.map(l=>Number(l.year)))].sort((a,b)=>a-b);
    const tree=years.map(y=>{
     const ll=courseLessons.filter(l=>Number(l.year)===y).sort((a,b)=>Number(a.lesson_number)-Number(b.lesson_number));
-    return '<details class="mti-year"><summary><strong>Year '+y+'</strong><span class="mti-muted">'+ll.length+' sessions ⌄</span></summary><div class="mti-lessons">'+ll.map(l=>
-     '<div class="mti-session"><span><strong>Session '+esc(l.lesson_number)+'</strong><br><span class="mti-muted">'+esc(l.memory_verse_reference||"Study materials")+' · '+esc(l.credits)+' credits</span></span>'+
+    const needsReview=ll.filter(l=>Number(l.is_current)!==1).length;
+    return '<details class="mti-year"><summary><strong>Year '+y+'</strong><span class="mti-muted">'+ll.length+' sessions · '+(needsReview?'<span class="mti-needs-counter">'+needsReview+' need updating</span>':'All current')+' ⌄</span></summary><div class="mti-lessons">'+ll.map(l=>
+     '<div class="mti-session '+(Number(l.is_current)===1?'mti-is-current':'mti-needs-update')+'"><span><strong>Session '+esc(l.lesson_number)+'</strong><span class="mti-review-pill">'+(Number(l.is_current)===1?'Current':'Needs updating')+'</span><br><span class="mti-muted">'+esc(l.memory_verse_reference||"Study materials")+' · '+esc(l.credits)+' credits</span></span>'+
      '<div class="mti-session-actions"><button type="button" class="mti-link" data-course-action="lesson" data-course-id="'+esc(l.id)+'">Edit lesson</button><button type="button" class="mti-link mti-print-button" data-course-action="print" data-course-id="'+esc(l.id)+'">Print</button></div></div>').join("")+'</div></details>';
    }).join("");
-   return '<details class="mti-course"><summary><span><strong>'+esc(c.name)+'</strong><span class="mti-muted" style="display:block">'+years.length+' year(s) · '+courseLessons.length+' lessons</span></span><span>⌄</span></summary>'+
+   const currentCount=courseLessons.filter(l=>Number(l.is_current)===1).length;
+   return '<details class="mti-course"><summary><span><strong>'+esc(c.name)+'</strong><span class="mti-muted" style="display:block">'+years.length+' year(s) · '+currentCount+'/'+courseLessons.length+' current</span></span><span>⌄</span></summary>'+
    '<div style="padding:0 11px 11px"><button type="button" class="mti-link" data-course-action="course" data-course-id="'+esc(c.id)+'">Edit course details</button></div>'+tree+'</details>';
   }).join("");
   return '<details class="mti-category" '+(query?'open':'')+'><summary><span style="display:flex;align-items:center;gap:11px"><span style="display:grid;place-items:center;width:37px;height:37px;border-radius:9px;background:#edf2ee;font-size:17px">'+group.icon+'</span><span><strong>'+esc(group.name)+'</strong><span class="mti-muted" style="display:block">'+group.courses.length+' courses · '+total+' lessons</span></span></span><span>⌄</span></summary><div style="padding:0 2px 7px">'+cards+'</div></details>';
