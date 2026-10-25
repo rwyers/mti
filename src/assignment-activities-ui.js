@@ -96,8 +96,10 @@ const MTI_HANDWRITING_PRINT_CSS='<style>'+
 '.mti-hand-sheet .mh-head{display:flex;align-items:start;justify-content:space-between;gap:12px;border-bottom:2px solid #365f49;padding:0 0 9px;margin:0 0 10px}'+
 '.mti-hand-sheet h3{font:bold 16pt/1.15 Arial,Helvetica,sans-serif!important;color:#214a37;margin:0 0 3px!important}'+
 
-'.mti-hand-sheet .mh-name{font-size:9pt;white-space:nowrap;margin-top:3px;line-height:1.7}'+
-'.mti-hand-sheet .mh-body{display:flex;flex-direction:column;justify-content:space-between;flex:1;min-height:0}'+
+'.mti-hand-sheet .mh-name{font-size:9pt;white-space:nowrap;margin-top:4px;line-height:1.4}'+
+'.mti-hand-sheet .mh-top-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}'+
+'.mti-hand-sheet .mh-page-number{font-size:9pt;font-weight:800;letter-spacing:.4px;color:#32513d}'+
+'.mti-hand-sheet .mh-body{display:flex;flex-direction:column;justify-content:flex-start;flex:1;min-height:0;gap:14px}'+
 '.mti-hand-sheet .mh-section{break-inside:avoid-page;page-break-inside:avoid;margin:0 0 10px}'+
 '.mti-hand-sheet .mh-instruction-card{border:1px solid #c7d9cc;background:#f4f8f5;border-radius:9px;padding:13px 15px!important;margin-bottom:14px!important}'+
 '.mti-hand-sheet .mh-instruction-card h4{margin-bottom:8px}'+
@@ -112,6 +114,10 @@ const MTI_HANDWRITING_PRINT_CSS='<style>'+
 '.mti-hand-sheet .mh-rule{display:flex;align-items:end;gap:7px;margin:1px 0;min-height:21px}'+
 '.mti-hand-sheet .mh-rule-num{flex:0 0 20px;font-size:9pt;font-weight:700}'+
 '.mti-hand-sheet .mh-rule-line{flex:1;border-bottom:1px solid #a6b5aa;min-width:0;min-height:18px}'+
+'.mti-hand-sheet .mh-invites-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px;row-gap:8px;margin-top:7px}'+
+'.mti-hand-sheet .mh-invite-entry{display:flex;align-items:baseline;gap:7px;min-width:0;font-size:9pt;min-height:19px}'+
+'.mti-hand-sheet .mh-invite-num{font-weight:700;flex:0 0 16px}'+
+'.mti-hand-sheet .mh-invite-blank{flex:1;min-width:0;min-height:16px;border-bottom:1px solid #a6b5aa;overflow-wrap:anywhere}'+
 '.mti-hand-sheet .mh-filled{white-space:pre-wrap;overflow-wrap:anywhere;border-bottom:1px solid #a6b5aa;padding:2px 0 5px;font-size:9pt;line-height:1.4}'+
 '.mti-hand-sheet .mh-entry{padding:3px 0 6px;border-bottom:1px dotted #d5ded6;break-inside:avoid-page}'+
 '.mti-hand-sheet .mh-entry:last-child{border-bottom:0}'+
@@ -141,8 +147,9 @@ function mtiActivityPrintHtml(raw){
   pair(field("service_what","What"),field("service_when","When"))+
   pair(field("service_where","Where"),field("service_approved","Approved by / signature")));
  const evangelism=heading("Invites to Church","Write the names of five people you personally invited to church in the last six weeks.",
-  Array.from({length:5},(_,i)=>'<div class="mh-rule"><span class="mh-rule-num">'+(i+1)+'.</span>'+
-  (value("evangelism_"+(i+1))?'<span class="mh-answer">'+value("evangelism_"+(i+1))+'</span>':'<span class="mh-rule-line"></span>')+'</div>').join(""));
+  '<div class="mh-invites-grid">'+Array.from({length:5},(_,i)=>
+    '<div class="mh-invite-entry"><span class="mh-invite-num">'+(i+1)+'.</span><span class="mh-invite-blank">'+
+    (value("evangelism_"+(i+1))||'&nbsp;')+'</span></div>').join("")+'</div>');
  const confessions='<section class="mh-section mh-instruction-card">'+
   '<h4>Confessions</h4>'+
   '<p class="mh-note">Write nine confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne that you spoke aloud in the last six weeks. Complete this separately; no answers need to be written in this box.</p>'+
@@ -166,7 +173,8 @@ function mtiActivityPrintHtml(raw){
  const sheet=(sections,finalSheet)=>
   '<section class="mti-hand-sheet" aria-label="MTI printable lesson activity record">'+
    '<div class="mh-head"><h3>MTI Lesson Activity Record</h3>'+
-   '<div class="mh-name">Student: ____________________________</div></div>'+
+   '<div class="mh-top-right"><span class="mh-page-number">'+(finalSheet?'3 of 3':'2 of 3')+'</span>'+
+   '<div class="mh-name">Student: ____________________________</div></div></div>'+
    '<div class="mh-body">'+sections+'</div>'+
    '<div class="mh-footer">'+(finalSheet?'Return completed paper assignment to your MTI instructor.':'Ministry Training Institute · Handwritten activity record')+'</div>'+
    '</section>';
@@ -261,11 +269,12 @@ function mtiLessonPrintCoverHtml(record){
  '.mti-cover-page .mti-cover-content{position:absolute;left:0;top:0;width:100%;transform-origin:top left}'+
  '.mti-cover-page .mti-cover-topline{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:8px;border-bottom:2px solid #35624c}'+
  '.mti-cover-page .mti-cover-brand{font-size:8pt;font-weight:800;letter-spacing:1.25px;text-transform:uppercase;color:#35624c}'+
+'.mti-cover-page .mti-cover-page-number{font-size:9pt;font-weight:800;letter-spacing:.4px;color:#32513d}'+
  
- '.mti-cover-page .mti-cover-titleline{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:11px 0 9px}'+
+ '.mti-cover-page .mti-cover-titleline{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;margin:10px 0 12px}'+
  '.mti-cover-page .mti-cover-titleline h1{font:bold 18pt/1.16 Arial,Helvetica,sans-serif!important;color:#1a4030!important;margin:0 0 5px!important;letter-spacing:-.35px}'+
- '.mti-cover-page .mti-cover-caption{font-size:8.5pt;color:#607468}'+
- '.mti-cover-page .mti-cover-year{flex:0 0 auto;white-space:nowrap;background:#eff5f0;border:1px solid #d5e5d9;border-radius:7px;padding:6px 9px;font-size:8pt;font-weight:800;color:#305e48}'+
+ 
+ '.mti-cover-page .mti-cover-year{white-space:nowrap;padding:3px 12px;font:bold 16pt/1.2 Arial,Helvetica,sans-serif;color:#214a37;letter-spacing:.3px;text-align:center}'+
  '.mti-cover-page .mti-cover-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px 14px;padding:11px 13px;background:#f6f9f6;border:1px solid #dce7dd;border-radius:8px;margin-bottom:10px}'+
  '.mti-cover-page .mti-cover-meta-student{grid-column:1/-1}'+
  '.mti-cover-page .mti-cover-meta-date{display:flex;flex-direction:column;gap:5px}'+
@@ -292,9 +301,9 @@ function mtiLessonPrintCoverHtml(record){
  '@media print{.mti-cover-page{height:9.25in!important;max-height:9.25in!important;overflow:hidden!important;page-break-after:auto;break-after:auto;background:#fff!important;margin:0!important}.mti-cover-page .mti-cover-meta{background:#fff}.mti-cover-page .mti-office-marks{background:#fff!important}}'+
  '</style>'+
  '<section class="mti-cover-page" aria-label="MTI printable assignment cover"><div class="mti-cover-content">'+
- '<div class="mti-cover-topline"><span class="mti-cover-brand">Ministry Training Institute</span></div>'+
- '<div class="mti-cover-titleline"><div><h1>'+escape(title)+'</h1><div class="mti-cover-caption">'+escape((plain(data.assignmentTitle)&&plain(data.assignmentTitle)!==title?data.assignmentTitle:"Lesson study & assignment")+(credits?" · "+credits+" credits":""))+'</div></div>'+
- '<div class="mti-cover-year">'+(labelYear?'YEAR '+escape(labelYear)+' · ':'')+(lesson?'LESSON '+escape(lesson):'MTI')+'</div></div>'+
+ '<div class="mti-cover-topline"><span class="mti-cover-brand">Ministry Training Institute</span><span class="mti-cover-page-number">1 of 3</span></div>'+
+ '<div class="mti-cover-titleline"><h1>'+escape(title)+'</h1>'+
+ '<div class="mti-cover-year">'+(labelYear?'Year '+escape(labelYear)+' · ':'')+(lesson?'Lesson '+escape(lesson):'MTI')+'</div></div>'+
  '<div class="mti-cover-meta"><div class="mti-cover-meta-cell mti-cover-meta-student"><strong>Student Name</strong><span class="mti-cover-meta-value">'+(name?escape(name):'&nbsp;')+'</span></div>'+
  '<div class="mti-cover-meta-cell mti-cover-meta-date"><strong>Date Started</strong><span class="mti-cover-meta-value">'+escape(dateStarted)+'&nbsp;</span></div>'+
  '<div class="mti-cover-meta-cell mti-cover-meta-date"><strong>Date Completed</strong><span class="mti-cover-meta-value">'+escape(dateCompleted)+'&nbsp;</span></div>'+
