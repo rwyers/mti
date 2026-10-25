@@ -1,10 +1,10 @@
 /* MTI lesson activity record. Mirrors the reverse side of the MTI paper assignment sheet. */
 const MTI_ACTIVITY_SECTIONS=[
- {title:"One Hour of Practical Service",note:"Approved by Pastors Don & Tabatha Laing or Leslie Wyers.",rows:[
+ {title:"One Hour of Practical Service",note:"Approved by Pastors Don & Tabatha Laing, Leslie Wyers, or April Hill.",rows:[
   [{key:"service_what",label:"What"},{key:"service_when",label:"When"},{key:"service_where",label:"Where"}],
   [{key:"service_approved",label:"Approved by (name / handwritten signature when printed)"}]
  ]},
- {title:"Personal Evangelism",note:"Invited 5 people personally to church in the last 6 weeks. List their names.",rows:
+ {title:"Invites to Church",note:"Invited 5 people personally to church in the last 6 weeks. List their names.",rows:
   Array.from({length:5},(_,i)=>[{key:"evangelism_"+(i+1),label:"Person "+(i+1)}])},
  {title:"Confessions",note:"Write out 9 confessions, including scripture references from Champion Confessions by Dr. Carmen Lynne, that you spoke out loud in the last 6 weeks.",rows:[
   [{key:"confessions",label:"Nine confessions and scripture references",multiline:true,lines:9}]
@@ -19,7 +19,7 @@ const MTI_ACTIVITY_SECTIONS=[
   [{key:"study_date",label:"Date"},{key:"study_taught",label:"What was taught",multiline:true,lines:2}],
   [{key:"study_application",label:"How I will apply it",multiline:true,lines:2}]
  ]},
- {title:"Small Group / Worship Encounter",note:"For each meeting, write one thing you learnt and how it personally applied to your Christian walk.",rows:
+ {title:"Small Groups",note:"For each meeting, write one thing you learnt and how it personally applied to your Christian walk.",rows:
   Array.from({length:6},(_,i)=>[
    {key:"small_"+(i+1)+"_date",label:"Meeting "+(i+1)+" — Date"},
    {key:"small_"+(i+1)+"_taught",label:"What was taught",multiline:true,lines:2},
@@ -99,6 +99,9 @@ const MTI_HANDWRITING_PRINT_CSS='<style>'+
 '.mti-hand-sheet .mh-name{font-size:9pt;white-space:nowrap;margin-top:3px;line-height:2}'+
 '.mti-hand-sheet .mh-body{display:flex;flex-direction:column;justify-content:space-between;flex:1;min-height:0}'+
 '.mti-hand-sheet .mh-section{break-inside:avoid-page;page-break-inside:avoid;margin:0 0 10px}'+
+'.mti-hand-sheet .mh-instruction-card{border:1px solid #c7d9cc;background:#f4f8f5;border-radius:9px;padding:13px 15px!important;margin-bottom:14px!important}'+
+'.mti-hand-sheet .mh-instruction-card h4{margin-bottom:8px}'+
+'.mti-hand-sheet .mh-instruction-card .mh-note{font:9.5pt/1.5 Arial,Helvetica,sans-serif;color:#243d2e;margin:0}'+
 '.mti-hand-sheet h4{font:bold 11pt/1.2 Arial,Helvetica,sans-serif;color:#244c39;border-bottom:1px solid #a8b7aa;margin:0 0 3px;padding-bottom:3px}'+
 '.mti-hand-sheet .mh-note{font:8.5pt/1.3 Arial,Helvetica,sans-serif;margin:3px 0 7px;color:#4b6052}'+
 '.mti-hand-sheet .mh-line{display:flex;align-items:end;gap:8px;min-width:0;margin:6px 0;font-size:9.2pt}'+
@@ -134,16 +137,16 @@ function mtiActivityPrintHtml(raw){
  };
  const heading=(title,note,body)=>'<section class="mh-section"><h4>'+mtiActivityEscape(title)+'</h4>'+
   (note?'<div class="mh-note">'+mtiActivityEscape(note)+'</div>':"")+body+'</section>';
- const service=heading("One Hour of Practical Service","Service must be approved by Pastors Don & Tabatha Laing or Leslie Wyers.",
+ const service=heading("One Hour of Practical Service","Service must be approved by Pastors Don & Tabatha Laing, Leslie Wyers, or April Hill.",
   pair(field("service_what","What"),field("service_when","When"))+
   pair(field("service_where","Where"),field("service_approved","Approved by / signature")));
- const evangelism=heading("Personal Evangelism","Write the names of five people you personally invited to church in the last six weeks.",
+ const evangelism=heading("Invites to Church","Write the names of five people you personally invited to church in the last six weeks.",
   Array.from({length:5},(_,i)=>'<div class="mh-rule"><span class="mh-rule-num">'+(i+1)+'.</span>'+
   (value("evangelism_"+(i+1))?'<span class="mh-answer">'+value("evangelism_"+(i+1))+'</span>':'<span class="mh-rule-line"></span>')+'</div>').join(""));
- const confessionText=value("confessions");
- const confessions=heading("Confessions","Write nine confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne that you spoke aloud in the last six weeks. Use extra paper for longer confessions.",
-  confessionText?'<div class="mh-filled">'+confessionText+'</div>':
-  Array.from({length:9},(_,i)=>'<div class="mh-rule"><span class="mh-rule-num">'+(i+1)+'.</span><span class="mh-rule-line"></span></div>').join(""));
+ const confessions='<section class="mh-section mh-instruction-card">'+
+  '<h4>Confessions</h4>'+
+  '<p class="mh-note">Write nine confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne that you spoke aloud in the last six weeks. Complete this separately; no answers need to be written in this box.</p>'+
+  '</section>';
  const attendance=heading("Attendance — Sunday Services","For six Sunday services, note the date, theme and how the message personally applied to your life.",
   Array.from({length:6},(_,i)=>{
    const n=i+1,p="sunday_"+n+"_";
@@ -152,7 +155,7 @@ function mtiActivityPrintHtml(raw){
     '<div class="mh-line"><b>Application:</b><span class="mh-answer">'+(value(p+"application")||'&nbsp;')+'</span></div>'+
     (value(p+"application")?'':'<div class="mh-rule"><span class="mh-rule-line"></span></div>')+'</div>';
   }).join(""));
- const group=heading("Small Group / Worship Encounter","For each of six meetings, write what you learned and how it applies to your Christian walk.",
+ const group=heading("Small Groups","For each of six meetings, write what you learned and how it applies to your Christian walk.",
   Array.from({length:6},(_,i)=>{
    const n=i+1,p="small_"+n+"_";
    return '<div class="mh-entry"><div class="mh-line"><b class="mh-entry-num">'+n+'.</b>'+
@@ -168,8 +171,8 @@ function mtiActivityPrintHtml(raw){
    '<div class="mh-footer"><span>'+(n===2?'Return completed paper assignment to your MTI instructor.':'Ministry Training Institute · Handwritten activity record')+'</span><span>Page '+n+' / 2</span></div>'+
    '</section>';
  return MTI_HANDWRITING_PRINT_CSS+
-  sheet(1,"Service, personal evangelism and Sunday attendance",service+evangelism+attendance)+
-  sheet(2,"Confessions and small-group / worship encounters",confessions+group);
+  sheet(1,"Service, invites to church and Sunday attendance",service+evangelism+attendance)+
+  sheet(2,"Confessions and small groups",confessions+group);
 }
 
 
