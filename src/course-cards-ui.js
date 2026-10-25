@@ -40,7 +40,7 @@ function printMtiLesson(id){
  const documentHtml='<!doctype html><html lang="en"><head><meta charset="utf-8">'+
   '<meta name="viewport" content="width=device-width, initial-scale=1"><title>'+esc(title)+'</title>'+
   '<style>'+
-  '@page{size:letter;margin:.6in}*{box-sizing:border-box}body{margin:0;background:#edf2ee;color:#1a3327;font:12px/1.45 Arial,Helvetica,sans-serif}'+
+  '@page{size:letter;margin:.6in .4in .6in .9in}*{box-sizing:border-box}body{margin:0;background:#edf2ee;color:#1a3327;font:12px/1.45 Arial,Helvetica,sans-serif}'+
   '.print-tools{max-width:850px;margin:18px auto 10px;display:flex;justify-content:space-between;align-items:center;gap:12px;font:14px Arial,Helvetica,sans-serif}'+
   '.print-tools button{background:#22533c;color:white;border:0;border-radius:8px;padding:11px 18px;font-weight:750;cursor:pointer}'+
   'main{max-width:850px;background:white;margin:12px auto 40px;padding:25px;box-shadow:0 8px 30px #152c1d12}'+
