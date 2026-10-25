@@ -41,6 +41,23 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 15px}.span2{grid-column:span 2}.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:19px;border-top:1px solid #e9efea;padding-top:19px}
 #formError{color:#b24640;font-size:12px}.rubric{display:grid;grid-template-columns:1fr 1fr;gap:12px 17px}.rubric-line{display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:12px;border-bottom:1px solid #e9efea;padding-bottom:9px}.rubric-line input{max-width:74px;text-align:center;padding:8px}
 .score-total{margin:17px 0;background:#edf3ee;padding:13px 15px;border-radius:9px;font-weight:800}.score-total span{float:right}
+/* Final grading uses a deliberate pointer/keyboard slide, not a clickable Finish button. */
+.mti-grade-finalize{margin:17px 0 5px;padding:14px 15px 11px;border:1px solid #d9e5e0;border-radius:11px;background:#f8faf9}
+.mti-grade-finalize h3{font-size:13px;color:#183b34;margin:0 0 5px}
+.mti-grade-finalize p{font-size:11px;line-height:1.5;color:#58726b;margin:0 0 10px}
+.mti-grade-slide-track{height:52px;position:relative;isolation:isolate;background:#e5eee9;border:1px solid #cdded4;border-radius:11px;overflow:hidden;user-select:none;-webkit-user-select:none}
+.mti-grade-slide-progress{position:absolute;left:0;top:0;bottom:0;width:0;background:#cce6d9;pointer-events:none;transition:width .07s linear}
+.mti-grade-slide-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#305949;pointer-events:none;padding-left:40px;text-align:center}
+.mti-grade-slide-thumb{appearance:none;position:absolute;top:4px;left:4px;width:43px;height:42px;border:0;border-radius:9px;background:#173f34;color:white;font-size:22px;font-weight:800;display:grid;place-items:center;padding:0;cursor:grab;touch-action:none;box-shadow:0 2px 6px #14392b38;z-index:2;will-change:transform}
+.mti-grade-slide-thumb:active{cursor:grabbing}
+.mti-grade-slide-thumb:focus-visible{outline:3px solid #5096bb;outline-offset:-3px}
+.mti-grade-slide-thumb:disabled{background:#97aea5;cursor:not-allowed;box-shadow:none}
+.mti-grade-slide-track.mti-grade-slide-disabled{background:#f1f3f2;border-color:#e0e7e2}
+.mti-grade-slide-track.mti-grade-slide-disabled .mti-grade-slide-label{color:#80958a}
+.mti-grade-slide-track.mti-grade-slide-submitting .mti-grade-slide-thumb{background:#377461;cursor:wait}
+.mti-grade-slide-instruction{display:block;margin:8px 0 0!important;font-size:11px!important;color:#687d74!important}
+@media(max-width:500px){.mti-grade-slide-label{font-size:11px}.mti-grade-finalize{padding:12px}}
+
 .mti-email-switch-wrap input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
 .mti-email-track{display:inline-flex;width:58px;height:32px;border-radius:99px;background:#adbcb6;padding:4px;align-items:center;transition:background .18s ease}
 .mti-email-knob{width:24px;height:24px;background:white;border-radius:50%;box-shadow:0 1px 5px #102b432f;transition:transform .18s ease}
@@ -239,8 +256,16 @@ function openForm(type,id){
     hasDraft?rowData.grading_draft_feedback:(rowData.status==="graded"?rowData.feedback:""))+
    '<p class="small" id="gradingSaveState" role="status" aria-live="polite">No new marks saved in this editing session yet.</p>'+
    '<div class="modal-actions"><button type="button" class="outline" onclick="closeForm()">Close</button>'+
-   '<button type="submit" class="outline" onclick="el(&quot;recordForm&quot;).dataset.gradeAction=&quot;save_progress&quot;">Save grading progress</button>'+
-   '<button type="button" class="primary" onclick="finishGrading()">Finish grading</button></div>';
+   '<button type="submit" class="outline" onclick="el(&quot;recordForm&quot;).dataset.gradeAction=&quot;save_progress&quot;">Save grading progress</button></div>'+
+   '<section class="mti-grade-finalize" aria-label="Finalize assignment grading">'+
+   '<h3>Ready to publish the final grade?</h3>'+
+   '<p>Finishing releases the marks to the student and may unlock their next lesson. Drag the arrow from left to right to confirm.</p>'+
+   '<div class="mti-grade-slide-track mti-grade-slide-disabled" id="mtiGradeSlideTrack">'+
+    '<div class="mti-grade-slide-progress" id="mtiGradeSlideProgress"></div>'+
+    '<span class="mti-grade-slide-label" id="mtiGradeSlideLabel">Complete all six core marks first</span>'+
+    '<button type="button" class="mti-grade-slide-thumb" id="mtiGradeSlideThumb" role="slider" aria-label="Slide to finish grading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-disabled="true" aria-describedby="mtiGradeSlideHint" disabled>➜</button></div>'+
+   '<p class="mti-grade-slide-instruction" id="mtiGradeSlideHint" role="status" aria-live="polite">Save grading progress can be used at any time.</p>'+
+   '</section>';
   mode="grade:"+id;
  }
  el("modalTitle").textContent=title;el("formError").textContent="";
@@ -268,7 +293,7 @@ function openForm(type,id){
   };
   reviewChoice.addEventListener("change",showReview);showReview();
  }
- if(type==="grade"){el("recordForm").addEventListener("input",calcScore);el("recordForm").dataset.gradeAction="save_progress";calcScore()}
+ if(type==="grade"){el("recordForm").addEventListener("input",calcScore);el("recordForm").dataset.gradeAction="save_progress";mtiGradeSlide=setupMtiGradeSlider(el("recordForm"),rowData);calcScore()}
  el("recordForm").addEventListener("submit",function(e){e.preventDefault();submitForm(mode)});
  var first=el("recordForm").querySelector("input,select,textarea");if(first)first.focus();
 }window.openForm=openForm;
@@ -280,13 +305,108 @@ function calcScore(){
  el("coreTotal").textContent=CORE.reduce(function(s,x){return s+(scores[x[0]]||0)},0)+" / 100";
  el("bonusTotal").textContent=BONUS.reduce(function(s,x){return s+(scores[x[0]]||0)},0)+" / 17";
  el("gradingProgressCount").textContent=marked+" / 6 core items scored";
+ if(mtiGradeSlide)mtiGradeSlide.refresh();
 }
-function finishGrading(){
- var form=el("recordForm");if(!form)return;
- var missing=CORE.filter(function(x){return !form.querySelector('[data-score="'+x[0]+'"]')?.value.trim()}).map(x=>x[1]);
- if(missing.length){el("formError").textContent="To finish grading, fill in all six core scores (use 0 where appropriate): "+missing.join(", ")+". Otherwise click Save grading progress.";return;}
- if(!confirm("Finish grading and publish the grade to the student? This can unlock the next lesson. To save unfinished marks instead, choose Cancel and Save grading progress."))return;
- form.dataset.gradeAction="finish_grading";form.requestSubmit();
+var mtiGradeSlide=null;
+function setupMtiGradeSlider(form,assignment){
+ const track=form.querySelector("#mtiGradeSlideTrack"),thumb=form.querySelector("#mtiGradeSlideThumb");
+ const progress=form.querySelector("#mtiGradeSlideProgress"),label=form.querySelector("#mtiGradeSlideLabel");
+ const hint=form.querySelector("#mtiGradeSlideHint");
+ if(!track||!thumb||!progress||!label||!hint)return null;
+ let amount=0,activePointer=null,submitting=false;
+ const required=CORE.map(x=>x[0]);
+ function validate(){
+  for(const k of required){
+   const control=form.querySelector('[data-score="'+k+'"]'),raw=control?.value.trim();
+   const max=CORE.find(x=>x[0]===k)?.[2];
+   if(raw==null||raw===""||!Number.isInteger(Number(raw))||Number(raw)<0||Number(raw)>max)
+    return {ready:false,message:"Fill in all six core marks (0 is allowed) before finishing."};
+  }
+  for(const k of BONUS.map(x=>x[0])){
+   const control=form.querySelector('[data-score="'+k+'"]'),raw=control?.value.trim();
+   const max=BONUS.find(x=>x[0]===k)?.[2];
+   if(raw&&(!Number.isInteger(Number(raw))||Number(raw)<0||Number(raw)>max||(k==="invite"&&Number(raw)%2!==0)))
+    return {ready:false,message:"Check that all bonus marks are valid (invitations: 2 points each)."};
+  }
+  if(assignment.status==="assigned"&&!assignment.submitted_at)
+   return {ready:false,message:"The student must submit their assignment before final grading. Partial marks can still be saved."};
+  return {ready:true,message:"Drag the arrow all the way right to publish the final grade."};
+ }
+ function range(){return Math.max(0,track.clientWidth-thumb.offsetWidth-8);}
+ function draw(value){
+  amount=Math.max(0,Math.min(100,value));
+  thumb.style.transform="translateX("+(range()*amount/100)+"px)";
+  progress.style.width=(4+range()*amount/100+thumb.offsetWidth)+"px";
+  thumb.setAttribute("aria-valuenow",String(Math.round(amount)));
+ }
+ function reset(){
+  activePointer=null;
+  track.classList.remove("mti-grade-slide-submitting");
+  draw(0);
+ }
+ function refresh(){
+  const state=validate();
+  thumb.disabled=!state.ready||submitting;
+  thumb.setAttribute("aria-disabled",String(thumb.disabled));
+  track.classList.toggle("mti-grade-slide-disabled",!state.ready);
+  label.textContent=submitting?"Publishing final grade…":state.ready?"Slide to finish grading →":"Final grading locked";
+  hint.textContent=submitting?"Submitting final marks…":state.message;
+  if(!state.ready||submitting)reset();
+  return state.ready;
+ }
+ function submitFinal(){
+  if(submitting||!validate().ready){reset();refresh();return;}
+  submitting=true;activePointer=null;
+  track.classList.add("mti-grade-slide-submitting");
+  thumb.disabled=true;
+  thumb.setAttribute("aria-disabled","true");
+  label.textContent="Publishing final grade…";
+  hint.textContent="Saving final scores and completing grading…";
+  form.dataset.gradeAction="finish_grading";
+  form.requestSubmit();
+ }
+ thumb.addEventListener("pointerdown",function(e){
+  if(thumb.disabled||submitting||activePointer!==null)return;
+  if(e.pointerType==="mouse"&&e.button!==0)return;
+  e.preventDefault();
+  activePointer=e.pointerId;
+  try{thumb.setPointerCapture(e.pointerId)}catch{}
+ });
+ thumb.addEventListener("pointermove",function(e){
+  if(activePointer!==e.pointerId||submitting)return;
+  e.preventDefault();
+  const rect=track.getBoundingClientRect();
+  const px=e.clientX-rect.left-4-thumb.offsetWidth/2;
+  draw(range()?px/range()*100:0);
+ });
+ thumb.addEventListener("pointerup",function(e){
+  if(activePointer!==e.pointerId)return;
+  e.preventDefault();
+  const finished=amount>=96;
+  activePointer=null;
+  try{if(thumb.hasPointerCapture(e.pointerId))thumb.releasePointerCapture(e.pointerId)}catch{}
+  if(finished)submitFinal();else reset();
+ });
+ thumb.addEventListener("pointercancel",reset);
+ thumb.addEventListener("lostpointercapture",function(){if(activePointer!==null&&!submitting)reset()});
+ // Accessible deliberate keyboard path: repeatedly press Right Arrow to move
+ // from 0 to 100%; releasing it at 100% is the confirmation gesture.
+ thumb.addEventListener("keydown",function(e){
+  if(thumb.disabled||submitting)return;
+  if(e.key==="ArrowRight"){e.preventDefault();draw(amount+10);}
+  else if(e.key==="ArrowLeft"){e.preventDefault();draw(amount-10);}
+  else if(e.key==="Home"){e.preventDefault();draw(0);}
+  else if(e.key==="End"){e.preventDefault();draw(100);}
+  else if(e.key==="Enter"||e.key===" "){e.preventDefault();}
+ });
+ thumb.addEventListener("keyup",function(e){
+  if(thumb.disabled||submitting)return;
+  if((e.key==="ArrowRight"||e.key==="End")&&amount>=100){e.preventDefault();submitFinal();}
+ });
+ // Track clicks never finalize. Only dragging the thumb or intentionally
+ // operating its keyboard slider can submit the final grade.
+ track.addEventListener("click",function(e){if(e.target!==thumb)e.preventDefault()});
+ return {refresh,reset,done:()=>{submitting=false;reset();refresh();}};
 }
 async function submitForm(mode){
  if(mode==="viewlesson"){closeForm();return}
@@ -319,7 +439,7 @@ async function submitForm(mode){
    if(result.year_complete)alert("This student has completed all nine sessions in this academic year! Their finished year is now archived. The next year stays locked until payment and administrator approval.");
    else if(result.next_unlocked?.length)alert(result.next_unlocked.map(x=>"Session "+x.lesson_number+" is now unlocked for the student.").join("\n"));
   }
- }catch(e){el("formError").textContent=e.message}finally{if(mode.startsWith("grade:"))form.dataset.gradeAction="save_progress";button.disabled=false}
+ }catch(e){el("formError").textContent=e.message}finally{if(mode.startsWith("grade:")){form.dataset.gradeAction="save_progress";if(mtiGradeSlide)mtiGradeSlide.done()}button.disabled=false}
 }
 el("loginForm").addEventListener("submit",async function(e){
  e.preventDefault();var button=this.querySelector("button");button.disabled=true;el("loginError").textContent="";
