@@ -171,7 +171,7 @@ async function dataset(env){
  env.DB.prepare("SELECT * FROM lessons ORDER BY course_id,year,lesson_number").all(),
  env.DB.prepare("SELECT * FROM students ORDER BY created_at DESC").all(),
  env.DB.prepare("SELECT * FROM assignments ORDER BY created_at DESC").all(),
- env.DB.prepare("SELECT id,assignment_id,student_id,response_text,submitted_at,updated_at FROM assignment_submissions ORDER BY submitted_at DESC").all(),
+ env.DB.prepare("SELECT id,assignment_id,student_id,response_text,activity_form_json,submitted_at,updated_at FROM assignment_submissions ORDER BY submitted_at DESC").all(),
  env.DB.prepare("SELECT id,assignment_id,student_id,filename,content_type,size_bytes,created_at FROM submission_files ORDER BY created_at DESC").all()
  ]);
  return {courses:courses.results,lessons:lessons.results,students:students.results,assignments:assignments.results,submissions:submissions.results,files:files.results};
@@ -433,7 +433,7 @@ async function studentAPI(req,env,path) {
  if(path==="/api/student/change-password"&&req.method==="POST")return changePassword(req,env,user);
  if(path==="/api/student/data"&&req.method==="GET"){
   const s=await env.DB.prepare("SELECT s.id,s.full_name,s.email,s.course_id,s.current_year,s.current_lesson,s.status,c.name AS course_name FROM students s LEFT JOIN courses c ON c.id=s.course_id WHERE s.id=?").bind(user.student_id).first();
-  const assignments=await env.DB.prepare("SELECT a.*, l.course_id,c.name AS course_name,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.submission_notes,l.materials_list,s.response_text,s.submitted_at AS response_submitted_at FROM assignments a LEFT JOIN lessons l ON l.id=a.lesson_id LEFT JOIN courses c ON c.id=l.course_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? ORDER BY a.created_at DESC").bind(user.student_id).all();
+  const assignments=await env.DB.prepare("SELECT a.*, l.course_id,c.name AS course_name,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.submission_notes,l.materials_list,s.response_text,s.activity_form_json,s.submitted_at AS response_submitted_at FROM assignments a LEFT JOIN lessons l ON l.id=a.lesson_id LEFT JOIN courses c ON c.id=l.course_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? ORDER BY a.created_at DESC").bind(user.student_id).all();
   const files=await env.DB.prepare("SELECT id,assignment_id,filename,content_type,size_bytes,created_at FROM submission_files WHERE student_id=? ORDER BY created_at DESC").bind(user.student_id).all();
   return json({student:s,assignments:assignments.results,files:files.results});
  }
@@ -443,11 +443,21 @@ async function studentAPI(req,env,path) {
   if(!a)return json({error:"Assignment not found"},404);
   if(a.status==="graded")return json({error:"This work has already been graded. Contact your instructor."},409);
   const b=await payload(req),response=string(b.response_text,20000);
-  if(response.length<5){const f=await env.DB.prepare("SELECT COUNT(*) n FROM submission_files WHERE assignment_id=? AND student_id=?").bind(id,user.student_id).first();if(!f.n)return json({error:"Please write your response or upload a file before submitting."},400)}
-  await env.DB.prepare("INSERT INTO assignment_submissions(id,assignment_id,student_id,response_text) VALUES(?,?,?,?) ON CONFLICT(assignment_id) DO UPDATE SET response_text=excluded.response_text,updated_at=CURRENT_TIMESTAMP,submitted_at=CURRENT_TIMESTAMP")
-  .bind(crypto.randomUUID(),id,user.student_id,response).run();
+  if(b.activity_form!=null&&(typeof b.activity_form!=="object"||Array.isArray(b.activity_form)))return json({error:"Invalid lesson activity form"},400);
+  const activity={};
+  const allowed=/^(?:service_(?:what|when|where|approved)|evangelism_[1-5]|confessions|sunday_[1-6]_(?:date|theme|application)|study_(?:date|taught|application)|small_[1-6]_(?:date|taught|application)|intensive_(?:date|taught)|mentorship_(?:date|signature))$/;
+  for(const [key,value] of Object.entries(b.activity_form||{})){
+   if(!allowed.test(key)||typeof value!=="string")return json({error:"Invalid lesson activity field"},400);
+   const clean=value.trim();
+   if(clean.length>900)return json({error:"Lesson activity response is too long"},400);
+   if(clean)activity[key]=clean;
+  }
+  if(JSON.stringify(activity).length>18000)return json({error:"Lesson activity form is too long"},400);
+  if(response.length<5&&!Object.keys(activity).length){const f=await env.DB.prepare("SELECT COUNT(*) n FROM submission_files WHERE assignment_id=? AND student_id=?").bind(id,user.student_id).first();if(!f.n)return json({error:"Please write your response or upload a file before submitting."},400)}
+  await env.DB.prepare("INSERT INTO assignment_submissions(id,assignment_id,student_id,response_text,activity_form_json) VALUES(?,?,?,?,?) ON CONFLICT(assignment_id) DO UPDATE SET response_text=excluded.response_text,activity_form_json=excluded.activity_form_json,updated_at=CURRENT_TIMESTAMP,submitted_at=CURRENT_TIMESTAMP")
+  .bind(crypto.randomUUID(),id,user.student_id,response,JSON.stringify(activity)).run();
   await env.DB.prepare("UPDATE assignments SET status='submitted',submitted_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(id).run();
-  await auditAction(env,user,a.status==="submitted"?"resubmit":"submit","assignment",id,{status:a.status},{status:"submitted",characters:response.length});
+  await auditAction(env,user,a.status==="submitted"?"resubmit":"submit","assignment",id,{status:a.status},{status:"submitted",characters:response.length,activity_entries:Object.keys(activity).length});
   return json({ok:true});
  }
  return json({error:"Not found"},404);
