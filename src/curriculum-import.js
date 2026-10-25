@@ -79,7 +79,7 @@ async function importPublishedYear(env,name,year,actor){
   await env.DB.prepare("INSERT INTO courses (id,name,description) VALUES (?,?,'')").bind(courseId,name).run();
  }
  const statements=rows.map(row=>env.DB.prepare("INSERT OR IGNORE INTO lessons (id,course_id,year,lesson_number,credits,memory_verse_reference,memory_verse_text,bible_instruction,assignment_instructions,submission_notes,materials_list) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
-  .bind(crypto.randomUUID(),courseId,row.year,row.number,row.credits,row.memory_verse_reference,row.memory_verse_text,row.bible_instruction,row.assignment_instructions,row.submission_notes,row.materials_list));
+  .bind(crypto.randomUUID(),courseId,row.year,row.number,row.credits,row.memory_verse_reference,row.memory_verse_text,(row.year===1?MTI_YEAR1_BIBLE_INSTRUCTION:row.bible_instruction),row.assignment_instructions,row.submission_notes,row.materials_list));
  const changes=await env.DB.batch(statements);
  const imported=changes.reduce((n,result)=>n+(result.meta?.changes||0),0),existing=rows.length-imported;
  if(imported)await auditAction(env,actor||null,"import_curriculum","course",courseId,null,{course:name,year,imported,existing,source:"published MTI curriculum"});
