@@ -256,6 +256,18 @@ function mtiOfficeGradingPrintHtml(){
    unchanged. This cover contains the full assignment instructions + office rubric.
    Large supplemental resource lists and submitted responses get an explicit online
    continuation note instead of making the cover overflow and shifting the worksheets. */
+/* Dates on a printed assignment are tied to the closest Sunday to printing.
+   Date Due is exactly six Sundays (42 calendar days) after Date Started.
+   Work at local noon so daylight-saving shifts never move the displayed day. */
+function mtiPrintSundayDates(reference=new Date()){
+ const base=new Date(reference.getFullYear(),reference.getMonth(),reference.getDate(),12,0,0,0);
+ const weekday=base.getDay();
+ const toNearestSunday=weekday<=3?-weekday:7-weekday;
+ const started=new Date(base);started.setDate(base.getDate()+toNearestSunday);
+ const due=new Date(started);due.setDate(started.getDate()+42);
+ const printable=(date)=>date.toLocaleDateString("en-CA",{month:"short",day:"numeric",year:"numeric"});
+ return {started:printable(started),due:printable(due),startDate:started,dueDate:due};
+}
 function mtiLessonPrintCoverHtml(record){
  const data=record||{},escape=mtiActivityEscape;
  const plain=(value)=>String(value==null?"":value).replace(/\r\n?/g,"\n").trim();
@@ -282,8 +294,9 @@ function mtiLessonPrintCoverHtml(record){
  const confessionInstructions="Write 9 confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne that you spoke out loud in the last six weeks. Complete this separately; no answers need to be written in this box.";
  const confessionCard=card("Confessions",prose(confessionInstructions),"mti-cover-confessions");
  const title=plain(data.course)||plain(data.assignmentTitle)||"MTI Lesson";
- const name=plain(data.student),due=plain(data.due),credits=plain(data.credits);
- const dateStarted=plain(data.dateStarted),dateCompleted=plain(data.dateCompleted);
+ const printDates=mtiPrintSundayDates();
+ const name=plain(data.student),due=printDates.due,credits=plain(data.credits);
+ const dateStarted=printDates.started,dateCompleted=plain(data.dateCompleted);
  const labelYear=plain(data.year),lesson=plain(data.lesson);
  return '<style>'+
  '.mti-cover-page,.mti-cover-page *{box-sizing:border-box}'+
@@ -329,7 +342,7 @@ function mtiLessonPrintCoverHtml(record){
  '<div class="mti-cover-meta"><div class="mti-cover-meta-cell mti-cover-meta-student"><strong>Student Name</strong><span class="mti-cover-meta-value">'+(name?escape(name):'&nbsp;')+'</span></div>'+
  '<div class="mti-cover-meta-cell mti-cover-meta-date"><strong>Date Started</strong><span class="mti-cover-meta-value">'+escape(dateStarted)+'&nbsp;</span></div>'+
  '<div class="mti-cover-meta-cell mti-cover-meta-date"><strong>Date Completed</strong><span class="mti-cover-meta-value">'+escape(dateCompleted)+'&nbsp;</span></div>'+
- '<div class="mti-cover-meta-cell mti-cover-meta-date"><strong>Date Due</strong><span class="mti-cover-meta-value">'+escape(due||plain(data.date))+'&nbsp;</span></div></div>'+
+ '<div class="mti-cover-meta-cell mti-cover-meta-date"><strong>Date Due</strong><span class="mti-cover-meta-value">'+escape(due)+'&nbsp;</span></div></div>'+
  '<div class="mti-cover-grid">'+panels+submittedResponse+confessionCard+'</div>'+
  mtiOfficeGradingPrintHtml()+
  '</div></section>';
