@@ -24,7 +24,13 @@ async function nextLessonPreview(env,assignmentId) {
   already_assigned:duplicate||null};
 }
 function emailSendingEnabled(env){return Boolean(env.MTI_EMAIL_DELIVERY_ENABLED==="true" && env.MTI_EMAIL_FROM && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(env.MTI_EMAIL_FROM) && (env.MTI_MAIL_RELAY_TOKEN || typeof env.EMAIL?.send==="function" || env.RESEND_API_KEY));}
+/* Persistent master stop-switch; absent or invalid settings mean OFF, never ON. */
+async function mtiNotificationsEnabled(env) {
+ const row=await env.DB.prepare("SELECT setting_value FROM mti_settings WHERE setting_key='email_notifications_enabled'").first();
+ return row?.setting_value==="true";
+}
 async function queueEmail(env,eventType,recipientRole,recipientEmail,assignmentId,studentId,subject,bodyText) {
+ if(!(await mtiNotificationsEnabled(env)))return null; // No backlog of accidental test emails while paused.
  if(!recipientEmail||!isEmail(recipientEmail))return null;
  const id=crypto.randomUUID();
  await env.DB.prepare("INSERT INTO notification_outbox(id,event_key,event_type,recipient_email,recipient_role,student_id,assignment_id,subject,body_text) VALUES(?,?,?,?,?,?,?,?,?)")
@@ -33,13 +39,19 @@ async function queueEmail(env,eventType,recipientRole,recipientEmail,assignmentI
  return id;
 }
 async function sendPendingEmails(env,onlyIds=null) {
- if(!emailSendingEnabled(env)||env.MTI_EMAIL_DELIVERY_ENABLED!=="true")return {configured:false,sent:0};
+ if(!(await mtiNotificationsEnabled(env))||!emailSendingEnabled(env))return {configured:false,sent:0};
  const rows=await env.DB.prepare("SELECT * FROM notification_outbox WHERE status IN ('pending','failed') ORDER BY created_at ASC LIMIT 12").all();
  const ready=onlyIds?rows.results.filter(row=>onlyIds.includes(row.id)):rows.results;
  let sent=0,failed=0;
  for(const mail of ready) {
+  if(!(await mtiNotificationsEnabled(env)))break; // Re-check if admin has disabled sending during this batch.
   const locked=await env.DB.prepare("UPDATE notification_outbox SET status='sending',attempts=attempts+1,last_error=NULL WHERE id=? AND status IN ('pending','failed')").bind(mail.id).run();
   if(!locked.meta?.changes)continue;
+  /* Re-check immediately before contacting the email provider. */
+  if(!(await mtiNotificationsEnabled(env))){
+   await env.DB.prepare("DELETE FROM notification_outbox WHERE id=? AND status='sending'").bind(mail.id).run();
+   break;
+  }
   try {
    if(env.MTI_MAIL_RELAY_TOKEN){
     const response=await fetch("https://greatchurch.ca/api/mti/email/send",{
