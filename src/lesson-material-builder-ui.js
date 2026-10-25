@@ -85,7 +85,7 @@ function mtiMountMaterialAssignmentBuilder(lessonId){
     '<div><span class="mti-m-tag">'+esc(label)+'</span><div class="mti-m-card-title" style="margin-top:7px">'+esc(c.title)+(c.author?' — '+esc(c.author):'')+'</div></div>'+
     '<div class="mti-m-action"><button type="button" class="outline" data-mti-m-edit="'+i+'">Edit</button>'+
     '<button type="button" class="outline mti-m-delete" data-mti-m-delete="'+i+'" aria-label="Delete '+esc(c.title)+' assignment">Delete</button></div></div>'+
-    '<div class="mti-m-copy">'+esc(mtiMaterialCardText(c))+'</div></div>';
+    '<div class="mti-m-copy">'+esc(mtiMaterialCardBody(c))+'</div></div>';
   }).join(""):'<div class="mti-m-empty" style="margin-top:10px">No added material cards yet. Choose a type and enter a material name above.</div>';
   sync();
  }
