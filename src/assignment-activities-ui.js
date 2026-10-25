@@ -249,7 +249,7 @@ function mtiLessonPrintCoverHtml(record){
  const submittedResponse=fullResponse?card("Submitted Response",prose(shorten(fullResponse,420))+
   (clippedResponse?'<div class="mti-cover-online-note">The complete submitted response is available online.</div>':""),"05","mti-cover-response"):"";
  const title=plain(data.course)||plain(data.assignmentTitle)||"MTI Lesson";
- const name=plain(data.student);
+ const name=plain(data.student),due=plain(data.due),credits=plain(data.credits);
  const labelYear=plain(data.year),lesson=plain(data.lesson);
  const sheet='Sheet 1 of 3';
  return '<style>'+
@@ -288,10 +288,10 @@ function mtiLessonPrintCoverHtml(record){
  '</style>'+
  '<section class="mti-cover-page" aria-label="MTI printable assignment cover, '+sheet+'"><div class="mti-cover-content">'+
  '<div class="mti-cover-topline"><span class="mti-cover-brand">Ministry Training Institute</span><span class="mti-cover-sheet">'+sheet+' · Assignment</span></div>'+
- '<div class="mti-cover-titleline"><div><h1>'+escape(title)+'</h1><div class="mti-cover-caption">'+escape(plain(data.assignmentTitle)&&plain(data.assignmentTitle)!==title?data.assignmentTitle:"Lesson study & assignment")+'</div></div>'+
+ '<div class="mti-cover-titleline"><div><h1>'+escape(title)+'</h1><div class="mti-cover-caption">'+escape((plain(data.assignmentTitle)&&plain(data.assignmentTitle)!==title?data.assignmentTitle:"Lesson study & assignment")+(credits?" · "+credits+" credits":""))+'</div></div>'+
  '<div class="mti-cover-year">'+(labelYear?'YEAR '+escape(labelYear)+' · ':'')+(lesson?'LESSON '+escape(lesson):'MTI')+'</div></div>'+
  '<div class="mti-cover-meta"><div class="mti-cover-meta-cell"><strong>Student</strong><span class="mti-cover-meta-value">'+(name?escape(name):'&nbsp;')+'</span></div>'+
- '<div class="mti-cover-meta-cell"><strong>Date</strong><span class="mti-cover-meta-value">'+escape(plain(data.date))+'&nbsp;</span></div></div>'+
+ '<div class="mti-cover-meta-cell"><strong>'+(due?"Due":"Date")+'</strong><span class="mti-cover-meta-value">'+escape(due||plain(data.date))+'&nbsp;</span></div></div>'+
  '<div class="mti-cover-grid">'+panels+submittedResponse+'</div>'+
  mtiOfficeGradingPrintHtml()+
  '<div class="mti-cover-footer"><span>MTI · Lesson worksheet</span><span>Additional handwriting activities follow on sheets 2–3</span></div>'+
