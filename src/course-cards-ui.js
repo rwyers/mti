@@ -68,6 +68,7 @@ function printMtiLesson(id){
   section("Required materials",lesson.materials_list)+
 
   '<section class="lesson-section"><h2>Student responses / notes</h2>'+responseLines+'</section>'+
+  mtiOfficeGradingPrintHtml()+
   mtiActivityPrintHtml({})+'</main></body></html>';
  const printWindow=window.open("","_blank");
  if(!printWindow){alert("Your browser blocked the print window. Allow pop-ups for MTI and try again.");return;}
