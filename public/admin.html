@@ -113,6 +113,8 @@ var BONUS=[["opportunity","Opportunity 101/102",5],["growth","Growth Tracks",10]
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function nameOf(id,type){var r=DATA[type].find(function(x){return x.id===id});return r?(type==="students"?r.full_name:r.name):"—"}
 function lessonName(id){var l=DATA.lessons.find(function(x){return x.id===id});return l?nameOf(l.course_id,"courses")+" · Year "+l.year+" · Lesson "+l.lesson_number:"Custom assignment"}
+function lessonReviewLabel(id){var l=DATA.lessons.find(function(x){return x.id===id});return l?(Number(l.is_current)===1?"Current":"Needs updating"):"Custom"}
+function lessonNeedsUpdate(id){var l=DATA.lessons.find(function(x){return x.id===id});return !!l&&Number(l.is_current)!==1}
 function badge(s){return '<span class="pill '+esc(s)+'">'+esc(s)+'</span>'}
 function empty(msg,fn,text){return '<div class="empty"><div class="round">✦</div><h3>'+esc(msg)+'</h3><p>Your workspace will show records here when you add them.</p>'+(fn?'<button class="primary" onclick="openForm(\''+fn+'\')">+ '+esc(text)+'</button>':"")+'</div>'}
 function table(headers,rows){return '<div class="table-scroll"><table><thead><tr>'+headers.map(function(h){return '<th>'+esc(h)+'</th>'}).join("")+'</tr></thead><tbody>'+rows.join("")+'</tbody></table></div>'}
@@ -131,7 +133,7 @@ function render(){
  ].map(function(a){return '<div class="stat"><span>'+a[0]+'</span><strong>'+a[1]+'</strong><small>'+a[2]+'</small></div>'}).join("");
  function assignmentRows(items,gradingMode){
   return items.map(function(a){return row([
-    "<strong>"+esc(a.title)+"</strong><br><small>"+esc(lessonName(a.lesson_id))+"</small>",
+    "<strong>"+esc(a.title)+"</strong><br><small>"+esc(lessonName(a.lesson_id))+(a.lesson_id?' · <span style=\"color:'+(lessonNeedsUpdate(a.lesson_id)?'#a14b56':'#3766a1')+';font-weight:700\">'+esc(lessonReviewLabel(a.lesson_id))+'</span>':'')+"</small>",
     esc(nameOf(a.student_id,"students")),esc(a.due_date||"Not set"),
     badge(a.status),a.grade_points==null?"—":"<strong>"+a.grade_points+"/100</strong>",
     '<div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">'+
@@ -164,7 +166,9 @@ function openForm(type,id){
  if(type==="student"){title="Add student";fields='<div class="formgrid">'+input("full_name","Student full name","text","","required maxlength=160")+input("email","Email address","email")+input("phone","Phone number","tel")+select("course_id","Course / field of study",copt)+select("current_year","Current year",optsNums(5,1))+select("current_lesson","Current lesson",optsNums(12,1))+'<div class="span2">'+area("notes","Private administrator notes")+'</div></div>'+buttons("Save student")}
  if(type==="course"){title="Create course";fields=input("name","Course name","text","","required")+area("description","Course description")+buttons("Add course")}
  if(type==="lesson"){title="Create lesson";fields='<div class="formgrid">'+select("course_id","Course",copt,"required")+select("year","Year",optsNums(5,1))+input("lesson_number","Lesson number","number","1",'min="1" max="52" required')+input("credits","Credits","number","3",'min="0"')+input("memory_verse_reference","Scripture reference")+input("memory_verse_text","Scripture text")+'<div class="span2">'+area("bible_instruction","Bible study instructions")+area("assignment_instructions","Assignment instructions")+area("submission_notes","Submission instructions")+area("materials_list","Materials list")+'</div></div>'+buttons("Save lesson")}
- if(type==="assignment"){title="Create assignment";fields=select("student_id","Assign to student",selectOptions(DATA.students,"Select student",function(s){return s.full_name}),"required")+select("lesson_id","Lesson",selectOptions(DATA.lessons,"Custom / not linked",function(l){return lessonName(l.id)}))+input("title","Assignment title","text","","required")+input("due_date","Due date","date")+buttons("Assign lesson")}
+ if(type==="assignment"){title="Create assignment";fields=select("student_id","Assign to student",selectOptions(DATA.students,"Select student",function(s){return s.full_name}),"required")+select("lesson_id","Lesson review status",selectOptions(DATA.lessons,"Custom / not linked",function(l){return (Number(l.is_current)===1?"CURRENT — ":"NEEDS UPDATING — ")+lessonName(l.id)}))+
+ '<div id="mtiAssignReviewNotice" role="status" class="callout" style="display:none;margin-bottom:12px"></div>'+
+ input("title","Assignment title","text","","required")+input("due_date","Due date","date")+buttons("Assign lesson")}
  if(type==="viewlesson"){rowData=DATA.lessons.find(function(l){return l.id===id});if(!rowData)return;title="Lesson details";fields='<div class="callout"><strong>'+esc(lessonName(id))+'</strong> · '+esc(rowData.credits)+' credits</div><h3>Scripture to memorize</h3><p>'+esc(rowData.memory_verse_reference)+" — "+esc(rowData.memory_verse_text)+'</p><h3>Bible study</h3><p style="white-space:pre-wrap">'+esc(rowData.bible_instruction)+'</p><h3>Assignment</h3><p style="white-space:pre-wrap">'+esc(rowData.assignment_instructions)+'</p><h3>Submission notes</h3><p style="white-space:pre-wrap">'+esc(rowData.submission_notes)+'</p><h3>Materials</h3><p style="white-space:pre-wrap">'+esc(rowData.materials_list)+'</p>'+buttons("Close");mode="viewlesson"}
  if(type==="grade"){
   rowData=DATA.assignments.find(function(a){return a.id===id});if(!rowData)return;title="Mark assignment";var scores={};try{scores=JSON.parse(rowData.grading_json||"{}")}catch{}
@@ -176,6 +180,20 @@ function openForm(type,id){
  }
  el("modalTitle").textContent=title;el("formError").textContent="";
  el("modalBody").innerHTML='<form id="recordForm">'+fields+'</form>';el("overlay").classList.remove("hidden");
+ if(type==="assignment"){
+  var reviewChoice=el("f_lesson_id"),reviewNotice=el("mtiAssignReviewNotice");
+  var showReview=function(){
+   var lesson=DATA.lessons.find(function(x){return x.id===reviewChoice.value});
+   reviewNotice.style.display=lesson?"block":"none";
+   if(!lesson)return;
+   var outdated=Number(lesson.is_current)!==1;
+   reviewNotice.style.background=outdated?"#fff0f1":"#eaf3ff";
+   reviewNotice.style.border="1px solid "+(outdated?"#f0bec5":"#bbd4f3");
+   reviewNotice.style.color=outdated?"#913f4d":"#295585";
+   reviewNotice.innerHTML=outdated?"<strong>Needs updating:</strong> This lesson has not been reviewed and marked current. Please review it in Courses &amp; Lessons before giving it to a student.":"<strong>Current:</strong> This lesson has been reviewed and marked current.";
+  };
+  reviewChoice.addEventListener("change",showReview);showReview();
+ }
  if(type==="grade"){el("f_status").value=rowData.status;el("recordForm").addEventListener("input",calcScore);calcScore()}
  el("recordForm").addEventListener("submit",function(e){e.preventDefault();submitForm(mode)});
  var first=el("recordForm").querySelector("input,select,textarea");if(first)first.focus();
@@ -191,7 +209,10 @@ async function submitForm(mode){
  if(mode==="student")path="/api/admin/students";
  if(mode==="course")path="/api/admin/courses";
  if(mode==="lesson")path="/api/admin/lessons";
- if(mode==="assignment")path="/api/admin/assignments";
+ if(mode==="assignment"){
+  path="/api/admin/assignments";
+  if(lessonNeedsUpdate(b.lesson_id)&&!confirm("This lesson is marked Needs updating. Do you want to assign it anyway? You can review it first in Courses & Lessons."))return;
+ }
  button.disabled=true;el("formError").textContent="";
  try{
   const result=await api(path,{method:method,headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
