@@ -136,13 +136,13 @@ function selectAssignment(id){
  (a.read_only?'<p><strong>Previous curriculum submission.</strong> Your work remains saved for grading and review, but cannot be edited after a transfer.</p>':
  '<p>You can type your assignment below or submit your work as an attachment. Please include chapter and question numbers where applicable.</p>');
  if(a.status!=="graded"&&!a.read_only){
-  html+='<form id="responseForm"><textarea id="responseText" maxlength="20000" required placeholder="Type your answers here...">'+esc(a.response_text||"")+'</textarea><div class="error" id="submitError"></div><div class="actions"><button class="primary" type="submit">'+(a.status==="submitted"?"Update my submission":"Submit assignment")+'</button><button type="button" class="outline" id="printLesson">Print assignment / Save PDF</button></div></form>';
+  html+='<form id="responseForm"><textarea id="responseText" maxlength="20000" placeholder="Type your answers here...">'+esc(a.response_text||"")+'</textarea>'+mtiActivityFormHtml(a.activity_form_json)+'<div class="error" id="submitError"></div><div class="actions"><button class="primary" type="submit">'+(a.status==="submitted"?"Update my submission":"Submit assignment")+'</button><button type="button" class="outline" id="printLesson">Print assignment / Save PDF</button></div></form>';
  }else{
-  html+='<div class="detail-box">'+esc(a.response_text||"No written response saved.")+'</div><button type="button" class="outline" id="printLesson">Print assignment / Save PDF</button>';
+  html+='<div class="detail-box">'+esc(a.response_text||"No written response saved.")+'</div>'+mtiActivityReadOnlyHtml(a.activity_form_json)+'<button type="button" class="outline" id="printLesson">Print assignment / Save PDF</button>';
  }
  el("assignmentDetail").innerHTML=html;
  el("responseForm")?.addEventListener("submit",async function(e){e.preventDefault();var btn=this.querySelector("button[type=submit]");btn.disabled=true;
-  try{await api("/api/student/assignments/"+id+"/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({response_text:el("responseText").value})});await refresh();alert("Your assignment was submitted successfully.")}
+  try{await api("/api/student/assignments/"+id+"/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({response_text:el("responseText").value,activity_form:mtiActivityCollect()||{}})});await refresh();alert("Your assignment was submitted successfully.")}
   catch(e){el("submitError").textContent=e.message}finally{btn.disabled=false}
  });
  el("printLesson")?.addEventListener("click",function(){printAssignment(a)});
@@ -196,7 +196,7 @@ function printAssignment(a){
  for(var x of [["Scripture",String(a.memory_verse_reference||"")+" "+String(a.memory_verse_text||"")],["Bible instruction",a.bible_instruction],["Assignment",a.assignment_instructions],["Materials",a.materials_list],["Submission notes",a.submission_notes],["Student response",a.response_text]]){
   if(x[1])h+='<h2>'+esc(x[0])+'</h2><p>'+esc(x[1])+'</p>';
  }
- el("paper").innerHTML=h;window.print();
+ h+=mtiActivityPrintHtml(selected===a.id?(mtiActivityCollect()||a.activity_form_json):a.activity_form_json);el("paper").innerHTML=h;window.print();
 }
 el("signin").addEventListener("submit",async function(e){e.preventDefault();var btn=this.querySelector("button");btn.disabled=true;el("authError").textContent="";
  try{await api("/api/student/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:el("email").value,password:el("password").value})});el("password").value="";await refresh();}
