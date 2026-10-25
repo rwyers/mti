@@ -189,6 +189,8 @@ start=async function(){
   ACCOUNT=data.user;el("loginPage").classList.add("hidden");el("app").classList.remove("hidden");
   var staffTab=document.querySelector('[data-tab="staff"]');
   if(staffTab)staffTab.classList.toggle("hidden",ACCOUNT.role==="teacher");
+  var notificationsTab=document.querySelector('[data-tab="notifications"]');
+  if(notificationsTab)notificationsTab.classList.toggle("hidden",!["owner","admin"].includes(ACCOUNT.role));
   renderProfile();
   if(ACCOUNT.must_change_password){
    switchTab("profile");openForm("password");
