@@ -191,14 +191,25 @@ async function removeFile(id){
  catch(e){alert(e.message)}
 }
 function printAssignment(a){
- var rows=[["Student",DATA.student.full_name],["Assignment",a.title],["Year / Lesson",a.year?"Year "+a.year+" — Lesson "+a.lesson_number:"Individual assignment"],["Due date",a.due_date||"Not set"]];
- var h='<h1>MINISTRY TRAINING INSTITUTE</h1>'+rows.map(function(x){return '<p><strong>'+esc(x[0])+':</strong> '+esc(x[1])+'</p>'}).join("");
- for(var x of [["Scripture",String(a.memory_verse_reference||"")+" "+String(a.memory_verse_text||"")],["Bible instruction",a.bible_instruction],["Assignment",a.assignment_instructions],["Materials",a.materials_list],["Student response",a.response_text]]){
-  if(x[1])h+='<h2>'+esc(x[0])+'</h2><p>'+esc(x[1])+'</p>';
- }
- h+=mtiOfficeGradingPrintHtml();
- h+=mtiActivityPrintHtml(selected===a.id?(mtiActivityCollect()||a.activity_form_json):a.activity_form_json);el("paper").innerHTML=h;window.print();
+ const cover=mtiLessonPrintCoverHtml({
+  course:a.course_name||a.course||a.title||"MTI Lesson",
+  assignmentTitle:a.title,
+  year:a.year,lesson:a.lesson_number,
+  student:DATA?.student?.full_name||"",
+  date:"",
+  verseRef:a.memory_verse_reference,verseText:a.memory_verse_text,
+  bible:a.bible_instruction,assignment:a.assignment_instructions,
+  materials:a.materials_list,response:a.response_text
+ });
+ const activity=(selected===a.id?mtiActivityCollect():null)||a.activity_form_json;
+ el("paper").innerHTML=cover+mtiActivityPrintHtml(activity);
+ // The screen-only #paper is display:none; browser print styling activates
+ // during beforeprint so the cover can be fitted to the actual paper box.
+ window.print();
 }
+window.addEventListener("beforeprint",function(){
+ mtiFitLessonPrintCover(document.querySelector("#paper .mti-cover-page"));
+});
 el("signin").addEventListener("submit",async function(e){e.preventDefault();var btn=this.querySelector("button");btn.disabled=true;el("authError").textContent="";
  try{await api("/api/student/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:el("email").value,password:el("password").value})});el("password").value="";await refresh();}
  catch(err){el("authError").textContent=err.message}finally{btn.disabled=false}});
