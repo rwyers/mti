@@ -20,7 +20,7 @@ async function nextLessonPreview(env,assignmentId) {
   current:{year:a.year,lesson_number:a.lesson_number},next:{id:next.id,year:next.year,lesson_number:next.lesson_number,credits:next.credits,
   memory_verse_reference:next.memory_verse_reference,memory_verse_text:next.memory_verse_text,
   bible_instruction:next.bible_instruction,assignment_instructions:next.assignment_instructions,
-  submission_notes:next.submission_notes,materials_list:next.materials_list,title:nextLessonTitle(a.course_name,next)},
+  materials_list:next.materials_list,title:nextLessonTitle(a.course_name,next)},
   already_assigned:duplicate||null};
 }
 function emailSendingEnabled(env){return Boolean(env.MTI_EMAIL_DELIVERY_ENABLED==="true" && env.MTI_EMAIL_FROM && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(env.MTI_EMAIL_FROM) && (env.MTI_MAIL_RELAY_TOKEN || typeof env.EMAIL?.send==="function" || env.RESEND_API_KEY));}
