@@ -61,7 +61,6 @@
     field("Bible instructions",l.bible_instruction,"bible_instruction"),
     field("Assignment instructions",l.assignment_instructions,"assignment_instructions"),
     field("Books and materials",l.materials_list,"materials_list"),
-    field("Submission notes",l.submission_notes,"submission_notes"),
     field("Status",Number(l.is_current)===1?"Current":"Needs updating")],6);
   for(const a of DATA?.assignments||[]){
    const s=student(a.student_id),l=lesson(a.lesson_id);
