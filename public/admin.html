@@ -41,6 +41,13 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 15px}.span2{grid-column:span 2}.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:19px;border-top:1px solid #e9efea;padding-top:19px}
 #formError{color:#b24640;font-size:12px}.rubric{display:grid;grid-template-columns:1fr 1fr;gap:12px 17px}.rubric-line{display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:12px;border-bottom:1px solid #e9efea;padding-bottom:9px}.rubric-line input{max-width:74px;text-align:center;padding:8px}
 .score-total{margin:17px 0;background:#edf3ee;padding:13px 15px;border-radius:9px;font-weight:800}.score-total span{float:right}
+.mti-email-switch-wrap input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.mti-email-track{display:inline-flex;width:58px;height:32px;border-radius:99px;background:#adbcb6;padding:4px;align-items:center;transition:background .18s ease}
+.mti-email-knob{width:24px;height:24px;background:white;border-radius:50%;box-shadow:0 1px 5px #102b432f;transition:transform .18s ease}
+.mti-email-switch-wrap input:checked+.mti-email-track{background:#2c8569}
+.mti-email-switch-wrap input:checked+.mti-email-track .mti-email-knob{transform:translateX(26px)}
+.mti-email-switch-wrap input:focus-visible+.mti-email-track{outline:3px solid #7ea9de;outline-offset:2px}
+.mti-email-switch-wrap input:disabled+.mti-email-track{opacity:.6;cursor:wait}
 @media(max-width:1040px){
  .stats{grid-template-columns:repeat(2,1fr)}
  .app{grid-template-columns:88px minmax(0,1fr)}
@@ -80,7 +87,7 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 <button class="nav-item" data-tab="courses"><i>▤</i><span>Courses & lessons</span></button>
 <button class="nav-item" data-tab="curriculum"><i>⇥</i><span>Curriculum import</span></button>
 <button class="nav-item" data-tab="assignments"><i>▣</i><span>Assignments</span></button>
-<button class="nav-item" data-tab="grading"><i>✎</i><span>Grading</span></button><button class="nav-item" data-tab="staff"><i>♧</i><span>Staff accounts</span></button><button class="nav-item" data-tab="activity"><i>◷</i><span>Activity history</span></button><button class="nav-item" data-tab="profile"><i>⚙</i><span>My profile</span></button>
+<button class="nav-item" data-tab="grading"><i>✎</i><span>Grading</span></button><button class="nav-item" data-tab="notifications"><i>✉</i><span>Email notifications</span></button><button class="nav-item" data-tab="staff"><i>♧</i><span>Staff accounts</span></button><button class="nav-item" data-tab="activity"><i>◷</i><span>Activity history</span></button><button class="nav-item" data-tab="profile"><i>⚙</i><span>My profile</span></button>
 <div class="aside-bottom"><a href="/">↗ View website</a><button class="nav-item" id="logout" style="padding-left:0"><i>⇥</i><span>Sign out</span></button><div>MTI · Staff workspace</div></div></aside>
 <main><div class="top"><div class="crumb">MINISTRY TRAINING INSTITUTE <strong id="topTitle">Admin overview</strong></div><div style="display:flex;align-items:center;gap:13px"><span style="color:#87999a;font-size:12px">Administrator</span><div class="avatar">A</div></div></div>
 <div class="maininner">
@@ -97,6 +104,24 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 <section class="page" id="page-grading"><div class="heading"><div><h1>Grading</h1><p>Score student work using MTI's original marking rubric.</p></div></div>
 <div class="callout">Core scores total 100 points. The remaining tracked activities are recorded separately as additional points. All marks stay private.</div>
 <div class="panel"><div class="panel-head"><div><h2>Mark assignments</h2><p>Select an assignment to score it and add feedback.</p></div></div><div id="gradingTable"></div></div></section>
+<section class="page" id="page-notifications"><div class="heading"><div><h1>Email notifications</h1><p>Control automatic email alerts while building and testing MTI.</p></div></div>
+<div class="panel" style="padding:24px;max-width:760px">
+ <div style="display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap">
+  <div><h2 style="font-size:19px;margin:0 0 7px">Automatic MTI emails</h2>
+   <p style="color:#6c8080;font-size:13px;line-height:1.6;max-width:520px;margin:0">Includes new student assignments, grades, grade corrections, and assignment-submitted notifications to administrators.</p></div>
+  <label class="mti-email-switch-wrap" for="mtiEmailSwitch" style="display:flex;align-items:center;gap:11px;cursor:pointer;font-weight:800;margin:0">
+   <span id="mtiEmailSwitchText">OFF</span>
+   <input type="checkbox" id="mtiEmailSwitch" role="switch" aria-label="Send automatic MTI notification emails" disabled>
+   <span class="mti-email-track" aria-hidden="true"><span class="mti-email-knob"></span></span>
+  </label>
+ </div>
+ <div id="mtiEmailState" role="status" aria-live="polite" class="callout" style="margin:20px 0 12px;background:#fff4e8;color:#845b38">Loading email settings…</div>
+ <p id="mtiEmailProviderStatus" style="font-size:12px;color:#687c77;margin:9px 0 0"></p>
+ <p id="mtiEmailError" role="alert" style="font-size:12px;color:#a34442;margin:12px 0 0"></p>
+ <div style="padding-top:15px;margin-top:20px;border-top:1px solid #e3ebe5;color:#536b66;font-size:12px;line-height:1.7">
+  <strong>Development-safe default: OFF.</strong> While OFF, no new automatic MTI emails are queued or sent. Undelivered notification emails are cancelled when you switch OFF, so they won't suddenly go out when you switch back ON. No student assignments, files, grades, or previously sent email records are changed.
+ </div>
+</div></section>
 <section class="page" id="page-curriculum">
 <div class="heading"><div><h1>Curriculum import</h1><p>Bring published MTI course lessons into the secure database, keeping existing lessons intact.</p></div><button class="outline" onclick="loadCurriculumStatus()">↻ Refresh counts</button></div>
 <div class="callout">The import is <strong>additive</strong>: it adds missing lessons but never overwrites a lesson an administrator has already edited. It uses the published course sheets from MTI's original assignment generator. Student records are not involved.</div>
@@ -121,7 +146,7 @@ function table(headers,rows){return '<div class="table-scroll"><table><thead><tr
 function td(s){return "<td>"+s+"</td>"}
 function row(cells){return "<tr>"+cells.map(td).join("")+"</tr>"}
 function el(id){return document.getElementById(id)}
-function switchTab(name){CURRENT=name;document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){b.classList.toggle("active",b.dataset.tab===name)});document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("show",p.id==="page-"+name)});el("topTitle").textContent=({overview:"Admin overview",students:"Students",courses:"Courses & lessons",curriculum:"Curriculum import",assignments:"Assignments",grading:"Grading",staff:"Staff accounts",activity:"Activity history",profile:"My profile"})[name];if(name==="curriculum")loadCurriculumStatus();if(name==="staff")loadStaff();if(name==="activity")loadActivity();if(name==="profile")renderProfile();window.scrollTo({top:0,behavior:"smooth"})}
+function switchTab(name){CURRENT=name;document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){b.classList.toggle("active",b.dataset.tab===name)});document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("show",p.id==="page-"+name)});el("topTitle").textContent=({overview:"Admin overview",students:"Students",courses:"Courses & lessons",curriculum:"Curriculum import",assignments:"Assignments",grading:"Grading",notifications:"Email notifications",staff:"Staff accounts",activity:"Activity history",profile:"My profile"})[name];if(name==="curriculum")loadCurriculumStatus();if(name==="staff")loadStaff();if(name==="notifications")loadEmailNotificationSettings();if(name==="activity")loadActivity();if(name==="profile")renderProfile();window.scrollTo({top:0,behavior:"smooth"})}
 window.switchTab=switchTab;
 function render(){
  var assignments=DATA.assignments,students=DATA.students,lessons=DATA.lessons;
