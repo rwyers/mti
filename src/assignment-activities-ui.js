@@ -90,29 +90,29 @@ function mtiActivityReadOnlyHtml(raw){
 }
 /* Compact paper-only layout; mtiActivityFormHtml is unchanged for online submissions. */
 const MTI_COMPACT_PAPER_CSS='<style>'+
-'.mti-pa-page{max-width:7.4in;margin:20px auto;color:#17281e;font:8pt/1.18 Arial,Helvetica,sans-serif;box-sizing:border-box}'+
+'.mti-pa-page{max-width:7.6in;margin:20px auto;color:#17281e;font:9.2pt/1.23 Arial,Helvetica,sans-serif;box-sizing:border-box}'+
 '.mti-pa-page *{box-sizing:border-box}'+
 '.mti-pa-page .pa-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:5px;margin-bottom:8px;border-bottom:2px solid #557664}'+
-'.mti-pa-page h3{font:bold 12pt/1.15 Arial,Helvetica,sans-serif!important;margin:0!important;color:#214b37}'+
-'.mti-pa-page .pa-meta{font-size:7pt;white-space:nowrap}'+
-'.mti-pa-page .pa-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}'+
-'.mti-pa-page .pa-col{min-width:0}'+
-'.mti-pa-page .pa-section{margin:0 0 8px;padding:0;break-inside:avoid-page;page-break-inside:avoid}'+
-'.mti-pa-page h4{font:bold 9pt/1.2 Arial,Helvetica,sans-serif;margin:0 0 2px;padding:0 0 2px;border-bottom:1px solid #a0b2a6;color:#244b37}'+
-'.mti-pa-page .pa-note{font:7pt/1.2 Arial,Helvetica,sans-serif;color:#49564c;margin:2px 0 5px}'+
-'.mti-pa-page .pa-row{display:flex;align-items:baseline;gap:4px;margin:3px 0;min-height:12px;min-width:0}'+
+'.mti-pa-page h3{font:bold 14pt/1.18 Arial,Helvetica,sans-serif!important;margin:0!important;color:#214b37}'+
+'.mti-pa-page .pa-meta{font-size:8.5pt;white-space:nowrap}'+
+'.mti-pa-page .pa-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:23px;align-items:stretch}'+
+'.mti-pa-page .pa-col{min-width:0;display:flex;flex-direction:column;justify-content:space-between}'+
+'.mti-pa-page .pa-section{margin:0 0 12px;padding:0;break-inside:avoid-page;page-break-inside:avoid}'+
+'.mti-pa-page h4{font:bold 10.5pt/1.22 Arial,Helvetica,sans-serif;margin:0 0 4px;padding:0 0 3px;border-bottom:1px solid #a0b2a6;color:#244b37}'+
+'.mti-pa-page .pa-note{font:8.3pt/1.22 Arial,Helvetica,sans-serif;color:#49564c;margin:2px 0 5px}'+
+'.mti-pa-page .pa-row{display:flex;align-items:baseline;gap:5px;margin:5px 0;min-height:16px;min-width:0}'+
 '.mti-pa-page .pa-field{display:inline-flex;flex:1 1 0;align-items:baseline;gap:3px;min-width:0}'+
-'.mti-pa-page .pa-field b{font:bold 7.4pt/1.18 Arial,Helvetica,sans-serif;white-space:nowrap}'+
-'.mti-pa-page .pa-answer{display:inline-block;flex:1;min-width:0;min-height:11px;border-bottom:1px solid #94a49a;white-space:pre-wrap;overflow-wrap:anywhere;padding:0 1px 1px}'+
-'.mti-pa-page .pa-entry{padding:2px 0 3px;break-inside:avoid-page;page-break-inside:avoid}'+
-'.mti-pa-page .pa-entry .pa-row{margin:1px 0}'+
-'.mti-pa-page .pa-num{flex:0 0 12px;width:12px;font-weight:bold}'+
-'.mti-pa-page .pa-confession-text{white-space:pre-wrap;overflow-wrap:anywhere;padding:4px;border:1px solid #ced7ce;font-size:7pt}'+
-'.mti-pa-page .pa-attach{font-size:7pt}'+
-'@media print{.mti-pa-page{break-before:page;page-break-before:always;break-inside:avoid-page;page-break-inside:avoid;max-width:none!important;margin:0!important;padding:0!important;color:#000;font:8pt/1.18 Arial,Helvetica,sans-serif}'+
-'.mti-pa-page .pa-columns{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}'+
+'.mti-pa-page .pa-field b{font:bold 8.2pt/1.22 Arial,Helvetica,sans-serif;white-space:nowrap}'+
+'.mti-pa-page .pa-answer{display:inline-block;flex:1;min-width:0;min-height:15px;border-bottom:1px solid #94a49a;white-space:pre-wrap;overflow-wrap:anywhere;padding:0 1px 1px}'+
+'.mti-pa-page .pa-entry{padding:3px 0 5px;break-inside:avoid-page;page-break-inside:avoid}'+
+'.mti-pa-page .pa-entry .pa-row{margin:2px 0}'+
+'.mti-pa-page .pa-num{flex:0 0 16px;width:16px;font-weight:bold}'+
+'.mti-pa-page .pa-confession-text{white-space:pre-wrap;overflow-wrap:anywhere;padding:4px;border:1px solid #ced7ce;font-size:8.5pt}'+
+'.mti-pa-page .pa-attach{font-size:8pt}'+
+'@media print{.mti-pa-page{break-before:page;page-break-before:always;break-inside:avoid-page;page-break-inside:avoid;max-width:none!important;margin:0!important;padding:0!important;color:#000;font:9.2pt/1.23 Arial,Helvetica,sans-serif}'+
+'.mti-pa-page .pa-columns{grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:8.7in}'+
 '.mti-pa-page .pa-note{color:#222}'+
-'.mti-pa-page .pa-section{margin-bottom:8px}'+
+'.mti-pa-page .pa-section{margin-bottom:10px}'+
 '}</style>';
 function mtiActivityPrintHtml(raw){
  const data=mtiActivityData(raw);
