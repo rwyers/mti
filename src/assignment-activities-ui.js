@@ -88,18 +88,67 @@ function mtiActivityReadOnlyHtml(raw){
   section.rows.map(row=>'<div class="mti-act-row">'+row.map(field=>'<div><label>'+mtiActivityEscape(field.label)+'</label><div class="mti-act-value">'+mtiActivityEscape(data[field.key]||"—")+'</div></div>').join("")+'</div>').join("")+'</section>').join("")+
  '</div>';
 }
+/* Compact paper-only layout; mtiActivityFormHtml is unchanged for online submissions. */
+const MTI_COMPACT_PAPER_CSS='<style>'+
+'.mti-pa-page{max-width:7.4in;margin:20px auto;color:#17281e;font:8pt/1.18 Arial,Helvetica,sans-serif;box-sizing:border-box}'+
+'.mti-pa-page *{box-sizing:border-box}'+
+'.mti-pa-page .pa-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:5px;margin-bottom:8px;border-bottom:2px solid #557664}'+
+'.mti-pa-page h3{font:bold 12pt/1.15 Arial,Helvetica,sans-serif!important;margin:0!important;color:#214b37}'+
+'.mti-pa-page .pa-meta{font-size:7pt;white-space:nowrap}'+
+'.mti-pa-page .pa-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}'+
+'.mti-pa-page .pa-col{min-width:0}'+
+'.mti-pa-page .pa-section{margin:0 0 8px;padding:0;break-inside:avoid-page;page-break-inside:avoid}'+
+'.mti-pa-page h4{font:bold 9pt/1.2 Arial,Helvetica,sans-serif;margin:0 0 2px;padding:0 0 2px;border-bottom:1px solid #a0b2a6;color:#244b37}'+
+'.mti-pa-page .pa-note{font:7pt/1.2 Arial,Helvetica,sans-serif;color:#49564c;margin:2px 0 5px}'+
+'.mti-pa-page .pa-row{display:flex;align-items:baseline;gap:4px;margin:3px 0;min-height:12px;min-width:0}'+
+'.mti-pa-page .pa-field{display:inline-flex;flex:1 1 0;align-items:baseline;gap:3px;min-width:0}'+
+'.mti-pa-page .pa-field b{font:bold 7.4pt/1.18 Arial,Helvetica,sans-serif;white-space:nowrap}'+
+'.mti-pa-page .pa-answer{display:inline-block;flex:1;min-width:0;min-height:11px;border-bottom:1px solid #94a49a;white-space:pre-wrap;overflow-wrap:anywhere;padding:0 1px 1px}'+
+'.mti-pa-page .pa-entry{padding:2px 0 3px;break-inside:avoid-page;page-break-inside:avoid}'+
+'.mti-pa-page .pa-entry .pa-row{margin:1px 0}'+
+'.mti-pa-page .pa-num{flex:0 0 12px;width:12px;font-weight:bold}'+
+'.mti-pa-page .pa-confession-text{white-space:pre-wrap;overflow-wrap:anywhere;padding:4px;border:1px solid #ced7ce;font-size:7pt}'+
+'.mti-pa-page .pa-attach{font-size:7pt}'+
+'@media print{.mti-pa-page{break-before:page;page-break-before:always;break-inside:avoid-page;page-break-inside:avoid;max-width:none!important;margin:0!important;padding:0!important;color:#000;font:8pt/1.18 Arial,Helvetica,sans-serif}'+
+'.mti-pa-page .pa-columns{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}'+
+'.mti-pa-page .pa-note{color:#222}'+
+'.mti-pa-page .pa-section{margin-bottom:8px}'+
+'}</style>';
 function mtiActivityPrintHtml(raw){
  const data=mtiActivityData(raw);
- return MTI_ACTIVITY_CSS+'<section class="mti-activity-record mti-act-print"><h3>MTI Lesson Activity Record</h3>'+
- MTI_ACTIVITY_SECTIONS.map(section=>'<div class="mti-act-section"><h4>'+mtiActivityEscape(section.title)+'</h4>'+
-  '<p class="mti-act-note">'+mtiActivityEscape(section.note)+'</p>'+
-  section.rows.map(row=>'<div class="mti-act-print-row">'+row.map(field=>{
-   const value=String(data[field.key]||"").trim();
-   const lines=field.lines===9?9:field.multiline?2:1;
-   return '<div style="margin-bottom:7px"><strong>'+mtiActivityEscape(field.label)+':</strong>'+
-    (value?'<div class="mti-act-print-value">'+mtiActivityEscape(value)+'</div>':
-     Array.from({length:lines},()=>'<span class="mti-act-blank"></span>').join(""))+
-    '</div>';
-  }).join("")+'</div>').join("")+'</div>').join("")+
- '</section>';
+ const answer=k=>mtiActivityEscape(String(data[k]||"").trim());
+ const field=(key,label)=>'<span class="pa-field"><b>'+mtiActivityEscape(label)+':</b><span class="pa-answer">'+(answer(key)||'&nbsp;')+'</span></span>';
+ const row=(...items)=>'<div class="pa-row">'+items.join("")+'</div>';
+ const section=(heading,note,body)=>'<section class="pa-section"><h4>'+mtiActivityEscape(heading)+'</h4>'+
+   (note?'<p class="pa-note">'+mtiActivityEscape(note)+'</p>':"")+body+'</section>';
+ const service=section("One Hour of Practical Service","Approved by Pastors Don & Tabatha Laing or Leslie Wyers.",
+   row(field("service_what","What"),field("service_when","When"))+row(field("service_where","Where"),field("service_approved","Approved by")));
+ const outreach=section("Personal Evangelism","Invited 5 people personally to church in the last 6 weeks. List names:",
+   row(field("evangelism_1","1"),field("evangelism_2","2"))+
+   row(field("evangelism_3","3"),field("evangelism_4","4"))+row(field("evangelism_5","5")));
+ const written=answer("confessions");
+ const confessions=section("Confessions",
+   "On a separate sheet, write out 9 spoken confessions with Scripture references from Champion Confessions by Dr. Carmen Lynne.",
+   written?'<div class="pa-confession-text">'+written+'</div>':
+   '<div class="pa-attach">Attach the nine confessions on a separate sheet.</div>');
+ const attendance=section("Attendance — Sunday Services","Theme of each service and how it personally applied to your life.",
+   Array.from({length:6},(_,i)=>{
+     const n=i+1;
+     return '<div class="pa-entry">'+row('<span class="pa-num">'+n+'.</span>',field("sunday_"+n+"_date","Date"),field("sunday_"+n+"_theme","Theme"))+
+       row('<span class="pa-num"></span>',field("sunday_"+n+"_application","Application"))+'</div>';
+   }).join(""));
+ const study=section("MTI Study Night","One thing learnt and how you will apply it to your life.",
+   row(field("study_date","Date"),field("study_taught","Taught"))+row(field("study_application","Application")));
+ const groups=section("Small Group / Worship Encounter","One thing learnt from each meeting and how it personally applied to your Christian walk.",
+   Array.from({length:6},(_,i)=>{
+     const n=i+1;
+     return '<div class="pa-entry">'+row('<span class="pa-num">'+n+'.</span>',field("small_"+n+"_date","Date"),field("small_"+n+"_taught","Taught"))+
+       row('<span class="pa-num"></span>',field("small_"+n+"_application","Application"))+'</div>';
+   }).join(""));
+ const intensive=section("Spiritual Intensive Night","",row(field("intensive_date","Date"),field("intensive_taught","Taught")));
+ const mentor=section("Mentorship Assignment","",row(field("mentorship_date","Date"),field("mentorship_signature","Signature")));
+ return MTI_COMPACT_PAPER_CSS+'<section class="mti-pa-page">'+
+  '<div class="pa-head"><h3>MTI Lesson Activity Record</h3><span class="pa-meta">Student: __________________  Date: __________</span></div>'+
+  '<div class="pa-columns"><div class="pa-col">'+service+outreach+confessions+attendance+'</div>'+
+  '<div class="pa-col">'+study+groups+intensive+mentor+'</div></div></section>';
 }
