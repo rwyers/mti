@@ -30,6 +30,7 @@ function mountMTIAIControls(id){
  '<div class="field" style="margin-top:16px"><label for="mtiVoiceCommand">Change something in this lesson</label>'+
  '<textarea id="mtiVoiceCommand" rows="3" placeholder="Type or paste an instruction, e.g. Change the memory verse to Jeremiah 29:11 NIV." style="width:100%;margin-top:6px"></textarea></div>'+
  '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="outline" id="mtiVoiceBtn">🎙 Speak instruction</button>'+
+ '<button type="button" class="outline" id="mtiClearVoiceBtn">Clear instruction</button>'+ 
  '<button type="button" class="primary" id="mtiCommandBtn">Preview instructed change</button></div>'+
  '<div class="small" id="mtiVoiceSupport" style="margin:9px 0">Voice recognition depends on browser support. You can always type or paste an instruction.</div>'+
  '<div id="mtiAiPreview" aria-live="polite" style="margin-top:16px"></div>';
@@ -37,6 +38,12 @@ function mountMTIAIControls(id){
  el("mtiProofreadBtn").addEventListener("click",()=>requestMTIAIDraft("proofread",id));
  el("mtiCommandBtn").addEventListener("click",()=>requestMTIAIDraft("instruction",id));
  el("mtiVoiceBtn").addEventListener("click",()=>startMTIVoice());
+ el("mtiClearVoiceBtn").addEventListener("click",()=>{
+  if(MTI_VOICE_RECOGNITION){try{MTI_VOICE_RECOGNITION.abort()}catch{}MTI_VOICE_RECOGNITION=null;}
+  const input=el("mtiVoiceCommand");if(input){input.value="";input.focus();}
+  const status=el("mtiVoiceSupport");if(status)status.textContent="Instruction cleared. Speak again, or type your request.";
+  const button=el("mtiVoiceBtn");if(button)button.textContent="🎙 Speak instruction";
+ });
 }
 function collectMTIEditableFields(){
  const draft={};
@@ -92,22 +99,75 @@ function applyMTIAIProposal(){
  '. Please inspect the fields above, then click <strong>Save lesson</strong> when satisfied.</div>':
  '<div class="callout">No changes selected.</div>';
 }
+function mtiVoiceTranscriptLooksBroken(text){
+ const words=String(text||"").toLowerCase().match(/[a-z0-9']+/g)||[];
+ if(words.length<9)return false;
+ for(const width of [4,3]){
+  const counts=new Map();
+  for(let i=0;i<=words.length-width;i++){
+   const phrase=words.slice(i,i+width).join(" ");
+   const count=(counts.get(phrase)||0)+1;
+   if(count>=(width===4?3:4))return true;
+   counts.set(phrase,count);
+  }
+ }
+ return false;
+}
 function startMTIVoice(){
  const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
- const status=el("mtiVoiceSupport"),button=el("mtiVoiceBtn");
- if(!Speech){status.textContent="Voice recognition is unavailable in this browser. Type or paste your instruction instead.";return}
- if(MTI_VOICE_RECOGNITION){MTI_VOICE_RECOGNITION.stop();return}
- const recognizer=new Speech();
- recognizer.lang="en-CA";recognizer.continuous=false;recognizer.interimResults=false;
- MTI_VOICE_RECOGNITION=recognizer;
- recognizer.onresult=function(e){
-  const transcript=Array.from(e.results).map(r=>r[0].transcript).join(" ").trim();
-  const input=el("mtiVoiceCommand");if(input)input.value=(input.value?input.value.trim()+" ":"")+transcript;
-  if(status)status.textContent="Transcribed. Review the words above, then click Preview instructed change.";
+ const status=el("mtiVoiceSupport"),button=el("mtiVoiceBtn"),input=el("mtiVoiceCommand");
+ if(!Speech){
+  if(status)status.textContent="Voice recognition is unavailable in this browser. You can type or paste an instruction instead.";
+  return;
+ }
+ if(MTI_VOICE_RECOGNITION){
+  try{MTI_VOICE_RECOGNITION.stop()}catch{}
+  if(status)status.textContent="Stopping and finalizing speech…";
+  return;
+ }
+ if(!input)return;
+ let rec;
+ try{rec=new Speech()}catch(error){
+  if(status)status.textContent="Microphone could not start: "+error.message;
+  return;
+ }
+ rec.lang="en-CA";rec.continuous=false;rec.interimResults=false;rec.maxAlternatives=1;
+ MTI_VOICE_RECOGNITION=rec;
+ let accepted=false,hadError=false,unreliable=false;
+ rec.onresult=function(event){
+  const parts=[];
+  for(const r of Array.from(event.results||[])){
+   if(r.isFinal===false)continue;
+   const part=String(r[0]?.transcript||"").trim();
+   if(part&&parts[parts.length-1]?.toLowerCase()!==part.toLowerCase())parts.push(part);
+  }
+  const transcript=parts.join(" ").replace(/\s+/g," ").trim();
+  if(!transcript)return;
+  if(mtiVoiceTranscriptLooksBroken(transcript)){
+   unreliable=true;
+   if(status)status.textContent="Speech recognition repeated words and did not capture a reliable instruction. Your previous text was kept. Try one short sentence or type it.";
+   return;
+  }
+  // Speech result events are cumulative. Replace, NEVER append to old results.
+  input.value=transcript;input.dispatchEvent(new Event("input",{bubbles:true}));
+  accepted=true;unreliable=false;
+  if(status)status.textContent="Instruction captured. Check it before clicking Preview instructed change.";
  };
- recognizer.onerror=function(e){if(status)status.textContent="Voice recognition: "+e.error+". You can still type or paste."};
- recognizer.onend=function(){MTI_VOICE_RECOGNITION=null;if(button)button.textContent="🎙 Speak instruction"};
+ rec.onnomatch=function(){if(status)status.textContent="Could not understand speech. Please try again or type it."};
+ rec.onerror=function(e){
+  hadError=true;
+  if(status)status.textContent="Voice recognition: "+e.error+". Your text was not changed. Try again or type your instruction.";
+ };
+ rec.onend=function(){
+  if(MTI_VOICE_RECOGNITION===rec)MTI_VOICE_RECOGNITION=null;
+  if(button)button.textContent="🎙 Speak instruction";
+  if(!accepted&&!hadError&&!unreliable&&status)status.textContent="No speech captured. Try one short instruction or type it.";
+ };
  if(button)button.textContent="■ Stop listening";
- if(status)status.textContent="Listening… Speak the requested change.";
- try{recognizer.start()}catch(e){MTI_VOICE_RECOGNITION=null;if(status)status.textContent=e.message}
+ if(status)status.textContent="Listening… Speak one clear, short instruction. This recording replaces any old dictation.";
+ try{rec.start()}catch(e){
+  MTI_VOICE_RECOGNITION=null;
+  if(button)button.textContent="🎙 Speak instruction";
+  if(status)status.textContent="Microphone could not start: "+e.message;
+ }
 }
