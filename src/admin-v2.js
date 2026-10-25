@@ -61,6 +61,46 @@ async function toggleStaff(id,active){
   loadStaff();
  }catch(err){alert(err.message);}
 }
+/* Print the actual current module for an administrator-selected student.
+ * Year-path students use the same unlocked session shown in their portal.
+ * Legacy students use their current outstanding assignment, when available. */
+async function printCurrentModule(studentId){
+ const student=DATA.students.find(s=>String(s.id)===String(studentId));
+ if(!student){alert("Student not found. Refresh Students and try again.");return;}
+ // Reserve the existing print window during the button click, before the API
+ // request, so browser popup blockers do not prevent printing.
+ const printWindow=window.open("","_blank");
+ if(!printWindow){alert("Your browser blocked the print window. Allow pop-ups for MTI and try again.");return;}
+ printWindow.document.body.innerHTML='<p style="font:15px Arial,sans-serif;padding:24px">Preparing the current MTI module…</p>';
+ try{
+  const progress=await api("/api/admin/learning-paths/progress?student_id="+encodeURIComponent(student.id));
+  let lesson=null;
+  if(progress.current){
+   const currentCard=(progress.cards||[]).find(c=>!c.completed);
+   if(!currentCard||currentCard.locked||!currentCard.available)
+    throw new Error("This student does not have an unlocked current module. Check their enrollment in Students → Enroll year.");
+   lesson=DATA.lessons.find(l=>String(l.course_id)===String(progress.current.course_id)&&Number(l.year)===Number(progress.current.year)&&Number(l.lesson_number)===Number(currentCard.lesson_number));
+  }else if((progress.history||[]).length){
+   throw new Error("This student has no active module. Their last academic year is complete; enroll the next year before printing.");
+  }else{
+   const outstanding=DATA.assignments.filter(a=>String(a.student_id)===String(student.id)&&a.lesson_id&&["assigned","submitted"].includes(a.status))
+    .sort((a,b)=>String(b.created_at||"").localeCompare(String(a.created_at||"")));
+   const matching=outstanding.find(a=>{
+    const l=DATA.lessons.find(x=>String(x.id)===String(a.lesson_id));
+    return l&&String(l.course_id)===String(student.course_id)&&Number(l.year)===Number(student.current_year)&&Number(l.lesson_number)===Number(student.current_lesson);
+   })||outstanding[0];
+   if(matching)lesson=DATA.lessons.find(l=>String(l.id)===String(matching.lesson_id));
+   if(!lesson)lesson=DATA.lessons.find(l=>String(l.course_id)===String(student.course_id)&&Number(l.year)===Number(student.current_year)&&Number(l.lesson_number)===Number(student.current_lesson));
+  }
+  if(!lesson)throw new Error("No current module is available for this student. Confirm their course, year, and lesson assignment.");
+  printMtiLesson(lesson.id,student.full_name,printWindow);
+ }catch(err){
+  if(!printWindow.closed)printWindow.close();
+  alert("Unable to print current module: "+err.message);
+ }
+}
+window.printCurrentModule=printCurrentModule;
+
 function addActions(){
  var st=DATA.students.filter(function(s){
   var term=(el("studentSearch").value||"").toLowerCase();
@@ -74,7 +114,8 @@ function addActions(){
   Array.prototype.forEach.call(trs,function(tr,i){var cell=document.createElement("td");cell.innerHTML=make(records[i]);tr.appendChild(cell)});
  }
  addButtons("studentTable",st,function(a){
-  return '<button class="soft" onclick="openForm(\'editstudent\',\''+esc(a.id)+'\')">Edit</button> <button class="outline" onclick="inviteStudent(\''+esc(a.id)+'\')">Invite</button>';
+  return '<button class="soft" onclick="openForm(\'editstudent\',\''+esc(a.id)+'\')">Edit</button> <button class="outline" onclick="inviteStudent(\''+esc(a.id)+'\')">Invite</button>'+
+   (ACCOUNT&&["owner","admin"].includes(ACCOUNT.role)?' <button class="outline" onclick="printCurrentModule(\''+esc(a.id)+'\')">Print Current Module</button>':'');
  });
  addButtons("courseTable",DATA.courses,function(a){
   return '<button class="soft" onclick="openForm(\'editcourse\',\''+esc(a.id)+'\')">Edit</button>';
