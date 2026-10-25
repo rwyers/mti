@@ -274,12 +274,12 @@ export default {
     const enrolled=prev?await currentYearProgress(env,prev.student_id):null;
     if(enrolled&&prev.year===enrolled.year&&prev.course_id===enrolled.course_id) {
      const body=await req.clone().json().catch(()=>null);
-     if(body?.status==="graded"&&prev.status==="assigned")
+     if(body?.action==="finish_grading"&&prev.status==="assigned")
       return json({error:"The student must submit this session before a teacher can approve it."},409);
      const response=await ROSTER_APP.fetch(req,env);
      if(!response.ok)return response;
      let unlocked=[],yearComplete=false;
-     if(body?.status==="graded"){
+     if(body?.action==="finish_grading"){
       const outcome=await recordGradedSession(env,prev.student_id,grade[1],user);
       unlocked=outcome.created||[];yearComplete=!!outcome.year_complete;
       if(typeof safeQueueNotice==="function")
@@ -295,10 +295,11 @@ export default {
    if(priorGrade&&req.method==="PATCH"){
     const old=await env.DB.prepare("SELECT t.student_id,t.year,t.session_number FROM student_session_completions t WHERE t.assignment_id=?").bind(priorGrade[1]).first();
     if(old){
+     const gradingAction=(await req.clone().json().catch(()=>({})))?.action;
      const reply=await ROSTER_APP.fetch(req,env);
      if(!reply.ok)return reply;
      const row=await env.DB.prepare("SELECT status,grade_points,bonus_points FROM assignments WHERE id=?").bind(priorGrade[1]).first();
-     if(row?.status==="graded"){
+     if(gradingAction==="finish_grading"&&row?.status==="graded"){
       await env.DB.prepare("UPDATE student_session_completions SET grade_points=?,bonus_points=? WHERE assignment_id=?").bind(row.grade_points,row.bonus_points,priorGrade[1]).run();
       if(typeof safeQueueNotice==="function")await safeQueueNotice(()=>queuedStudentUpdate(env,priorGrade[1],"grade_corrected"));
      }
