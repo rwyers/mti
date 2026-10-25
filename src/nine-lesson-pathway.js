@@ -11,7 +11,7 @@ async function getPathRows(env,studentId){
  const path=await getLearningPath(env,studentId);
  if(!path)return null;
  const lessons=await env.DB.prepare("SELECT id,course_id,year,lesson_number,credits,memory_verse_reference,memory_verse_text,bible_instruction,assignment_instructions,materials_list FROM lessons WHERE course_id=? AND year=? AND active=1 AND lesson_number BETWEEN 1 AND 9 ORDER BY lesson_number").bind(path.course_id,path.year).all();
- const assignments=await env.DB.prepare("SELECT a.*,l.course_id,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.materials_list,c.name AS course_name,s.response_text,s.submitted_at AS response_submitted_at FROM assignments a JOIN lessons l ON l.id=a.lesson_id JOIN courses c ON c.id=l.course_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? AND l.course_id=? AND l.year=? AND l.lesson_number BETWEEN 1 AND 9 ORDER BY a.created_at DESC,a.id DESC").bind(studentId,path.course_id,path.year).all();
+ const assignments=await env.DB.prepare("SELECT a.id,a.student_id,a.lesson_id,a.title,a.due_date,a.status,a.submitted_at,a.grade_points,a.bonus_points,a.grading_json,a.feedback,a.created_at,a.updated_at,l.course_id,l.year,l.lesson_number,l.credits,l.memory_verse_reference,l.memory_verse_text,l.bible_instruction,l.assignment_instructions,l.materials_list,c.name AS course_name,s.response_text,s.submitted_at AS response_submitted_at FROM assignments a JOIN lessons l ON l.id=a.lesson_id JOIN courses c ON c.id=l.course_id LEFT JOIN assignment_submissions s ON s.assignment_id=a.id WHERE a.student_id=? AND l.course_id=? AND l.year=? AND l.lesson_number BETWEEN 1 AND 9 ORDER BY a.created_at DESC,a.id DESC").bind(studentId,path.course_id,path.year).all();
  const byLesson=new Map();
  for(const a of assignments.results)if(!byLesson.has(a.lesson_number))byLesson.set(a.lesson_number,a);
  const byNumber=new Map(lessons.results.map(l=>[l.lesson_number,l]));
@@ -163,7 +163,7 @@ export default {
     const actor=await currentUser(request,env);
     const requestBody=await request.clone().json().catch(()=>null);
     const before=actor?await env.DB.prepare("SELECT status,student_id,lesson_id FROM assignments WHERE id=?").bind(gradeMatch[1]).first():null;
-    if(before&&requestBody?.status==="graded"&&before.status==="assigned"){
+    if(before&&requestBody?.action==="finish_grading"&&before.status==="assigned"){
      const path=await getLearningPath(env,before.student_id);
      if(path){
       const lesson=await env.DB.prepare("SELECT course_id,year FROM lessons WHERE id=?").bind(before.lesson_id).first();
@@ -174,7 +174,7 @@ export default {
     const response=await ROSTER_APP.fetch(request,env);
     if(!response.ok||!actor||!before)return response;
     let unlocked=[];
-    if(requestBody?.status==="graded"&&before.status!=="graded"){
+    if(requestBody?.action==="finish_grading"&&before.status!=="graded"){
      const row=await env.DB.prepare("SELECT student_id FROM assignments WHERE id=?").bind(gradeMatch[1]).first();
      if(row){
       try{
@@ -185,7 +185,7 @@ export default {
       }catch(e){console.error("MTI auto-unlock failed",e.message)}
      }
     }
-    if(requestBody?.status==="graded"&&typeof safeQueueNotice==="function")
+    if(requestBody?.action==="finish_grading"&&typeof safeQueueNotice==="function")
      await safeQueueNotice(()=>queuedStudentUpdate(env,gradeMatch[1],before.status==="graded"?"grade_corrected":"assignment_graded"));
     const output=await response.json();
     return json({...output,next_unlocked:unlocked.map(x=>({lesson_number:x.lesson_number,title:x.title}))},response.status);
