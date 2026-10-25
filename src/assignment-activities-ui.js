@@ -171,7 +171,7 @@ function mtiActivityPrintHtml(raw){
    '<div class="mh-head"><div><h3>MTI Lesson Activity Record</h3><span class="mh-page">Page '+n+' of 2 · '+topic+'</span></div>'+
    '<div class="mh-name">Student: ______________________<br>Date: ________________________</div></div>'+
    '<div class="mh-body">'+sections+'</div>'+
-   '<div class="mh-footer"><span>Ministry Training Institute · Handwritten activity record</span><span>Page '+n+' / 2</span></div>'+
+   '<div class="mh-footer"><span>'+(n===2?'Return completed paper assignment to your MTI instructor.':'Ministry Training Institute · Handwritten activity record')+'</span><span>Page '+n+' / 2</span></div>'+
    '</section>';
  return MTI_HANDWRITING_PRINT_CSS+
   sheet(1,"Service, evangelism, confessions and attendance",service+evangelism+confessions+attendance)+
