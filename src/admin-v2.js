@@ -170,7 +170,7 @@ openForm=function(type,id){
    area("assignment_instructions","Assignment instructions",record.assignment_instructions)+
    area("submission_notes","Submission notes",record.submission_notes)+
    area("materials_list","Materials list",record.materials_list)+'</div></div>'+buttons("Save lesson");
-  onSave=async function(b){await api("/api/admin/lessons/"+id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});closeForm();await refresh();};
+  onSave=async function(b){await api("/api/admin/lessons/"+id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});closeForm(true);await refresh();};
  }
  el("modalTitle").textContent=title;el("formError").textContent="";
  el("modalBody").innerHTML='<form id="recordForm">'+fields+'</form>';el("overlay").classList.remove("hidden");
