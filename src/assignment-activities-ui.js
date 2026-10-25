@@ -153,7 +153,7 @@ function mtiActivityPrintHtml(raw){
    return '<div class="mh-entry"><div class="mh-line"><b class="mh-entry-num">'+n+'.</b>'+
     field(p+"date","Date")+field(p+"theme","Theme")+'</div>'+
     '<div class="mh-line"><b>Application:</b><span class="mh-answer">'+(value(p+"application")||'&nbsp;')+'</span></div>'+
-    (value(p+"application")?'':'<div class="mh-rule"><span class="mh-rule-line"></span></div>')+'</div>';
+    (n===6||value(p+"application")?'':'<div class="mh-rule"><span class="mh-rule-line"></span></div>')+'</div>';
   }).join(""));
  const group=heading("Small Groups","For each of six meetings, write what you learned and how it applies to your Christian walk.",
   Array.from({length:6},(_,i)=>{
@@ -161,7 +161,7 @@ function mtiActivityPrintHtml(raw){
    return '<div class="mh-entry"><div class="mh-line"><b class="mh-entry-num">'+n+'.</b>'+
     field(p+"date","Date")+field(p+"taught","Taught")+'</div>'+
     '<div class="mh-line"><b>Application:</b><span class="mh-answer">'+(value(p+"application")||'&nbsp;')+'</span></div>'+
-    (value(p+"application")?'':'<div class="mh-rule"><span class="mh-rule-line"></span></div>')+'</div>';
+    (n===6||value(p+"application")?'':'<div class="mh-rule"><span class="mh-rule-line"></span></div>')+'</div>';
   }).join(""));
  const sheet=(sections,finalSheet)=>
   '<section class="mti-hand-sheet" aria-label="MTI printable lesson activity record">'+
