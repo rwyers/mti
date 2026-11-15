@@ -1,3 +1,64 @@
+
+/* Attach the current PDF's real pages after the existing three printable MTI
+   sheets. Using high-resolution page images preserves the uploaded QR codes. */
+function mtiIsYear1Session1(year,lesson){return Number(year)===1&&Number(lesson)===1}
+let mtiMaterialsPdfJsPromise=null;
+async function mtiMaterialsPdfJs(){
+ if(!mtiMaterialsPdfJsPromise){
+  mtiMaterialsPdfJsPromise=import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs")
+   .then(pdfjs=>{
+    pdfjs.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs";
+    return pdfjs;
+   }).catch(error=>{mtiMaterialsPdfJsPromise=null;throw error});
+ }
+ return mtiMaterialsPdfJsPromise;
+}
+async function mtiAttachYear1MaterialsPdfPages(container,url){
+ const response=await fetch(url,{credentials:"same-origin"});
+ if(!response.ok)throw new Error("The materials PDF is not available. Check the upload under Courses & Lessons.");
+ const pdfjs=await mtiMaterialsPdfJs();
+ const data=new Uint8Array(await response.arrayBuffer());
+ const documentTask=pdfjs.getDocument({data,isEvalSupported:false});
+ const pdf=await documentTask.promise;
+ const doc=container.ownerDocument;
+ const cssClass="mti-materials-pdf-sheet";
+ container.querySelectorAll("."+cssClass).forEach(node=>node.remove());
+ if(!doc.getElementById("mtiMaterialsPrintStyles")){
+  const style=doc.createElement("style");
+  style.id="mtiMaterialsPrintStyles";
+  style.textContent=
+   "."+cssClass+"{break-before:page!important;page-break-before:always!important;break-inside:avoid-page!important;page-break-inside:avoid-page!important;width:100%;height:9.2in;max-height:9.2in;overflow:hidden;display:flex;align-items:center;justify-content:center;background:white}"+
+   "."+cssClass+" img{display:block;max-width:100%;max-height:9.15in;width:auto;height:auto;object-fit:contain}"+
+   "@media screen{."+cssClass+"{border:1px solid #dae4dc;margin:18px 0}}"+
+   "@media print{."+cssClass+"{margin:0!important;border:0!important;box-shadow:none!important}}";
+  doc.head.appendChild(style);
+ }
+ try{
+  if(pdf.numPages>30)throw new Error("The materials PDF has too many pages for one print packet.");
+  const printed=[];
+  for(let number=1;number<=pdf.numPages;number++){
+   const page=await pdf.getPage(number);
+   const viewport=page.getViewport({scale:2});
+   const canvas=document.createElement("canvas");
+   canvas.width=Math.ceil(viewport.width);
+   canvas.height=Math.ceil(viewport.height);
+   await page.render({canvasContext:canvas.getContext("2d"),viewport}).promise;
+   const sheet=doc.createElement("section");
+   sheet.className=cssClass;
+   sheet.setAttribute("aria-label","Year 1 Session 1 materials PDF page "+number);
+   const img=doc.createElement("img");
+   img.alt="Materials list page "+number;
+   img.src=canvas.toDataURL("image/png");
+   sheet.appendChild(img);
+   printed.push(sheet);
+   if(img.decode)await img.decode();
+   canvas.width=0;canvas.height=0;
+  }
+  printed.forEach(sheet=>container.appendChild(sheet));
+  return printed.length;
+ }finally{await pdf.destroy()}
+}
+
 /* MTI lesson activity record. Mirrors the reverse side of the MTI paper assignment sheet. */
 const MTI_ACTIVITY_SECTIONS=[
  {title:"One Hour of Practical Service",note:"Approved by Pastors Don & Tabatha Laing, Leslie Wyers, or April Hill.",rows:[
