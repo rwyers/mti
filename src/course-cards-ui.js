@@ -30,13 +30,14 @@ function printMtiLesson(id,studentName="",targetWindow=null){
  if(!lesson){alert("Lesson not found. Refresh the page and try again.");return;}
  const course=DATA.courses.find(c=>String(c.id)===String(lesson.course_id));
  const title=(course?.name||"MTI Course")+" — Year "+lesson.year+" Lesson "+lesson.lesson_number;
+ const useSharedMaterials=mtiIsYear1Session1(lesson.year,lesson.lesson_number);
  const cover=mtiLessonPrintCoverHtml({
   course:course?.name||"MTI Course",
   year:lesson.year,lesson:lesson.lesson_number,credits:lesson.credits,
   student:studentName,
   verseRef:lesson.memory_verse_reference,verseText:lesson.memory_verse_text,
   bible:lesson.bible_instruction,assignment:lesson.assignment_instructions,
-  materials:lesson.materials_list
+  materials:useSharedMaterials?"The current Year 1, Session 1 materials list (including QR codes) is attached after the three assignment pages.":lesson.materials_list
  });
  const documentHtml='<!doctype html><html lang="en"><head><meta charset="utf-8">'+
   '<meta name="viewport" content="width=device-width, initial-scale=1"><title>'+esc(title)+'</title>'+
@@ -49,13 +50,31 @@ function printMtiLesson(id,studentName="",targetWindow=null){
   '.mti-cover-page{height:9.25in!important}'+
   '}'+
   '</style></head><body>'+
-  '<div class="print-tools"><strong>MTI · Lesson &amp; grading sheet</strong><button type="button" id="mtiPrintNow">Print / Save PDF</button></div>'+
+  '<div class="print-tools"><strong id="mtiPrintStatus">MTI · Lesson &amp; grading sheet</strong><button type="button" id="mtiPrintNow">Print / Save PDF</button></div>'+
   '<main>'+cover+mtiActivityPrintHtml({})+'</main></body></html>';
  const win=targetWindow||window.open("","_blank");
  if(!win){alert("Your browser blocked the print window. Allow pop-ups for MTI and try again.");return;}
  win.document.open();win.document.write(documentHtml);win.document.close();
  const scaleCover=()=>mtiFitLessonPrintCover(win.document.querySelector(".mti-cover-page"));
- const doPrint=()=>{scaleCover();win.focus();win.print();};
+ let printing=false;
+ const doPrint=async()=>{
+  if(printing)return;
+  printing=true;
+  const label=win.document.getElementById("mtiPrintStatus");
+  try{
+   if(useSharedMaterials){
+    label.textContent="Adding the latest Session 1 materials PDF and QR codes…";
+    await mtiAttachYear1MaterialsPdfPages(win.document.querySelector("main"),"/api/admin/materials/year1/download");
+   }
+   scaleCover();
+   label.textContent="MTI · Lesson & grading sheet";
+   win.focus();
+   win.print();
+  }catch(error){
+   label.textContent="Unable to include materials PDF: "+error.message;
+   win.document.getElementById("mtiPrintNow").textContent="Try printing again";
+  }finally{printing=false}
+ };
  win.document.getElementById("mtiPrintNow").addEventListener("click",doPrint);
  win.addEventListener("beforeprint",scaleCover);
  if(win.document.readyState==="complete")doPrint();
