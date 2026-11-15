@@ -220,6 +220,9 @@ async function adminAPI(req,env,path){
  if(!u||u.role==="student")return json({error:"Not authenticated"},401);
  if(path==="/api/admin/change-password"&&req.method==="POST")return changePassword(req,env,u);
  if(u.must_change_password)return json({error:"Change your administrator password before continuing.",password_change_required:true},403);
+ if(path==="/api/admin/materials/year1"&&req.method==="GET")return json(year1MaterialsSummary(await year1MaterialsRecord(env)));
+ if(path==="/api/admin/materials/year1/download"&&req.method==="GET")return year1MaterialsDownload(env);
+ if(path==="/api/admin/materials/year1"&&req.method==="PUT")return year1MaterialsUpload(req,env,u);
  if(path==="/api/admin/email-notifications"&&(req.method==="GET"||req.method==="PATCH")){
   if(!["owner","admin"].includes(u.role))return json({error:"Only MTI administrators can change email notifications."},403);
   const existing=await env.DB.prepare("SELECT setting_value,updated_at FROM mti_settings WHERE setting_key='email_notifications_enabled'").first();
@@ -441,6 +444,68 @@ async function adminAPI(req,env,path){
  return json({error:"Not found"},404);
 }
 
+
+/* Shared Year 1 materials: one replaceable private PDF for every course. */
+const YEAR1_MATERIALS_SETTING="materials_year1_pdf";
+async function year1MaterialsRecord(env){
+ const row=await env.DB.prepare("SELECT setting_value,updated_at FROM mti_settings WHERE setting_key=?")
+  .bind(YEAR1_MATERIALS_SETTING).first();
+ if(!row)return null;
+ try{
+  const record=JSON.parse(row.setting_value);
+  return record&&typeof record.key==="string"&&typeof record.filename==="string"?
+   {...record,updated_at:row.updated_at}:null;
+ }catch{return null}
+}
+function year1MaterialsSummary(record){
+ return record?{available:true,filename:record.filename,size_bytes:record.size_bytes,updated_at:record.updated_at}:{available:false};
+}
+async function year1MaterialsDownload(env){
+ const record=await year1MaterialsRecord(env);
+ if(!record)return json({error:"No Year 1 materials PDF has been uploaded."},404);
+ const object=await env.FILES.get(record.key);
+ if(!object)return json({error:"Materials PDF unavailable."},404);
+ const safe=(record.filename||"MTI-Year-1-Materials.pdf").replace(/[\u0000-\u001f"\\]/g,"_");
+ return new Response(object.body,{headers:{
+  "Content-Type":"application/pdf",
+  "Content-Disposition":"attachment; filename=\""+safe+"\"; filename*=UTF-8''"+encodeURIComponent(record.filename),
+  "Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff",
+  "Content-Security-Policy":"sandbox"
+ }});
+}
+async function year1MaterialsUpload(req,env,user){
+ if(!["owner","admin"].includes(user.role))return json({error:"Only administrators can replace the materials PDF."},403);
+ if(!fileOriginOK(req))return json({error:"Invalid request origin"},403);
+ if((req.headers.get("Content-Type")||"").split(";")[0].trim()!=="application/pdf")
+  return json({error:"Please upload a PDF file."},400);
+ const filename=safeFileName(req.headers.get("X-MTI-File-Name"));
+ if(!filename||!filename.toLowerCase().endsWith(".pdf"))
+  return json({error:"Please select a .pdf file."},400);
+ const maxSize=10*1024*1024;
+ if(Number(req.headers.get("Content-Length")||0)>maxSize)
+  return json({error:"Maximum PDF size is 10 MB."},413);
+ const bytes=new Uint8Array(await req.arrayBuffer());
+ if(bytes.byteLength<5||bytes.byteLength>maxSize)
+  return json({error:"PDF must be between 5 bytes and 10 MB."},413);
+ if(String.fromCharCode(...bytes.slice(0,5))!=="%PDF-")
+  return json({error:"The selected file is not a valid PDF."},400);
+ const previous=await year1MaterialsRecord(env);
+ const key="materials/year1/"+crypto.randomUUID()+".pdf";
+ await env.FILES.put(key,bytes,{httpMetadata:{contentType:"application/pdf"}});
+ try{
+  await env.DB.prepare("INSERT INTO mti_settings(setting_key,setting_value,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(setting_key) DO UPDATE SET setting_value=excluded.setting_value,updated_at=CURRENT_TIMESTAMP")
+   .bind(YEAR1_MATERIALS_SETTING,JSON.stringify({key,filename,size_bytes:bytes.byteLength})).run();
+ }catch(error){
+  await env.FILES.delete(key).catch(()=>{});
+  throw error;
+ }
+ await auditAction(env,user,"replace_materials_pdf","year1_materials","shared_year1",
+  previous?{filename:previous.filename,size_bytes:previous.size_bytes}:null,
+  {filename,size_bytes:bytes.byteLength});
+ if(previous?.key&&previous.key!==key)await env.FILES.delete(previous.key).catch(()=>{});
+ return json({ok:true,...year1MaterialsSummary(await year1MaterialsRecord(env))});
+}
+
 function fileOriginOK(req){const o=req.headers.get("Origin");return !!o&&o===new URL(req.url).origin}
 function safeFileName(raw){
  try{return decodeURIComponent(raw||"").replace(/[/\\\r\n\t\x00-\x1f]/g,"_").slice(0,165).trim()}
@@ -516,6 +581,8 @@ async function studentAPI(req,env,path) {
  }
  const user=await currentUser(req,env);
  if(!user||user.role!=="student"||!user.student_id)return json({error:"Please sign in."},401);
+ if(path==="/api/student/materials/year1"&&req.method==="GET")return json(year1MaterialsSummary(await year1MaterialsRecord(env)));
+ if(path==="/api/student/materials/year1/download"&&req.method==="GET")return year1MaterialsDownload(env);
  if(path.startsWith("/api/student/files/")||path.includes("/files"))return studentFileAPI(req,env,path,user);
  if(path==="/api/student/change-password"&&req.method==="POST")return changePassword(req,env,user);
  if(path==="/api/student/data"&&req.method==="GET"){

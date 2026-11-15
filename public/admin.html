@@ -114,6 +114,16 @@ td,th{padding:15px 22px;border-bottom:1px solid #eaf0ec}td{font-size:12px;color:
 <section class="page" id="page-students"><div class="heading"><div><h1>Students</h1><p>Manage student records and course enrollment.</p></div><button class="primary" onclick="openForm('student')">+ Add student</button></div>
 <div class="panel"><div class="panel-head"><div><h2>Student directory</h2><p>Only signed-in administrators can view this information.</p></div><input class="search" id="studentSearch" placeholder="Search students..." aria-label="Search students"></div><div id="studentTable"></div></div></section>
 <section class="page" id="page-courses"><div class="heading"><div><h1>Courses & lessons</h1><p>Manage learning pathways and create new lessons.</p></div><div style="display:flex;gap:10px"><button class="outline" onclick="openForm('course')">+ New course</button><button class="primary" onclick="openForm('lesson')">+ New lesson</button></div></div>
+<div class="panel" style="padding:24px;margin-bottom:22px" id="mtiYear1MaterialsAdmin">
+ <h2 style="margin:0 0 8px">Year 1 materials list (PDF)</h2>
+ <p style="color:#647b7c;font-size:13px;line-height:1.6;margin:0 0 15px">One shared materials list for all Year 1 students, including QR codes and links. When it changes, upload a new PDF; students will always get the latest version.</p>
+ <div id="mtiYear1MaterialsStatus" role="status" aria-live="polite" style="font-size:13px;margin-bottom:13px">Checking current PDF…</div>
+ <form id="mtiYear1MaterialsForm" style="display:flex;align-items:end;flex-wrap:wrap;gap:12px">
+  <div class="field" style="flex:1;min-width:220px;margin:0"><label for="mtiYear1MaterialsFile">PDF document (max 10 MB)</label><input id="mtiYear1MaterialsFile" type="file" accept=".pdf,application/pdf" required></div>
+  <button type="submit" class="primary" id="mtiYear1MaterialsButton">Upload / Replace PDF</button>
+ </form>
+ <p id="mtiYear1MaterialsError" role="alert" style="color:#a34442;font-size:12px;margin:9px 0 0"></p>
+</div>
 <div class="panel"><div class="panel-head"><div><h2>Course catalog</h2><p>Based on the MTI source workbooks.</p></div></div><div id="courseTable"></div></div>
 <div class="panel"><div class="panel-head"><div><h2>Lesson library</h2><p>Scripture, Bible instructions, assignments and supporting materials.</p></div></div><div id="lessonTable"></div></div></section>
 <section class="page" id="page-assignments"><div class="heading"><div><h1>Assignments</h1><p>Give a student a lesson, track submissions and record progress.</p></div><button class="primary" onclick="openForm('assignment')">+ New assignment</button></div>
@@ -164,7 +174,7 @@ function table(headers,rows){return '<div class="table-scroll"><table><thead><tr
 function td(s){return "<td>"+s+"</td>"}
 function row(cells){return "<tr>"+cells.map(td).join("")+"</tr>"}
 function el(id){return document.getElementById(id)}
-function switchTab(name){CURRENT=name;document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){b.classList.toggle("active",b.dataset.tab===name)});document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("show",p.id==="page-"+name)});el("topTitle").textContent=({overview:"Admin overview",students:"Students",courses:"Courses & lessons",curriculum:"Curriculum import",assignments:"Assignments",grading:"Grading",notifications:"Email notifications",staff:"Staff accounts",activity:"Activity history",profile:"My profile"})[name];if(name==="curriculum")loadCurriculumStatus();if(name==="staff")loadStaff();if(name==="notifications")loadEmailNotificationSettings();if(name==="activity")loadActivity();if(name==="profile")renderProfile();window.scrollTo({top:0,behavior:"smooth"})}
+function switchTab(name){CURRENT=name;document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){b.classList.toggle("active",b.dataset.tab===name)});document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("show",p.id==="page-"+name)});el("topTitle").textContent=({overview:"Admin overview",students:"Students",courses:"Courses & lessons",curriculum:"Curriculum import",assignments:"Assignments",grading:"Grading",notifications:"Email notifications",staff:"Staff accounts",activity:"Activity history",profile:"My profile"})[name];if(name==="courses")loadYear1Materials();if(name==="curriculum")loadCurriculumStatus();if(name==="staff")loadStaff();if(name==="notifications")loadEmailNotificationSettings();if(name==="activity")loadActivity();if(name==="profile")renderProfile();window.scrollTo({top:0,behavior:"smooth"})}
 window.switchTab=switchTab;
 function render(){
  var assignments=DATA.assignments,students=DATA.students,lessons=DATA.lessons;
@@ -455,5 +465,38 @@ el("logout").addEventListener("click",async function(){await api("/api/admin/log
 el("studentSearch").addEventListener("input",render);
 el("overlay").addEventListener("click",function(e){if(e.target===this)closeForm()});
 document.addEventListener("keydown",function(e){if(e.key==="Escape")closeForm()});
+
+async function loadYear1Materials(){
+ const status=el("mtiYear1MaterialsStatus"),form=el("mtiYear1MaterialsForm");
+ if(!status||!form)return;
+ form.classList.toggle("hidden",!ACCOUNT||!["owner","admin"].includes(ACCOUNT.role));
+ try{
+  const r=await api("/api/admin/materials/year1");
+  status.innerHTML=r.available?
+   'Current file: <strong>'+esc(r.filename)+'</strong> · Updated '+esc(r.updated_at||"recently")+
+   ' · <a href="/api/admin/materials/year1/download" style="text-decoration:underline;font-weight:800">Download current PDF ↓</a>':
+   'No Year 1 materials PDF uploaded yet.';
+ }catch(e){status.textContent="Unable to check the current PDF: "+e.message}
+}
+el("mtiYear1MaterialsForm").addEventListener("submit",async function(e){
+ e.preventDefault();
+ const input=el("mtiYear1MaterialsFile"),file=input.files[0],button=el("mtiYear1MaterialsButton");
+ const error=el("mtiYear1MaterialsError"),status=el("mtiYear1MaterialsStatus");
+ error.textContent="";
+ if(!file||!file.name.toLowerCase().endsWith(".pdf")||file.size>10*1024*1024){
+  error.textContent="Choose a PDF file smaller than 10 MB.";return;
+ }
+ button.disabled=true;status.textContent="Uploading "+file.name+"…";
+ try{
+  const response=await fetch("/api/admin/materials/year1",{method:"PUT",credentials:"same-origin",
+   headers:{"Content-Type":"application/pdf","X-MTI-File-Name":encodeURIComponent(file.name)},body:file});
+  const result=await response.json();
+  if(!response.ok)throw Error(result.error||"Upload failed");
+  input.value="";
+  await loadYear1Materials();
+ }catch(err){error.textContent=err.message;await loadYear1Materials()}
+ finally{button.disabled=false}
+});
+
 /*__MTI_ADMIN_V2__*/
 </script></body></html>
