@@ -37,7 +37,7 @@ textarea{min-height:230px;resize:vertical;line-height:1.7}.error{color:#ab4b45;f
 <p class="small" style="margin-top:24px">New to MTI? Your administrator will send you a private invitation link once your student record has been added.</p></div></section>
 <div id="portal" class="hidden"><div class="wrap"><div class="intro"><div><div class="eyebrow">Your MTI learning home</div><h1 id="welcome">My learning</h1><p>Grow at your pace, stay organized and keep moving forward.</p></div><button class="outline" id="changePassword">Change password</button></div><div class="cards"><div class="card"><small>My current program</small><b id="statProgram">—</b></div><div class="card"><small>Current year</small><b id="statYear">—</b></div><div class="card"><small>Assignments completed</small><b id="statCompleted">0</b></div></div>
 <div class="panel hidden" id="year1MaterialsCard" style="padding:19px 23px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap">
- <div><strong style="font-size:16px">Year 1 materials list</strong><p id="year1MaterialsInfo" style="font-size:12px;margin:5px 0 0">Always the most recent list, including QR codes.</p></div>
+ <div><strong style="font-size:16px">Year 1 · Session 1 Materials</strong><p id="year1MaterialsInfo" style="font-size:12px;margin:5px 0 0">Always the most recent list, including QR codes.</p></div>
  <a href="/api/student/materials/year1/download" class="primary" download>↓ Download Materials List (PDF)</a>
 </div>
 <div class="layout"><details class="panel" id="myAssignmentsCard" style="overflow:hidden"><summary style="cursor:pointer;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none"><span><strong style="font-size:18px">My assignments</strong><small style="display:block;margin-top:6px;color:#70847d">Tap to see your lessons, progress and assignments.</small></span><span style="font-size:12px;color:#557f67">Expand / Collapse ▾</span></summary><div id="assignmentList"></div></details><details class="panel" id="assignmentDetailsCard" style="overflow:hidden"><summary style="cursor:pointer;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none"><span><strong style="font-size:18px">Assignment details</strong><small style="display:block;margin-top:6px;color:#70847d">Tap to expand instructions, materials and submissions.</small></span><span style="font-size:12px;color:#557f67">Expand / Collapse ▾</span></summary><div id="assignmentDetail" class="details"><h2>Choose an assignment</h2><p>Your assignments will appear here when assigned by the institute.</p></div></details></div><div id="yearArchive" style="margin-top:24px"></div></div></div>
@@ -50,7 +50,8 @@ async function loadYear1Materials(){
  try{YEAR1_MATERIALS=await api("/api/student/materials/year1")}
  catch{YEAR1_MATERIALS={available:false}}
  const card=el("year1MaterialsCard");
- const visible=!!YEAR1_MATERIALS.available && Number(DATA?.student?.current_year)===1;
+ const a=(DATA?.assignments||[]).find(x=>x.id===selected);
+ const visible=!!YEAR1_MATERIALS.available && mtiIsYear1Session1(a?.year,a?.lesson_number);
  if(card)card.classList.toggle("hidden",!visible);
  if(visible&&el("year1MaterialsInfo"))
   el("year1MaterialsInfo").textContent="Current PDF: "+YEAR1_MATERIALS.filename+" · Includes QR codes and links.";
@@ -131,11 +132,12 @@ function selectAssignment(id){
  document.querySelectorAll(".assignment").forEach(function(e){e.classList.remove("active")});
  var btn=[...document.querySelectorAll("[data-path-lesson],[data-history-assignment]")].find(b=>b.dataset.pathLesson===a.id||b.dataset.historyAssignment===a.id);if(btn)btn.classList.add("active");
  var html='<h2>'+esc(a.title)+'</h2><p>'+status(a.status)+' &nbsp; '+(a.year?"Year "+esc(a.year)+" · Lesson "+esc(a.lesson_number)+" · "+esc(a.credits)+" credits":"Individual assignment")+' · Due '+esc(a.due_date||"Not set")+'</p>';
+ el("year1MaterialsCard").classList.toggle("hidden",!(YEAR1_MATERIALS.available&&mtiIsYear1Session1(a.year,a.lesson_number)));
  if(a.memory_verse_reference||a.memory_verse_text)html+='<div class="detail-title">Scripture to memorize</div><div class="detail-box"><b>'+esc(a.memory_verse_reference)+'</b>\n'+esc(a.memory_verse_text)+'</div>';
  if(a.bible_instruction)html+='<div class="detail-title">Bible instructions</div><div class="detail-box">'+esc(a.bible_instruction)+'</div>';
  if(a.assignment_instructions)html+='<div class="detail-title">Assignment instructions</div><div class="detail-box">'+esc(a.assignment_instructions)+'</div>';
- if(Number(a.year)===1&&YEAR1_MATERIALS.available){
-  html+='<div class="detail-title">Required materials</div><div class="detail-box">The latest Year 1 materials list includes all QR codes and links. <a href="/api/student/materials/year1/download" download style="text-decoration:underline;font-weight:800">Download current materials PDF ↓</a></div>';
+ if(mtiIsYear1Session1(a.year,a.lesson_number)&&YEAR1_MATERIALS.available){
+  html+='<div class="detail-title">Required materials</div><div class="detail-box">This is the current Year 1, Session 1 materials list with all QR codes and links. <a href="/api/student/materials/year1/download" download style="text-decoration:underline;font-weight:800">Download current materials PDF ↓</a></div>';
  }else if(a.materials_list)html+='<div class="detail-title">Materials</div><div class="detail-box">'+esc(a.materials_list)+'</div>'+
  '<button type="button" class="outline" id="findMaterialsButton" style="margin:12px 0">Find these materials online ↗</button>'+
  '<div id="materialLinksBox" aria-live="polite"></div>';
@@ -208,7 +210,8 @@ async function removeFile(id){
  try{await api("/api/student/files/"+id,{method:"DELETE",headers:{"Content-Type":"application/json"},body:"{}"});await refresh();}
  catch(e){alert(e.message)}
 }
-function printAssignment(a){
+async function printAssignment(a){
+ const useSharedMaterials=mtiIsYear1Session1(a.year,a.lesson_number)&&YEAR1_MATERIALS.available;
  const cover=mtiLessonPrintCoverHtml({
   course:a.course_name||a.course||a.title||"MTI Lesson",
   assignmentTitle:a.title,
@@ -217,7 +220,7 @@ function printAssignment(a){
   date:"",due:a.due_date,
   verseRef:a.memory_verse_reference,verseText:a.memory_verse_text,
   bible:a.bible_instruction,assignment:a.assignment_instructions,
-  materials:a.materials_list,response:a.response_text
+  materials:useSharedMaterials?"The current Year 1, Session 1 materials PDF (including QR codes) follows the three assignment pages.":a.materials_list,response:a.response_text
  });
  const activity=(selected===a.id?mtiActivityCollect():null)||a.activity_form_json;
  el("paper").innerHTML=cover+mtiActivityPrintHtml(activity);
@@ -227,6 +230,10 @@ function printAssignment(a){
  paper.style.cssText="display:block!important;position:absolute!important;left:-9999px!important;top:0!important;width:7.2in!important;visibility:hidden!important";
  mtiFitLessonPrintCover(paper.querySelector(".mti-cover-page"));
  if(before==null)paper.removeAttribute("style");else paper.setAttribute("style",before);
+ if(useSharedMaterials){
+  try{await mtiAttachYear1MaterialsPdfPages(paper,"/api/student/materials/year1/download");}
+  catch(error){alert("The materials PDF could not be added to the printed packet: "+error.message+" Please try again.");return;}
+ }
  window.print();
 }
 window.addEventListener("beforeprint",function(){
