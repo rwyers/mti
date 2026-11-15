@@ -13,7 +13,7 @@ function json(data,status=200,extra={}) {
 function page(value) {
  return new Response(value,{headers:{"Content-Type":"text/html; charset=utf-8","X-Content-Type-Options":"nosniff",
  "Referrer-Policy":"strict-origin-when-cross-origin","X-Frame-Options":"DENY",
- "Content-Security-Policy":"default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"}});
+ "Content-Security-Policy":"default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; worker-src 'self' blob:; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"}});
 }
 const string = (v,max=5000) => String(v==null?"":v).trim().slice(0,max);
 
@@ -445,7 +445,7 @@ async function adminAPI(req,env,path){
 }
 
 
-/* Shared Year 1 materials: one replaceable private PDF for every course. */
+/* Shared Year 1 Session 1 materials: one replaceable private PDF for every course. */
 const YEAR1_MATERIALS_SETTING="materials_year1_pdf";
 async function year1MaterialsRecord(env){
  const row=await env.DB.prepare("SELECT setting_value,updated_at FROM mti_settings WHERE setting_key=?")
