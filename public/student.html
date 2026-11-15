@@ -211,6 +211,7 @@ async function removeFile(id){
  catch(e){alert(e.message)}
 }
 async function printAssignment(a){
+ const withWatermark=window.confirm(MTI_WATERMARK_QUESTION);
  const useSharedMaterials=mtiIsYear1Session1(a.year,a.lesson_number)&&YEAR1_MATERIALS.available;
  const cover=mtiLessonPrintCoverHtml({
   course:a.course_name||a.course||a.title||"MTI Lesson",
@@ -234,6 +235,8 @@ async function printAssignment(a){
   try{await mtiAttachYear1MaterialsPdfPages(paper,"/api/student/materials/year1/download");}
   catch(error){alert("The materials PDF could not be added to the printed packet: "+error.message+" Please try again.");return;}
  }
+ try{await mtiSetPrintWatermark(paper,withWatermark);}
+ catch(error){alert("Unable to add the MTI watermark: "+error.message+" Please try printing again.");return;}
  window.print();
 }
 window.addEventListener("beforeprint",function(){

@@ -25,7 +25,7 @@
 })();
 
 /* Print one clean lesson/marking cover followed by the two existing activity sheets. */
-function printMtiLesson(id,studentName="",targetWindow=null){
+function printMtiLesson(id,studentName="",targetWindow=null,initialWatermarkChoice){
  const lesson=DATA.lessons.find(l=>String(l.id)===String(id));
  if(!lesson){alert("Lesson not found. Refresh the page and try again.");return;}
  const course=DATA.courses.find(c=>String(c.id)===String(lesson.course_id));
@@ -54,18 +54,23 @@ function printMtiLesson(id,studentName="",targetWindow=null){
   '<main>'+cover+mtiActivityPrintHtml({})+'</main></body></html>';
  const win=targetWindow||window.open("","_blank");
  if(!win){alert("Your browser blocked the print window. Allow pop-ups for MTI and try again.");return;}
+ const firstWatermarkChoice=typeof initialWatermarkChoice==="boolean"?initialWatermarkChoice:window.confirm(MTI_WATERMARK_QUESTION);
+ let firstPrint=true;
  win.document.open();win.document.write(documentHtml);win.document.close();
  const scaleCover=()=>mtiFitLessonPrintCover(win.document.querySelector(".mti-cover-page"));
  let printing=false;
  const doPrint=async()=>{
   if(printing)return;
   printing=true;
+  const withWatermark=firstPrint?firstWatermarkChoice:win.confirm(MTI_WATERMARK_QUESTION);
+  firstPrint=false;
   const label=win.document.getElementById("mtiPrintStatus");
   try{
    if(useSharedMaterials){
     label.textContent="Adding the latest Session 1 materials PDF and QR codes…";
     await mtiAttachYear1MaterialsPdfPages(win.document.querySelector("main"),"/api/admin/materials/year1/download");
    }
+   await mtiSetPrintWatermark(win.document,withWatermark);
    scaleCover();
    label.textContent="MTI · Lesson & grading sheet";
    win.focus();

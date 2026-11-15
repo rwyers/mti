@@ -627,6 +627,7 @@ export default {
    if(p.startsWith("/api/student/"))return await studentAPI(request,env,p);
    if(p==="/api"||p.startsWith("/api/"))return json({error:"Not found"},404);
    if(request.method!=="GET")return json({error:"Not found"},404);
+   if(p==="/assets/mti-watermark.svg")return STATIC[p]?new Response(STATIC[p],{headers:{"Content-Type":"image/svg+xml; charset=utf-8","Cache-Control":"public, max-age=86400","X-Content-Type-Options":"nosniff","Content-Security-Policy":"default-src 'none'"}}):json({error:"Not found"},404);
    if(p==="/")return page(STATIC["/"]||"<h1>MTI</h1>");
    if(p==="/admin")return page(STATIC["/admin"]||"<h1>MTI Admin</h1>");
    if(p==="/student")return page(STATIC["/student"]||"<h1>MTI Student Portal</h1>");

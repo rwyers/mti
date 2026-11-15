@@ -59,6 +59,26 @@ async function mtiAttachYear1MaterialsPdfPages(container,url){
  }finally{await pdf.destroy()}
 }
 
+/* The logo asset is a vector tracing of the MTI image supplied by the institute.
+   Optional on worksheet pages 2 and 3; cover and attached PDF remain unchanged. */
+const MTI_WATERMARK_QUESTION="Do you want to add the MTI logo as a 10% watermark behind pages 2 and 3?";
+async function mtiSetPrintWatermark(root,enabled){
+ const sheets=Array.from(root.querySelectorAll(".mti-hand-sheet"));
+ const images=[];
+ for(const sheet of sheets){
+  sheet.querySelectorAll(":scope > .mti-print-watermark").forEach(image=>image.remove());
+  if(!enabled)continue;
+  const image=sheet.ownerDocument.createElement("img");
+  image.className="mti-print-watermark";
+  image.src="/assets/mti-watermark.svg";
+  image.alt="";
+  image.setAttribute("aria-hidden","true");
+  sheet.insertBefore(image,sheet.firstChild);
+  images.push(image);
+ }
+ await Promise.all(images.map(image=>image.decode?image.decode():Promise.resolve()));
+}
+
 /* MTI lesson activity record. Mirrors the reverse side of the MTI paper assignment sheet. */
 const MTI_ACTIVITY_SECTIONS=[
  {title:"One Hour of Practical Service",note:"Approved by Pastors Don & Tabatha Laing, Leslie Wyers, or April Hill.",rows:[
@@ -159,7 +179,9 @@ function mtiActivityReadOnlyHtml(raw){
    Online entry, read-only grading and saved activity fields are unchanged. */
 const MTI_HANDWRITING_PRINT_CSS='<style>'+
 '.mti-hand-sheet,.mti-hand-sheet *{box-sizing:border-box}'+
-'.mti-hand-sheet{background:white;color:#182922;border:1px solid #d9e2dc;max-width:8.1in;margin:24px auto;padding:24px 25px;font:10pt/1.3 Arial,Helvetica,sans-serif}'+
+'.mti-hand-sheet{position:relative;isolation:isolate;background:white;color:#182922;border:1px solid #d9e2dc;max-width:8.1in;margin:24px auto;padding:24px 25px;font:10pt/1.3 Arial,Helvetica,sans-serif}'+
+'.mti-hand-sheet>.mti-print-watermark{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:76%!important;height:auto!important;max-height:68%!important;opacity:.10!important;z-index:0!important;pointer-events:none!important}'+
+'.mti-hand-sheet>.mh-head,.mti-hand-sheet>.mh-body,.mti-hand-sheet>.mh-footer{position:relative;z-index:1}'+
 '.mti-hand-sheet .mh-head{display:flex;align-items:start;justify-content:space-between;gap:12px;border-bottom:2px solid #365f49;padding:0 0 9px;margin:0 0 10px}'+
 '.mti-hand-sheet h3{font:bold 16pt/1.15 Arial,Helvetica,sans-serif!important;color:#214a37;margin:0 0 3px!important}'+
 

@@ -72,6 +72,7 @@ async function printCurrentModule(studentId){
  const printWindow=window.open("","_blank");
  if(!printWindow){alert("Your browser blocked the print window. Allow pop-ups for MTI and try again.");return;}
  printWindow.document.body.innerHTML='<p style="font:15px Arial,sans-serif;padding:24px">Preparing the current MTI module…</p>';
+ const withWatermark=window.confirm(MTI_WATERMARK_QUESTION);
  try{
   const progress=await api("/api/admin/learning-paths/progress?student_id="+encodeURIComponent(student.id));
   let lesson=null;
@@ -93,7 +94,7 @@ async function printCurrentModule(studentId){
    if(!lesson)lesson=DATA.lessons.find(l=>String(l.course_id)===String(student.course_id)&&Number(l.year)===Number(student.current_year)&&Number(l.lesson_number)===Number(student.current_lesson));
   }
   if(!lesson)throw new Error("No current module is available for this student. Confirm their course, year, and lesson assignment.");
-  printMtiLesson(lesson.id,student.full_name,printWindow);
+  printMtiLesson(lesson.id,student.full_name,printWindow,withWatermark);
  }catch(err){
   if(!printWindow.closed)printWindow.close();
   alert("Unable to print current module: "+err.message);
